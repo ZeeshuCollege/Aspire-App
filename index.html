@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231E3A8A'><path d='M12 2L2 22h20L12 2zm0 4.5l6.5 13H5.5L12 6.5z'/></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>ASPIRE Learning Centre - Better Learning, Bigger Dreams</title>
+    <meta name="description" content="Closed digital management ecosystem for ASPIRE Learning Centre offline students, parents, faculty, and administrators." />
+    <!-- Google Fonts: Outfit and Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+      window.addEventListener('error', function(e) {
+        console.error('Captured window error:', e);
+        var errDiv = document.getElementById('runtime-error-display');
+        if (!errDiv) {
+          errDiv = document.createElement('div');
+          errDiv.id = 'runtime-error-display';
+          errDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc2626;color:white;padding:16px;z-index:999999;font-family:sans-serif;font-size:13px;white-space:pre-wrap;';
+          document.body.prepend(errDiv);
+        }
+        errDiv.textContent += '\nError: ' + e.message + ' (' + e.filename + ':' + e.lineno + ')';
+      });
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

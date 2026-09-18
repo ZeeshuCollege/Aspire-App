@@ -1,0 +1,274 @@
+/* ==========================================================================
+   ASPIRE LEARNING CENTRE - MASTER DESIGN SYSTEM & TOKENS
+   Synthesized from ASPIRE THEME.png and Design.md
+   ========================================================================== */
+
+:root {
+  /* Brand Colors */
+  --brand-900: #0f172a; /* Slate 900 - Admin Sidebar, Main Headings */
+  --brand-800: #1e3a8a; /* Deep Royal Navy - Primary CTAs, Header Cards */
+  --brand-700: #1d4ed8;
+  --brand-600: #2563eb; /* Interactive Blue */
+  --brand-500: #3b82f6;
+  --brand-50: #eff6ff;  /* Soft Blue Tint for active cards & chips */
+
+  /* Accent Sky/Cyan */
+  --accent-500: #0ea5e9; /* Sky 500 - Ongoing Badges, Chart Highlights */
+  --accent-400: #38bdf8; /* Logo Highlights */
+  --accent-50: #f0f9ff;
+
+  /* Surfaces & Canvas */
+  --canvas: #f8fafc;     /* Universal Canvas / Background */
+  --surface: #ffffff;    /* Card Surface / Floating Containers */
+  --surface-alt: #f1f5f9;/* Light grey section fill */
+  --border: #e2e8f0;     /* Slate 200 - Borders, Dividers */
+  --border-focus: #1e3a8a;
+
+  /* Typography Colors */
+  --text-primary: #0f172a;   /* Primary Headings, Names */
+  --text-secondary: #475569; /* Subtitles, Timestamps */
+  --text-muted: #94a3b8;     /* Placeholders, Inactive Icons */
+  --text-white: #ffffff;
+
+  /* Semantic Status Colors */
+  --success: #10b981;        /* Emerald 500 - Present, High Score */
+  --success-tint: #ecfdf5;   /* Emerald 50 - Badge Background */
+  --warning: #f59e0b;        /* Amber 500 - Upcoming Tests, Due Alert */
+  --warning-tint: #fffbeb;   /* Amber 50 - Badge Background */
+  --danger: #ef4444;         /* Rose 500 - Absent, Overdue Fee */
+  --danger-tint: #fef2f2;    /* Rose 50 - Badge Background */
+  --info: #8b5cf6;           /* Violet 500 - Biology, Mathematics, PTM */
+  --info-tint: #f5f3ff;      /* Violet 50 - Badge Background */
+
+  /* Spacing & Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+  --shadow-float: 0 10px 30px -4px rgba(15, 23, 42, 0.1);
+  --shadow-modal: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+
+  /* Fonts */
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--canvas);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Reusable UI Utility Classes */
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand-800) 0%, #1e40af 100%);
+  color: var(--text-white);
+  border: none;
+  padding: 12px 20px;
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #172554 0%, #1e3a8a 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(30, 58, 138, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 10px 18px;
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--surface-alt);
+  border-color: #cbd5e1;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: var(--shadow-card);
+  padding: 18px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-float);
+}
+
+/* Badge Pills */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  gap: 4px;
+}
+
+.badge-success {
+  background: var(--success-tint);
+  color: var(--success);
+}
+
+.badge-warning {
+  background: var(--warning-tint);
+  color: var(--warning);
+}
+
+.badge-danger {
+  background: var(--danger-tint);
+  color: var(--danger);
+}
+
+.badge-info {
+  background: var(--info-tint);
+  color: var(--info);
+}
+
+.badge-accent {
+  background: var(--accent-50);
+  color: var(--accent-500);
+}
+
+/* Segmented Control / Tabs */
+.tab-container {
+  display: flex;
+  background: var(--surface-alt);
+  padding: 4px;
+  border-radius: var(--radius-full);
+  gap: 4px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-secondary);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+}
+
+.tab-btn.active {
+  background: var(--brand-800);
+  color: var(--text-white);
+  box-shadow: var(--shadow-sm);
+}
+
+/* App Container Modes */
+.mobile-app-wrapper {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--canvas);
+  position: relative;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.desktop-app-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  background: #f1f5f9;
+}
