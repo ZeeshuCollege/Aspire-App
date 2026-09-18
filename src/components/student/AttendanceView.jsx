@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
+import FullAttendanceReportModal from './FullAttendanceReportModal';
 
 export default function AttendanceView() {
+  const [isReportOpen, setIsReportOpen] = useState(false);
   const subjects = [
     { name: 'Physics', percent: 92, color: '#0ea5e9' },
     { name: 'Mathematics', percent: 86, color: '#10b981' },
@@ -78,9 +80,19 @@ export default function AttendanceView() {
         </div>
       </div>
 
-      <button className="btn-primary" style={{ width: '100%', marginTop: '4px' }}>
+      <button
+        onClick={() => setIsReportOpen(true)}
+        className="btn-primary"
+        style={{ width: '100%', marginTop: '4px' }}
+      >
         View Full Report
       </button>
+
+      {/* Full 30-Lecture Attendance Report Modal (0.5s Bottom-to-Top Pop-up) */}
+      <FullAttendanceReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+      />
     </div>
   );
 }

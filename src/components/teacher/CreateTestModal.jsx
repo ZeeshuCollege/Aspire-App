@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Upload, Calendar, Clock, CheckCircle2 } from 'lucide-react';
 
 export default function CreateTestModal({ isOpen, onClose, onCreated }) {
@@ -9,8 +10,17 @@ export default function CreateTestModal({ isOpen, onClose, onCreated }) {
   const [duration, setDuration] = useState('1 hr 30 min');
   const [fileUploaded, setFileUploaded] = useState(false);
   const [fileName, setFileName] = useState('');
+  const [isClosing, setIsClosing] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 380);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -28,34 +38,19 @@ export default function CreateTestModal({ isOpen, onClose, onCreated }) {
         status: 'Upcoming'
       });
     }
-    onClose();
+    handleClose();
   };
 
-  return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(15, 23, 42, 0.75)',
-      backdropFilter: 'blur(6px)',
-      zIndex: 95,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '16px',
-      animation: 'fadeIn 0.2s ease-out'
-    }}>
-      <div style={{
-        width: '100%',
-        maxWidth: '420px',
-        background: 'var(--surface)',
-        borderRadius: 'var(--radius-2xl)',
-        boxShadow: 'var(--shadow-modal)',
-        overflow: 'hidden',
-        position: 'relative'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 24px', borderBottom: '1px solid var(--border)' }}>
+  const modalContent = (
+    <div
+      className={`modal-backdrop-05s ${isClosing ? 'closing' : ''}`}
+      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
+    >
+      <div className={`modal-sheet-05s ${isClosing ? 'closing' : ''}`}>
+        <div className="sheet-drag-handle" />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 24px', borderBottom: '1px solid var(--border)' }}>
           <h3 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--brand-900)' }}>Create Test</h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+          <button onClick={handleClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
             <X size={18} />
           </button>
         </div>
@@ -201,4 +196,6 @@ export default function CreateTestModal({ isOpen, onClose, onCreated }) {
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 }

@@ -1,22 +1,33 @@
 import React, { useState } from 'react';
-import { mockAdminStats, mockStudentsList, mockTeachersList, mockBatches } from '../../lib/mockData';
+import { mockAdminStats, mockStudentsList, mockTeachersList, mockBatches, mockParentsList } from '../../lib/mockData';
 import {
   LayoutDashboard, Users, UserCheck, BookOpen, CheckSquare,
-  FileText, DollarSign, BarChart2, Settings, Download, Plus, Search, ShieldCheck
+  FileText, DollarSign, BarChart2, Settings, Download, Plus, Search, ShieldCheck, Phone
 } from 'lucide-react';
 
 export default function AdminDashboard({ user, onLogout }) {
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [students, setStudents] = useState(mockStudentsList);
+  const [parents, setParents] = useState(mockParentsList);
   const [searchTerm, setSearchTerm] = useState('');
+  const [parentSearchTerm, setParentSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentCourse, setNewStudentCourse] = useState('Std. 12 • JEE');
+  const [showAddParentModal, setShowAddParentModal] = useState(false);
+  const [newParentName, setNewParentName] = useState('');
+  const [newParentPhone, setNewParentPhone] = useState('');
+  const [newParentEmail, setNewParentEmail] = useState('');
+  const [newParentChildName, setNewParentChildName] = useState('');
+  const [newParentChildEmail, setNewParentChildEmail] = useState('');
+  const [newParentChildRoll, setNewParentChildRoll] = useState('');
+  const [newParentChildCourse, setNewParentChildCourse] = useState('Std. 12 • Science • JEE');
   const [exportFeedback, setExportFeedback] = useState('');
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'students', label: 'Students', icon: Users },
+    { id: 'parents', label: 'Parents', icon: UserCheck },
     { id: 'teachers', label: 'Teachers', icon: UserCheck },
     { id: 'courses', label: 'Courses & Batches', icon: BookOpen },
     { id: 'attendance', label: 'Attendance', icon: CheckSquare },
@@ -51,6 +62,31 @@ export default function AdminDashboard({ user, onLogout }) {
     setStudents([newStd, ...students]);
     setNewStudentName('');
     setShowAddModal(false);
+  };
+
+  // Add Parent Handler
+  const handleAddParent = (e) => {
+    e.preventDefault();
+    if (!newParentName || !newParentPhone) return;
+    const newPar = {
+      id: `par-${Date.now()}`,
+      name: newParentName.trim(),
+      phone: newParentPhone.trim(),
+      email: newParentEmail.trim() || `${newParentName.toLowerCase().replace(/\s+/g, '')}@gmail.com`,
+      linkedChildName: newParentChildName.trim() || 'Aryan Gupta',
+      linkedChildEmail: newParentChildEmail.trim() || `${(newParentChildName || 'student').toLowerCase().replace(/\s+/g, '')}@aspire.edu`,
+      linkedChildRoll: newParentChildRoll.trim() || '106',
+      linkedChildCourse: newParentChildCourse.trim(),
+      status: 'Active'
+    };
+    setParents([newPar, ...parents]);
+    setNewParentName('');
+    setNewParentPhone('');
+    setNewParentEmail('');
+    setNewParentChildName('');
+    setNewParentChildEmail('');
+    setNewParentChildRoll('');
+    setShowAddParentModal(false);
   };
 
   return (
@@ -303,6 +339,76 @@ export default function AdminDashboard({ user, onLogout }) {
         )}
 
         {/* ====================================================================
+            VIEW: PARENTS & GUARDIANS (Linked Children Directory)
+           ==================================================================== */}
+        {activeMenu === 'parents' && (
+          <div className="card" style={{ padding: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ position: 'relative', width: '320px' }}>
+                <input
+                  type="text"
+                  placeholder="Search parents or linked student..."
+                  value={parentSearchTerm}
+                  onChange={e => setParentSearchTerm(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px 8px 34px',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    fontSize: '13px'
+                  }}
+                />
+                <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+              </div>
+
+              <button onClick={() => setShowAddParentModal(true)} className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Plus size={16} />
+                Add Parent
+              </button>
+            </div>
+
+            {/* Parents Table */}
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid var(--border)', textAlign: 'left', color: 'var(--text-muted)' }}>
+                  <th style={{ padding: '10px' }}>Parent Name</th>
+                  <th style={{ padding: '10px' }}>Contact Phone</th>
+                  <th style={{ padding: '10px' }}>Email Address</th>
+                  <th style={{ padding: '10px' }}>Linked Student</th>
+                  <th style={{ padding: '10px' }}>Student Roll #</th>
+                  <th style={{ padding: '10px' }}>Course / Batch</th>
+                  <th style={{ padding: '10px' }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {parents
+                  .filter(p =>
+                    p.name.toLowerCase().includes(parentSearchTerm.toLowerCase()) ||
+                    (p.linkedChildName && p.linkedChildName.toLowerCase().includes(parentSearchTerm.toLowerCase())) ||
+                    p.phone.includes(parentSearchTerm)
+                  )
+                  .map(p => (
+                    <tr key={p.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '12px 10px', fontWeight: 700, color: 'var(--brand-900)' }}>{p.name}</td>
+                      <td style={{ padding: '12px 10px', color: 'var(--text-primary)' }}>{p.phone}</td>
+                      <td style={{ padding: '12px 10px', color: 'var(--text-secondary)' }}>{p.email}</td>
+                      <td style={{ padding: '12px 10px', fontWeight: 600, color: 'var(--brand-800)' }}>
+                        <div>{p.linkedChildName}</div>
+                        {p.linkedChildEmail && <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>{p.linkedChildEmail}</div>}
+                      </td>
+                      <td style={{ padding: '12px 10px', fontWeight: 700 }}>{p.linkedChildRoll}</td>
+                      <td style={{ padding: '12px 10px', color: 'var(--text-secondary)' }}>{p.linkedChildCourse}</td>
+                      <td style={{ padding: '12px 10px' }}>
+                        <span className="badge badge-success">{p.status}</span>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* ====================================================================
             VIEW: REPORTS & 1-CLICK EXPORT (From ASPIRE THEME.png Row 4 Screen 29)
            ==================================================================== */}
         {activeMenu === 'reports' && (
@@ -382,6 +488,103 @@ export default function AdminDashboard({ user, onLogout }) {
                   </button>
                   <button type="submit" className="btn-primary" style={{ flex: 1 }}>
                     Enroll Student
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Add Parent Modal (Desktop) */}
+        {showAddParentModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+            <div style={{ background: '#ffffff', borderRadius: '12px', padding: '24px', width: '420px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '16px', color: 'var(--brand-900)' }}>
+                Add New Parent & Link Child
+              </h3>
+              <form onSubmit={handleAddParent} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Parent Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Ramesh Gupta"
+                    value={newParentName}
+                    onChange={e => setNewParentName(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Phone Number *</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+91 98XXX XXXXX"
+                    value={newParentPhone}
+                    onChange={e => setNewParentPhone(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Email Address</label>
+                  <input
+                    type="email"
+                    placeholder="parent@example.com"
+                    value={newParentEmail}
+                    onChange={e => setNewParentEmail(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Linked Student Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Aryan Gupta"
+                    value={newParentChildName}
+                    onChange={e => setNewParentChildName(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Student Email Address</label>
+                  <input
+                    type="email"
+                    placeholder="e.g. aryan.gupta@aspire.edu"
+                    value={newParentChildEmail}
+                    onChange={e => setNewParentChildEmail(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Student Roll Number</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 106"
+                    value={newParentChildRoll}
+                    onChange={e => setNewParentChildRoll(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Enrolled Course</label>
+                  <select
+                    value={newParentChildCourse}
+                    onChange={e => setNewParentChildCourse(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px' }}
+                  >
+                    <option value="Std. 12 • Science • JEE">Std. 12 • Science • JEE</option>
+                    <option value="Std. 12 • Science • NEET">Std. 12 • Science • NEET</option>
+                    <option value="Std. 11 • Science • JEE">Std. 11 • Science • JEE</option>
+                    <option value="Std. 10 • Foundation">Std. 10 • Foundation</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+                  <button type="button" onClick={() => setShowAddParentModal(false)} className="btn-secondary" style={{ flex: 1 }}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-primary" style={{ flex: 1 }}>
+                    Add Parent
                   </button>
                 </div>
               </form>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Calendar, BookOpen, FileText, User, Users, CheckSquare, BarChart2, DollarSign, UserCheck } from 'lucide-react';
+import { Home, Calendar, BookOpen, FileText, User, Users, CheckSquare, BarChart2, DollarSign, UserCheck, UserPlus } from 'lucide-react';
 
 export default function BottomNav({ role, activeTab, setActiveTab }) {
   // Define nav configurations per role based on ASPIRE THEME.png
@@ -14,7 +14,6 @@ export default function BottomNav({ role, activeTab, setActiveTab }) {
     teacher: [
       { id: 'home', label: 'Dashboard', icon: Home },
       { id: 'batches', label: 'Batches', icon: Users },
-      { id: 'attendance', label: 'Attendance', icon: CheckSquare },
       { id: 'performance', label: 'Performance', icon: BarChart2 },
       { id: 'profile', label: 'Profile', icon: User }
     ],
@@ -28,13 +27,15 @@ export default function BottomNav({ role, activeTab, setActiveTab }) {
     admin: [
       { id: 'home', label: 'Dashboard', icon: Home },
       { id: 'students', label: 'Students', icon: Users },
-      { id: 'teachers', label: 'Teachers', icon: UserCheck },
+      { id: 'parents', label: 'Parents', icon: UserCheck },
+      { id: 'teachers', label: 'Teachers', icon: UserPlus },
       { id: 'batches', label: 'Batches', icon: BookOpen },
       { id: 'profile', label: 'Settings', icon: User }
     ]
   };
 
   const tabs = navConfigs[role] || navConfigs.student;
+  const isSixTabs = tabs.length >= 6;
 
   return (
     <nav style={{
@@ -49,7 +50,7 @@ export default function BottomNav({ role, activeTab, setActiveTab }) {
       display: 'flex',
       justifyContent: 'space-around',
       alignItems: 'center',
-      padding: '8px 4px 14px 4px',
+      padding: isSixTabs ? '6px 2px 14px 2px' : '8px 4px 14px 4px',
       zIndex: 40,
       boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.05)'
     }}>
@@ -70,17 +71,32 @@ export default function BottomNav({ role, activeTab, setActiveTab }) {
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              padding: '6px 0',
+              padding: isSixTabs ? '4px 0' : '6px 0',
               color: isActive ? 'var(--brand-800)' : 'var(--text-muted)',
-              transition: 'all 0.2s ease',
-              position: 'relative'
+              transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+              position: 'relative',
+              minWidth: 0
             }}
           >
-            <Icon size={20} strokeWidth={isActive ? 2.5 : 1.8} />
+            <div style={{
+              transform: isActive ? 'scale(1.12) translateY(-1px)' : 'scale(1)',
+              transition: 'transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Icon size={isSixTabs ? 18 : 20} strokeWidth={isActive ? 2.5 : 1.8} />
+            </div>
             <span style={{
-              fontSize: '11px',
+              fontSize: isSixTabs ? '10px' : '11px',
               fontWeight: isActive ? 700 : 500,
-              marginTop: '4px'
+              marginTop: isSixTabs ? '2px' : '4px',
+              transition: 'color 0.2s ease',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: '100%',
+              display: 'block'
             }}>
               {tab.label}
             </span>
@@ -88,13 +104,15 @@ export default function BottomNav({ role, activeTab, setActiveTab }) {
               <span style={{
                 position: 'absolute',
                 bottom: '0px',
-                width: '16px',
+                width: '18px',
                 height: '3px',
                 background: 'var(--brand-800)',
-                borderRadius: '9999px'
+                borderRadius: '9999px',
+                boxShadow: '0 1px 6px rgba(30, 58, 138, 0.4)'
               }} />
             )}
           </button>
+
         );
       })}
     </nav>

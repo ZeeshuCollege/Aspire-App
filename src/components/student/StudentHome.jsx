@@ -1,21 +1,60 @@
 import React from 'react';
-import { Calendar, FileText, BookOpen, Clock, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Calendar, FileText, BookOpen, CheckCircle2 } from 'lucide-react';
 
 export default function StudentHome({ user, onNavigate, onOpenTestPaper }) {
   return (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '90px' }}>
-      {/* Greeting Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Good Morning,</span>
-          <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--brand-900)' }}>{user.name}</h2>
-          <span style={{ fontSize: '11px', color: 'var(--accent-500)', fontWeight: 600 }}>{user.course}</span>
+    <div style={{
+      padding: '16px',
+      minHeight: '100%',
+      boxSizing: 'border-box',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '16px',
+      paddingBottom: '90px'
+    }}>
+      {/* Greeting Header - Compact Upward Placement with Square Avatar */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '0 0 6px 0'
+      }}>
+        <div style={{ flex: 1, paddingRight: '14px' }}>
+          <span style={{
+            fontSize: 'clamp(15px, 3.8vw, 18px)',
+            color: 'var(--text-muted)',
+            fontWeight: 600,
+            display: 'block',
+            marginBottom: '4px',
+            letterSpacing: '-0.01em'
+          }}>
+            Good Morning,
+          </span>
+          <h1 style={{
+            fontSize: 'clamp(28px, 7vw, 34px)',
+            fontWeight: 900,
+            color: 'var(--brand-900)',
+            letterSpacing: '-0.03em',
+            lineHeight: 1.15,
+            margin: 0
+          }}>
+            {user.name}
+          </h1>
         </div>
-        <img
-          src={user.avatar}
-          alt={user.name}
-          style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }}
-        />
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <img
+            src={user.avatar}
+            alt={user.name}
+            style={{
+              width: 'clamp(76px, 19vw, 90px)',
+              height: 'clamp(76px, 19vw, 90px)',
+              borderRadius: '16px',
+              objectFit: 'cover',
+              border: '2px solid var(--border)',
+              boxShadow: '0 4px 16px rgba(15, 23, 42, 0.08)'
+            }}
+          />
+        </div>
       </div>
 
       {/* Today's Class Card (From ASPIRE THEME.png Row 1 Screen 3) */}
@@ -37,18 +76,8 @@ export default function StudentHome({ user, onNavigate, onOpenTestPaper }) {
               Today's Class
             </span>
             <h3 style={{ fontSize: '22px', fontWeight: 800, marginTop: '2px' }}>Physics</h3>
-            <p style={{ fontSize: '12px', opacity: 0.9, marginTop: '2px' }}>10:00 AM - 11:00 AM • Room 204</p>
+            <p style={{ fontSize: '12px', opacity: 0.9, marginTop: '2px' }}>10:00 AM - 11:00 AM</p>
           </div>
-          <span style={{
-            background: 'rgba(255, 255, 255, 0.2)',
-            backdropFilter: 'blur(4px)',
-            padding: '4px 10px',
-            borderRadius: 'var(--radius-full)',
-            fontSize: '11px',
-            fontWeight: 700
-          }}>
-            Ongoing
-          </span>
         </div>
 
         <button
@@ -70,14 +99,52 @@ export default function StudentHome({ user, onNavigate, onOpenTestPaper }) {
         </button>
       </div>
 
-      {/* Quick Action Grid (4 Squircles from Theme) */}
-      <div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+      {/* Quick Action 2x2 Grid covering empty space */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '14px',
+          flex: 1,
+          minHeight: '260px'
+        }}>
           {[
-            { id: 'attendance', label: 'Attendance', icon: CheckCircle2, bg: '#ecfdf5', color: '#10b981' },
-            { id: 'tests', label: 'Tests', icon: FileText, bg: '#fffbeb', color: '#f59e0b' },
-            { id: 'materials', label: 'Materials', icon: BookOpen, bg: '#eff6ff', color: '#2563eb' },
-            { id: 'classes', label: 'Schedule', icon: Calendar, bg: '#f5f3ff', color: '#8b5cf6' }
+            {
+              id: 'attendance',
+              label: 'Attendance',
+              desc: 'Check records & log',
+              icon: CheckCircle2,
+              bg: '#ecfdf5',
+              color: '#10b981',
+              border: '#bbf7d0'
+            },
+            {
+              id: 'tests',
+              label: 'Tests',
+              desc: 'Upcoming & results',
+              icon: FileText,
+              bg: '#fffbeb',
+              color: '#f59e0b',
+              border: '#fde68a'
+            },
+            {
+              id: 'materials',
+              label: 'Materials',
+              desc: 'Notes, PDFs & videos',
+              icon: BookOpen,
+              bg: '#eff6ff',
+              color: '#2563eb',
+              border: '#bfdbfe'
+            },
+            {
+              id: 'classes',
+              label: 'Schedule',
+              desc: 'Lectures & routine',
+              icon: Calendar,
+              bg: '#f5f3ff',
+              color: '#8b5cf6',
+              border: '#ddd6fe'
+            }
           ].map(action => {
             const Icon = action.icon;
             return (
@@ -88,60 +155,51 @@ export default function StudentHome({ user, onNavigate, onOpenTestPaper }) {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
+                  justifyContent: 'center',
+                  textAlign: 'center',
                   background: 'var(--surface)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: '14px 6px',
+                  border: '1.5px solid var(--border)',
+                  borderRadius: '20px',
+                  padding: '18px 12px',
                   cursor: 'pointer',
-                  boxShadow: 'var(--shadow-sm)',
-                  transition: 'transform 0.15s ease'
+                  boxShadow: '0 4px 16px rgba(15, 23, 42, 0.05)',
+                  transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                  width: '100%',
+                  boxSizing: 'border-box'
                 }}
               >
-                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: action.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: action.color, marginBottom: '6px' }}>
-                  <Icon size={20} />
+                <div style={{
+                  width: '54px',
+                  height: '54px',
+                  borderRadius: '16px',
+                  background: action.bg,
+                  border: `1px solid ${action.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: action.color,
+                  marginBottom: '10px'
+                }}>
+                  <Icon size={26} />
                 </div>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)' }}>{action.label}</span>
+                <span style={{
+                  fontSize: '16px',
+                  fontWeight: 800,
+                  color: 'var(--brand-900)',
+                  marginBottom: '4px'
+                }}>
+                  {action.label}
+                </span>
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  color: 'var(--text-muted)'
+                }}>
+                  {action.desc}
+                </span>
               </button>
             );
           })}
-        </div>
-      </div>
-
-      {/* Upcoming Tests Section */}
-      <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--brand-900)' }}>Upcoming Tests</h4>
-          <button
-            onClick={() => onNavigate('tests')}
-            style={{ background: 'none', border: 'none', color: 'var(--brand-800)', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
-          >
-            View All
-          </button>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {[
-            { id: 't-02', name: 'Chemistry Test', date: '16 Apr 2025 • 90 min', subject: 'Chemistry', iconColor: '#f59e0b' },
-            { id: 't-03', name: 'Mathematics Test', date: '22 Apr 2025 • 90 min', subject: 'Mathematics', iconColor: '#8b5cf6' }
-          ].map(test => (
-            <div
-              key={test.id}
-              onClick={() => onOpenTestPaper({ title: test.name, subtitle: `${test.subject} • ${test.date}` })}
-              className="card card-hover"
-              style={{ padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#fffbeb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: test.iconColor }}>
-                  <FileText size={18} />
-                </div>
-                <div>
-                  <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{test.name}</h5>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{test.date}</span>
-                </div>
-              </div>
-              <ChevronRight size={16} color="var(--text-muted)" />
-            </div>
-          ))}
         </div>
       </div>
     </div>

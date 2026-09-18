@@ -1,14 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { mockSchedule } from '../../lib/mockData';
-import { Clock, MapPin, UserCheck } from 'lucide-react';
+import { Clock, UserCheck, Calendar as CalendarIcon, CheckCircle2 } from 'lucide-react';
+import AttendanceView from './AttendanceView';
 
-export default function Timetable() {
+export default function Timetable({ initialSubTab = 'schedule' }) {
+  const [subTab, setSubTab] = useState(initialSubTab);
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const [selectedDay, setSelectedDay] = useState('Mon');
 
+  useEffect(() => {
+    if (initialSubTab) {
+      setSubTab(initialSubTab);
+    }
+  }, [initialSubTab]);
+
   return (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '90px' }}>
-      <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--brand-900)' }}>Timetable</h3>
+      {/* Top Segmented View Switcher */}
+      <div className="tab-container">
+        <button
+          className={`tab-btn ${subTab === 'schedule' ? 'active' : ''}`}
+          onClick={() => setSubTab('schedule')}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+        >
+          <CalendarIcon size={14} /> Class Schedule
+        </button>
+        <button
+          className={`tab-btn ${subTab === 'attendance' ? 'active' : ''}`}
+          onClick={() => setSubTab('attendance')}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+        >
+          <CheckCircle2 size={14} /> Attendance Record
+        </button>
+      </div>
+
+      {subTab === 'attendance' ? (
+        <AttendanceView />
+      ) : (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--brand-900)' }}>Weekly Timetable</h3>
+            <span className="badge badge-accent">4 Classes Scheduled</span>
+          </div>
+
 
       {/* Horizontal Day Selector Pills */}
       <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
@@ -61,24 +95,19 @@ export default function Timetable() {
                   <span>{item.time}</span>
                 </div>
               </div>
-              <span className={`badge ${item.status === 'Ongoing' ? 'badge-accent' : 'badge-info'}`}>
-                {item.status}
-              </span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '14px', paddingTop: '12px', borderTop: '1px solid var(--border)', fontSize: '11px', color: 'var(--text-secondary)' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <MapPin size={12} color="var(--brand-800)" />
-                {item.room}
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <UserCheck size={12} color="var(--success)" />
+            <div style={{ display: 'flex', alignItems: 'center', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--border)', fontSize: '12px', color: 'var(--text-secondary)' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <UserCheck size={13} color="var(--success)" />
                 {item.faculty}
               </span>
             </div>
           </div>
         ))}
       </div>
+        </>
+      )}
     </div>
   );
 }

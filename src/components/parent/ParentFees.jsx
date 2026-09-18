@@ -1,5 +1,5 @@
 import React from 'react';
-import { DollarSign, Calendar, ChevronRight, CheckCircle, Download } from 'lucide-react';
+import { CheckCircle, Download } from 'lucide-react';
 
 export default function ParentFees() {
   return (
@@ -32,21 +32,6 @@ export default function ParentFees() {
         <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--accent-500)', display: 'block', textAlign: 'right', marginTop: '4px' }}>
           60% Paid
         </span>
-      </div>
-
-      {/* Next Due Date Highlight Card */}
-      <div className="card card-hover" style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderLeft: '4px solid var(--warning)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--warning-tint)', color: 'var(--warning)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Calendar size={20} />
-          </div>
-          <div>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Next Due Date</span>
-            <h4 style={{ fontSize: '15px', fontWeight: 800 }}>25 Apr 2025</h4>
-            <span style={{ fontSize: '11px', color: 'var(--danger)', fontWeight: 600 }}>Installment 2: ₹15,000</span>
-          </div>
-        </div>
-        <ChevronRight size={16} color="var(--text-muted)" />
       </div>
 
       {/* Past Receipts */}

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { mockStudyMaterials } from '../../lib/mockData';
-import { Search, FileText, Book, Video, ChevronRight } from 'lucide-react';
+import { Search, FileText, Video, ChevronRight } from 'lucide-react';
 
 export default function StudyMaterial({ onOpenViewer }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All');
 
-  const filters = ['All', 'Notes', 'PDF', 'Video'];
+  const filters = ['All', 'PDF', 'Video'];
 
   const filtered = mockStudyMaterials.filter(m => {
     const matchesFilter = selectedFilter === 'All' || m.type.toLowerCase() === selectedFilter.toLowerCase();
@@ -74,13 +74,13 @@ export default function StudyMaterial({ onOpenViewer }) {
                 width: '40px',
                 height: '40px',
                 borderRadius: '10px',
-                background: mat.type === 'PDF' ? '#fee2e2' : mat.type === 'Notes' ? '#fef3c7' : '#e0e7ff',
-                color: mat.type === 'PDF' ? '#ef4444' : mat.type === 'Notes' ? '#d97706' : '#4f46e5',
+                background: mat.type === 'PDF' ? '#fee2e2' : '#e0e7ff',
+                color: mat.type === 'PDF' ? '#ef4444' : '#4f46e5',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                {mat.type === 'PDF' ? <FileText size={20} /> : mat.type === 'Notes' ? <Book size={20} /> : <Video size={20} />}
+                {mat.type === 'PDF' ? <FileText size={20} /> : <Video size={20} />}
               </div>
               <div>
                 <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{mat.title}</h4>

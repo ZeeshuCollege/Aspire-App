@@ -1,21 +1,64 @@
 import React from 'react';
-import { CheckSquare, PlusCircle, Upload, BookOpen, Clock, ChevronRight, Users } from 'lucide-react';
+import { PlusCircle, Upload, BookOpen, Clock, ChevronRight, Users } from 'lucide-react';
 
 export default function TeacherDashboard({ user, onNavigate, onOpenCreateTest, onOpenUploadMaterial }) {
   return (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '90px' }}>
-      {/* Greeting Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Good Morning,</span>
-          <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--brand-900)' }}>{user.name}</h2>
-          <span style={{ fontSize: '11px', color: 'var(--accent-500)', fontWeight: 600 }}>{user.subject}</span>
+      {/* Greeting Header - Compact Upward Placement with Square Avatar */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '0 0 6px 0'
+      }}>
+        <div style={{ flex: 1, paddingRight: '14px' }}>
+          <span style={{
+            fontSize: 'clamp(15px, 3.8vw, 18px)',
+            color: 'var(--text-muted)',
+            fontWeight: 600,
+            display: 'block',
+            marginBottom: '4px',
+            letterSpacing: '-0.01em'
+          }}>
+            Good Morning,
+          </span>
+          <h1 style={{
+            fontSize: 'clamp(28px, 7vw, 34px)',
+            fontWeight: 900,
+            color: 'var(--brand-900)',
+            letterSpacing: '-0.03em',
+            lineHeight: 1.15,
+            margin: 0
+          }}>
+            {user.name}
+          </h1>
+          <span style={{
+            fontSize: '12px',
+            color: 'var(--accent-500)',
+            fontWeight: 700,
+            display: 'inline-block',
+            marginTop: '4px',
+            background: 'var(--accent-50)',
+            padding: '2px 8px',
+            borderRadius: 'var(--radius-full)'
+          }}>
+            {user.subject}
+          </span>
         </div>
-        <img
-          src={user.avatar}
-          alt={user.name}
-          style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }}
-        />
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <img
+            src={user.avatar}
+            alt={user.name}
+            style={{
+              width: 'clamp(76px, 19vw, 90px)',
+              height: 'clamp(76px, 19vw, 90px)',
+              borderRadius: '16px',
+              objectFit: 'cover',
+              border: '2px solid var(--border)',
+              boxShadow: '0 4px 16px rgba(15, 23, 42, 0.08)'
+            }}
+          />
+        </div>
       </div>
 
       {/* Today's Classes Card (From ASPIRE THEME.png Row 2 Screen 9) */}
@@ -44,33 +87,10 @@ export default function TeacherDashboard({ user, onNavigate, onOpenCreateTest, o
         </div>
       </div>
 
-      {/* 4 Quick Actions (From ASPIRE THEME.png Row 2 Screen 9) */}
+      {/* Quick Actions (From ASPIRE THEME.png Row 2 Screen 9) */}
       <div>
         <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--brand-900)', marginBottom: '12px' }}>Quick Action</h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-          <button
-            onClick={() => onNavigate('attendance')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '16px',
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-lg)',
-              cursor: 'pointer',
-              textAlign: 'left'
-            }}
-          >
-            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
-              <CheckSquare size={20} />
-            </div>
-            <div>
-              <span style={{ fontSize: '13px', fontWeight: 700, display: 'block', color: 'var(--text-primary)' }}>Take Attendance</span>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Roll Call Today</span>
-            </div>
-          </button>
-
           <button
             onClick={onOpenCreateTest}
             style={{
@@ -120,6 +140,7 @@ export default function TeacherDashboard({ user, onNavigate, onOpenCreateTest, o
           <button
             onClick={() => onNavigate('batches')}
             style={{
+              gridColumn: 'span 2',
               display: 'flex',
               alignItems: 'center',
               gap: '12px',

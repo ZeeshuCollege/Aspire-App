@@ -1,7 +1,7 @@
 import React from 'react';
-import { Bell, ShieldCheck, ChevronDown, LogOut } from 'lucide-react';
+import { Bell, ChevronDown } from 'lucide-react';
 
-export default function Header({ currentRole, setRole, user, onOpenLogin, onLogout }) {
+export default function Header({ currentRole, setRole, user, onOpenLogin, onLogout, onOpenNotifications, unreadCount = 0 }) {
   const roles = ['student', 'teacher', 'parent', 'admin'];
 
   return (
@@ -9,7 +9,7 @@ export default function Header({ currentRole, setRole, user, onOpenLogin, onLogo
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '14px 20px',
+      padding: '12px 18px',
       background: 'var(--surface)',
       borderBottom: '1px solid var(--border)',
       position: 'sticky',
@@ -44,7 +44,7 @@ export default function Header({ currentRole, setRole, user, onOpenLogin, onLogo
         </div>
       </div>
 
-      {/* Role Switcher & Profile Actions */}
+      {/* Right Controls: Role Toggle & Enlarged Notifications Bell */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         {/* Dynamic Role Quick Toggle */}
         <div style={{ position: 'relative' }}>
@@ -56,9 +56,9 @@ export default function Header({ currentRole, setRole, user, onOpenLogin, onLogo
               background: 'var(--surface-alt)',
               border: '1px solid var(--border)',
               borderRadius: 'var(--radius-full)',
-              padding: '6px 28px 6px 12px',
+              padding: '7px 28px 7px 12px',
               fontSize: '12px',
-              fontWeight: 600,
+              fontWeight: 700,
               color: 'var(--brand-800)',
               cursor: 'pointer',
               textTransform: 'capitalize'
@@ -71,65 +71,40 @@ export default function Header({ currentRole, setRole, user, onOpenLogin, onLogo
           <ChevronDown size={14} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-secondary)' }} />
         </div>
 
-        {/* Notifications Icon */}
+        {/* 20% Enlarged Notifications Icon shifted to the right */}
         <button
+          onClick={onOpenNotifications}
           style={{
             background: 'var(--surface-alt)',
-            border: 'none',
-            width: '34px',
-            height: '34px',
+            border: '1px solid var(--border)',
+            width: '42px',
+            height: '42px',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            position: 'relative'
+            position: 'relative',
+            boxShadow: 'var(--shadow-sm)',
+            transition: 'all 0.2s ease'
           }}
-          title="Notifications"
+          title={`Notice Board ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
         >
-          <Bell size={16} color="var(--text-secondary)" />
-          <span style={{
-            position: 'absolute',
-            top: '6px',
-            right: '6px',
-            width: '7px',
-            height: '7px',
-            background: 'var(--danger)',
-            borderRadius: '50%'
-          }} />
+          <Bell size={21} color="var(--brand-900)" />
+          {unreadCount > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: '7px',
+              right: '7px',
+              width: '9px',
+              height: '9px',
+              background: 'var(--danger)',
+              borderRadius: '50%',
+              border: '2px solid var(--surface)',
+              animation: 'pulseGlow 2s infinite'
+            }} />
+          )}
         </button>
-
-        {/* User Avatar & Login/Logout */}
-        {user ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <img
-              src={user.avatar}
-              alt={user.name}
-              style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--brand-800)' }}
-            />
-            <button
-              onClick={onLogout}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                color: 'var(--danger)',
-                padding: '4px'
-              }}
-              title="Log Out"
-            >
-              <LogOut size={16} />
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={onOpenLogin}
-            className="btn-primary"
-            style={{ padding: '6px 14px', fontSize: '12px' }}
-          >
-            Sign In
-          </button>
-        )}
       </div>
     </header>
   );

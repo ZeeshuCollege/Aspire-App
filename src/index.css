@@ -258,12 +258,45 @@ button, input, select, textarea {
 .mobile-app-wrapper {
   max-width: 480px;
   margin: 0 auto;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   background: var(--canvas);
   position: relative;
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+/* Hardware-Accelerated Mobile Screen Slider */
+.screen-slider-viewport {
+  width: 100%;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen-slider-track {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
+.screen-slide {
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  flex-shrink: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
 }
 
 .desktop-app-wrapper {
@@ -272,3 +305,114 @@ button, input, select, textarea {
   display: flex;
   background: #f1f5f9;
 }
+
+/* ==========================================================================
+   BOTTOM-TO-TOP POP-UP ANIMATIONS (0.5s DURATION)
+   For any screen / sheet / modal outside the bottom navigation bar
+   ========================================================================== */
+@keyframes slideUpFromBottom {
+  0% {
+    transform: translate3d(0, 100%, 0);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDownToBottom {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 100%, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes backdropFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Fullscreen slide-up screen (e.g. Protected In-App PDF Viewer) */
+.fullscreen-popup-slide-up {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  animation: slideUpFromBottom 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform;
+}
+
+.fullscreen-popup-slide-down {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  animation: slideDownToBottom 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  will-change: transform;
+}
+
+/* Modal Bottom-Up Backdrop */
+.modal-backdrop-05s {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: backdropFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.modal-backdrop-05s.closing {
+  animation: backdropFadeOut 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* Modal Bottom-Up Card Sheet */
+.modal-sheet-05s {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: slideUpFromBottom 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform;
+}
+
+.modal-sheet-05s.closing {
+  animation: slideDownToBottom 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  will-change: transform;
+}
+
+/* Drag Grab Handle indicator */
+.sheet-drag-handle {
+  width: 42px;
+  height: 5px;
+  background: #cbd5e1;
+  border-radius: 9999px;
+  margin: 10px auto 4px auto;
+  cursor: grab;
+}
+
+

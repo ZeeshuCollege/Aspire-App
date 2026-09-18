@@ -17,13 +17,13 @@ export default function TestsView({ onOpenTestPaper }) {
           onClick={() => setTab('upcoming')}
           className={`tab-btn ${tab === 'upcoming' ? 'active' : ''}`}
         >
-          Upcoming
+          Test Papers
         </button>
         <button
           onClick={() => setTab('completed')}
           className={`tab-btn ${tab === 'completed' ? 'active' : ''}`}
         >
-          Completed
+          Marks
         </button>
       </div>
 

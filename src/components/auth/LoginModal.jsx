@@ -20,8 +20,17 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRol
   const [cooldown, setCooldown] = useState(0);
   const [newPassword, setNewPassword] = useState('');
   const [demoOtpHint, setDemoOtpHint] = useState('');
+  const [isClosing, setIsClosing] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 380);
+  };
 
   // Handle Manual Email / Password Login via Supabase
   const handleLogin = async (e) => {
@@ -202,30 +211,15 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRol
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(15, 23, 42, 0.75)',
-      backdropFilter: 'blur(6px)',
-      zIndex: 90,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '16px',
-      animation: 'fadeIn 0.2s ease-out'
-    }}>
-      <div style={{
-        width: '100%',
-        maxWidth: '420px',
-        background: 'var(--surface)',
-        borderRadius: 'var(--radius-2xl)',
-        boxShadow: 'var(--shadow-modal)',
-        overflow: 'hidden',
-        position: 'relative'
-      }}>
+    <div
+      className={`modal-backdrop-05s ${isClosing ? 'closing' : ''}`}
+      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
+    >
+      <div className={`modal-sheet-05s ${isClosing ? 'closing' : ''}`}>
+        <div className="sheet-drag-handle" />
         {/* Modal Close Button */}
         <button
-          onClick={onClose}
+          onClick={handleClose}
           style={{
             position: 'absolute',
             top: '16px',

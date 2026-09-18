@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Calendar, FileText, BarChart2, DollarSign, ChevronRight, AlertCircle } from 'lucide-react';
+import { User, Calendar, BarChart2, DollarSign, ChevronRight } from 'lucide-react';
 
 export default function ParentHome({ user, onNavigate, onOpenTestPaper }) {
   const child = user.linkedChild || {
@@ -12,18 +12,52 @@ export default function ParentHome({ user, onNavigate, onOpenTestPaper }) {
 
   return (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '90px' }}>
-      {/* Parent Greeting */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Hello,</span>
-          <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--brand-900)' }}>{user.name}</h2>
-          <span className="badge badge-info" style={{ marginTop: '2px' }}>Verified Parent</span>
+      {/* Parent Greeting - Compact Upward Placement with Square Avatar */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '0 0 6px 0'
+      }}>
+        <div style={{ flex: 1, paddingRight: '14px' }}>
+          <span style={{
+            fontSize: 'clamp(15px, 3.8vw, 18px)',
+            color: 'var(--text-muted)',
+            fontWeight: 600,
+            display: 'block',
+            marginBottom: '4px',
+            letterSpacing: '-0.01em'
+          }}>
+            Hello,
+          </span>
+          <h1 style={{
+            fontSize: 'clamp(28px, 7vw, 34px)',
+            fontWeight: 900,
+            color: 'var(--brand-900)',
+            letterSpacing: '-0.03em',
+            lineHeight: 1.15,
+            margin: 0
+          }}>
+            {user.name}
+          </h1>
+          <span className="badge badge-info" style={{ marginTop: '6px', display: 'inline-block' }}>
+            Verified Parent
+          </span>
         </div>
-        <img
-          src={user.avatar}
-          alt={user.name}
-          style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }}
-        />
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <img
+            src={user.avatar}
+            alt={user.name}
+            style={{
+              width: 'clamp(76px, 19vw, 90px)',
+              height: 'clamp(76px, 19vw, 90px)',
+              borderRadius: '16px',
+              objectFit: 'cover',
+              border: '2px solid var(--border)',
+              boxShadow: '0 4px 16px rgba(15, 23, 42, 0.08)'
+            }}
+          />
+        </div>
       </div>
 
       {/* Linked Child Card (From ASPIRE THEME.png Row 3 Screen 17) */}
@@ -68,35 +102,11 @@ export default function ParentHome({ user, onNavigate, onOpenTestPaper }) {
         </div>
       </div>
 
-      {/* Upcoming Test Alert Card */}
-      <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--brand-900)' }}>Upcoming Assessment</h4>
-          <span style={{ fontSize: '11px', color: 'var(--accent-500)', fontWeight: 600 }}>Tomorrow</span>
-        </div>
-
-        <div
-          onClick={() => onOpenTestPaper({ title: 'Chemistry Test 02', subtitle: 'Organic Chemistry • 16 Apr 2025' })}
-          className="card card-hover"
-          style={{ padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', borderLeft: '4px solid var(--warning)' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'var(--warning-tint)', color: 'var(--warning)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <FileText size={18} />
-            </div>
-            <div>
-              <h5 style={{ fontSize: '14px', fontWeight: 700 }}>Chemistry Test 02</h5>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>16 Apr 2025 • 90 min</span>
-            </div>
-          </div>
-          <ChevronRight size={16} color="var(--text-muted)" />
-        </div>
-      </div>
 
       {/* Quick Navigation Rows (From Child Profile Screen 18) */}
       <div className="card" style={{ padding: '6px 16px' }}>
         {[
-          { id: 'child', label: 'Attendance Calendar', icon: Calendar, color: '#10b981' },
+          { id: 'child', label: 'Lecture Attendance', icon: Calendar, color: '#10b981' },
           { id: 'performance', label: 'Academic Performance', icon: BarChart2, color: '#0ea5e9' },
           { id: 'fees', label: 'Fee Details & Receipts', icon: DollarSign, color: '#f59e0b' }
         ].map((item, index) => {

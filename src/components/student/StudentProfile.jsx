@@ -1,11 +1,48 @@
-import React from 'react';
-import { User, Lock, Bell, HelpCircle, LogOut, ChevronRight, Award, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { User, Lock, HelpCircle, LogOut, ChevronRight, Award, ShieldCheck, Camera } from 'lucide-react';
+import PersonalDetailsModal from './PersonalDetailsModal';
+import ManagePasswordModal from './ManagePasswordModal';
+import ChangeAvatarModal from '../common/ChangeAvatarModal';
 
-export default function StudentProfile({ user, onLogout }) {
+export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdateUser }) {
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isManagePasswordOpen, setIsManagePasswordOpen] = useState(false);
+  const [isChangeAvatarOpen, setIsChangeAvatarOpen] = useState(false);
+
+  const isTeacher = user?.role === 'teacher';
+  const isParent = user?.role === 'parent';
+  const isAdmin = user?.role === 'admin';
+
+  // Dynamic Subtitle
+  const subtitle = isTeacher
+    ? (user.subject || user.subjects || 'Physics Faculty')
+    : isParent
+    ? `Parent of ${user.linkedChild?.name || 'Rohan Sharma'}`
+    : isAdmin
+    ? 'System Administrator'
+    : (user.course || 'Std. 12 • Science • JEE');
+
+  // Dynamic Verification Badge
+  const roleBadgeLabel = isTeacher
+    ? 'Verified ASPIRE Teacher'
+    : isParent
+    ? 'Verified ASPIRE Parent'
+    : isAdmin
+    ? 'Verified ASPIRE Admin'
+    : 'Verified ASPIRE Student';
+
+  // Dynamic Personal Details Badge
+  const personalDetailsBadge = isTeacher
+    ? (user.employeeId || 'ID #018')
+    : isParent
+    ? 'Parent ID'
+    : isAdmin
+    ? 'Admin ID'
+    : (user.rollNumber ? `#${user.rollNumber.split('-').pop()}` : 'Roll #104');
+
   const menuItems = [
-    { icon: User, label: 'Personal Details', badge: 'Roll #104' },
-    { icon: Lock, label: 'Change Password', badge: null },
-    { icon: Bell, label: 'Notifications', badge: 'On' },
+    { icon: User, label: 'Personal Details', badge: personalDetailsBadge },
+    { icon: Lock, label: 'Manage Password', badge: null },
     { icon: HelpCircle, label: 'Help & Support', badge: null }
   ];
 
@@ -15,17 +52,46 @@ export default function StudentProfile({ user, onLogout }) {
 
       {/* User Card */}
       <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px' }}>
-        <img
-          src={user.avatar}
-          alt={user.name}
-          style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--border)' }}
-        />
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <img
+            src={user.avatar}
+            alt={user.name}
+            onClick={() => setIsChangeAvatarOpen(true)}
+            style={{ width: '64px', height: '64px', borderRadius: '16px', objectFit: 'cover', border: '2px solid var(--border)', cursor: 'pointer' }}
+            title="Click to change profile picture"
+          />
+          <button
+            type="button"
+            onClick={() => setIsChangeAvatarOpen(true)}
+            aria-label="Change profile picture"
+            style={{
+              position: 'absolute',
+              bottom: '-4px',
+              right: '-4px',
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, var(--brand-800) 0%, var(--brand-600) 100%)',
+              border: '2px solid #ffffff',
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(30, 58, 138, 0.3)',
+              transition: 'transform 0.15s ease'
+            }}
+            title="Change Profile Picture"
+          >
+            <Camera size={12} strokeWidth={2.5} />
+          </button>
+        </div>
         <div>
           <h4 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--brand-900)' }}>{user.name}</h4>
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{user.course}</p>
-          <span className="badge badge-success" style={{ marginTop: '6px' }}>
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>{subtitle}</p>
+          <span className="badge badge-success" style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
             <ShieldCheck size={12} />
-            Verified ASPIRE Student
+            {roleBadgeLabel}
           </span>
         </div>
       </div>
@@ -37,13 +103,21 @@ export default function StudentProfile({ user, onLogout }) {
           return (
             <div
               key={item.label}
+              onClick={() => {
+                if (item.label === 'Personal Details') {
+                  setIsDetailsOpen(true);
+                } else if (item.label === 'Manage Password') {
+                  setIsManagePasswordOpen(true);
+                }
+              }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '14px 0',
                 borderBottom: index < menuItems.length - 1 ? '1px solid var(--border)' : 'none',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'background 0.15s ease'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -60,6 +134,29 @@ export default function StudentProfile({ user, onLogout }) {
           );
         })}
       </div>
+
+      {/* Personal Details Modal (0.5s Bottom-to-Top Pop-up) */}
+      <PersonalDetailsModal
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        user={user}
+        onSaveUser={onUpdateUser}
+      />
+
+      {/* Manage Password Modal (0.5s Bottom-to-Top Pop-up) */}
+      <ManagePasswordModal
+        isOpen={isManagePasswordOpen}
+        onClose={() => setIsManagePasswordOpen(false)}
+        user={user}
+      />
+
+      {/* Change Avatar Modal (0.5s Bottom-to-Top Pop-up, Camera & Media Access) */}
+      <ChangeAvatarModal
+        isOpen={isChangeAvatarOpen}
+        onClose={() => setIsChangeAvatarOpen(false)}
+        currentAvatar={user.avatar}
+        onSaveAvatar={onUpdateAvatar}
+      />
 
       {/* Log Out Button */}
       <button
