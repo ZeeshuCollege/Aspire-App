@@ -26,6 +26,16 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRol
   const [newPassword, setNewPassword] = useState('');
   const [demoOtpHint, setDemoOtpHint] = useState('');
   const [isClosing, setIsClosing] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutSeconds, setLockoutSeconds] = useState(0);
+
+  useEffect(() => {
+    if (lockoutSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setLockoutSeconds(prev => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [lockoutSeconds]);
 
   if (!isOpen) return null;
 
@@ -44,6 +54,11 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRol
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (lockoutSeconds > 0) {
+      setError(`Account temporarily locked. Please wait ${lockoutSeconds} seconds before trying again.`);
+      return;
+    }
 
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanPass = (password || '').trim();
@@ -111,10 +126,24 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRol
       if (!authUser) {
         setIsVerifying(false);
         setLoading(false);
-        setError('Email or password not found. If you were recently enrolled, please ask your Admin to re-add your account.');
+        setFailedAttempts(prev => {
+          const next = prev + 1;
+          if (next >= 5) {
+            setLockoutSeconds(30);
+            console.warn(`[SECURITY AUDIT] Rate limit triggered: 5 failed login attempts for ${cleanEmail}`);
+            setError('Too many failed attempts. Account locked for 30 seconds.');
+            return 0;
+          }
+          console.warn(`[SECURITY AUDIT] Failed login attempt ${next}/5 for ${cleanEmail}`);
+          setError(`Invalid email or password. (${5 - next} attempts remaining)`);
+          return next;
+        });
         return;
       }
 
+      setFailedAttempts(0);
+      setLockoutSeconds(0);
+      console.info(`[SECURITY AUDIT] Successful login for ${authUser.role}: ${authUser.email}`);
       setIsVerifying(false);
       setLoading(false);
       onLoginSuccess(authUser);
@@ -457,11 +486,11 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRol
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || lockoutSeconds > 0}
                   className="btn-primary"
-                  style={{ width: '100%', marginTop: '6px', opacity: loading ? 0.7 : 1 }}
+                  style={{ width: '100%', marginTop: '6px', opacity: (loading || lockoutSeconds > 0) ? 0.7 : 1 }}
                 >
-                  {loading ? 'Authenticating...' : 'Login'}
+                  {lockoutSeconds > 0 ? `Locked (${lockoutSeconds}s)` : loading ? 'Authenticating...' : 'Login'}
                 </button>
               </form>
 

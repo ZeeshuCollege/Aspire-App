@@ -157,6 +157,14 @@ export default function ChangeAvatarModal({ isOpen, onClose, currentAvatar, onSa
       return;
     }
 
+    // Security Rule: Limit request/file size to 5MB maximum
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+    if (file.size > MAX_FILE_SIZE) {
+      setCameraError('File size exceeds the 5MB limit. Please upload a smaller image.');
+      e.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       setPreviewImage(reader.result);

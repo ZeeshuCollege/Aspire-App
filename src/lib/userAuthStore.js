@@ -23,6 +23,13 @@ const getUserMap = () => {
 const saveCredMap = (m) => { try { localStorage.setItem(CREDS_KEY, JSON.stringify(m)); } catch {} };
 const saveUserMap = (m) => { try { localStorage.setItem(USERS_KEY, JSON.stringify(m)); } catch {} };
 
+// ----- Security Sanitizer -----
+// Strips executable tags and control characters (#13 Sanitize before storing)
+const sanitizeText = (str) => {
+  if (typeof str !== 'string') return '';
+  return str.replace(/<[^>]*>?/gm, '').trim();
+};
+
 // ----- Public API -----
 
 /**
@@ -30,23 +37,23 @@ const saveUserMap = (m) => { try { localStorage.setItem(USERS_KEY, JSON.stringif
  * Saves locally immediately. Also creates in Supabase (no email sent).
  */
 export const addRegisteredUser = async (user) => {
-  const cleanEmail = (user.email || '').trim().toLowerCase();
+  const cleanEmail = sanitizeText(user.email || '').toLowerCase();
   const cleanPassword = (user.password || '').trim();
   if (!cleanEmail || !cleanPassword) return null;
 
   const record = {
     id: user.id || `usr-${Date.now()}`,
-    name: (user.name || 'ASPIRE User').trim(),
+    name: sanitizeText(user.name || 'ASPIRE User'),
     email: cleanEmail,
     password: cleanPassword,
     role: user.role || 'student',
-    course: user.course || '12th Science',
-    rollNumber: user.rollNumber || `ASPIRE-${Date.now().toString().slice(-4)}`,
-    phone: (user.phone || '').trim(),
-    bloodGroup: (user.bloodGroup || '').trim(),
+    course: sanitizeText(user.course || '12th Science'),
+    rollNumber: sanitizeText(user.rollNumber || `ASPIRE-${Date.now().toString().slice(-4)}`),
+    phone: sanitizeText(user.phone || ''),
+    bloodGroup: sanitizeText(user.bloodGroup || ''),
     batches: user.batches || [],
     subjects: user.subjects || [],
-    linkedChildName: (user.linkedChildName || '').trim(),
+    linkedChildName: sanitizeText(user.linkedChildName || ''),
     status: 'Active',
     createdAt: new Date().toISOString()
   };
