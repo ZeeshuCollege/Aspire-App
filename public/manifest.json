@@ -1,0 +1,18 @@
+{
+  "name": "ASPIRE Learning Centre",
+  "short_name": "Aspire",
+  "description": "Closed digital management ecosystem for ASPIRE Learning Centre",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
