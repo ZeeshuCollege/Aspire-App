@@ -1,19 +1,30 @@
 import React, { useState } from 'react';
-import { mockAdminStats, mockStudentsList, mockTeachersList, mockBatches, mockParentsList } from '../../lib/mockData';
+import { mockAdminStats, mockTeachersList, mockBatches } from '../../lib/mockData';
+import {
+  getStoredStudents, saveStoredStudents,
+  getStoredParents, saveStoredParents,
+  addRegisteredUser
+} from '../../lib/userAuthStore';
 import {
   LayoutDashboard, Users, UserCheck, BookOpen, CheckSquare,
-  FileText, DollarSign, BarChart2, Settings, Download, Plus, Search, ShieldCheck, Phone
+  FileText, DollarSign, BarChart2, Settings, Download, Plus, Search, ShieldCheck, Phone, FileCheck, Award
 } from 'lucide-react';
+import AdminStudyMaterialsModal, { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
+import AdminTestsModal from './AdminTestsModal';
+import AdminMarksModal from './AdminMarksModal';
 
 export default function AdminDashboard({ user, onLogout }) {
   const [activeMenu, setActiveMenu] = useState('dashboard');
-  const [students, setStudents] = useState(mockStudentsList);
-  const [parents, setParents] = useState(mockParentsList);
+  const [students, setStudents] = useState(getStoredStudents);
+  const [parents, setParents] = useState(getStoredParents);
   const [searchTerm, setSearchTerm] = useState('');
   const [parentSearchTerm, setParentSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showMarksModal, setShowMarksModal] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
-  const [newStudentCourse, setNewStudentCourse] = useState('Std. 12 • JEE');
+  const [newStudentEmail, setNewStudentEmail] = useState('');
+  const [newStudentPassword, setNewStudentPassword] = useState('student@123');
+  const [newStudentCourse, setNewStudentCourse] = useState('12th Science');
   const [showAddParentModal, setShowAddParentModal] = useState(false);
   const [newParentName, setNewParentName] = useState('');
   const [newParentPhone, setNewParentPhone] = useState('');
@@ -21,7 +32,10 @@ export default function AdminDashboard({ user, onLogout }) {
   const [newParentChildName, setNewParentChildName] = useState('');
   const [newParentChildEmail, setNewParentChildEmail] = useState('');
   const [newParentChildRoll, setNewParentChildRoll] = useState('');
-  const [newParentChildCourse, setNewParentChildCourse] = useState('Std. 12 • Science • JEE');
+  const [newParentChildCourse, setNewParentChildCourse] = useState('12th Science');
+  const [selectedStudentIdForParent, setSelectedStudentIdForParent] = useState('');
+  const [showMaterialsModal, setShowMaterialsModal] = useState(false);
+  const [showTestsModal, setShowTestsModal] = useState(false);
   const [exportFeedback, setExportFeedback] = useState('');
 
   const menuItems = [
@@ -29,9 +43,10 @@ export default function AdminDashboard({ user, onLogout }) {
     { id: 'students', label: 'Students', icon: Users },
     { id: 'parents', label: 'Parents', icon: UserCheck },
     { id: 'teachers', label: 'Teachers', icon: UserCheck },
+    { id: 'materials', label: 'Study Materials', icon: BookOpen },
+    { id: 'tests', label: 'Tests & Exams', icon: FileCheck },
     { id: 'courses', label: 'Courses & Batches', icon: BookOpen },
     { id: 'attendance', label: 'Attendance', icon: CheckSquare },
-    { id: 'tests', label: 'Tests', icon: FileText },
     { id: 'fees', label: 'Fees', icon: DollarSign },
     { id: 'reports', label: 'Reports', icon: BarChart2 },
     { id: 'settings', label: 'Settings', icon: Settings }
@@ -47,46 +62,178 @@ export default function AdminDashboard({ user, onLogout }) {
   };
 
   // Add Student Handler
-  const handleAddStudent = (e) => {
+  const handleAddStudent = async (e) => {
     e.preventDefault();
-    if (!newStudentName) return;
+    if (!newStudentName.trim()) return;
+    const cleanName = newStudentName.trim();
+    const cleanEmail = (newStudentEmail.trim() || `${cleanName.toLowerCase().replace(/\s+/g, '')}@gmail.com`).toLowerCase();
+    const cleanPass = newStudentPassword.trim() || 'student@123';
+    const rollNo = (students.length + 101).toString();
+
     const newStd = {
       id: `s-${Date.now()}`,
-      name: newStudentName,
-      roll: (students.length + 101).toString(),
+      name: cleanName,
+      email: cleanEmail,
+      password: cleanPass,
+      roll: rollNo,
+      rollNumber: `ASPIRE-2025-${rollNo}`,
       course: newStudentCourse,
       attendance: 'Present',
       score: '85%',
-      status: 'Active'
+      status: 'Active',
+      phone: '',
+      bloodGroup: ''
     };
-    setStudents([newStd, ...students]);
+    const updated = [newStd, ...students];
+    setStudents(updated);
+    saveStoredStudents(updated);
+
+    await addRegisteredUser({
+      name: cleanName,
+      email: cleanEmail,
+      password: cleanPass,
+      role: 'student',
+      course: newStudentCourse,
+      rollNumber: `ASPIRE-2025-${rollNo}`,
+      phone: '',
+      bloodGroup: ''
+    });
+
     setNewStudentName('');
+    setNewStudentEmail('');
+    setNewStudentPassword('student@123');
     setShowAddModal(false);
   };
 
-  // Add Parent Handler
+  // Select student to auto-fill details in Add Parent modal
+  const handleSelectStudentForParent = (studentId) => {
+    setSelectedStudentIdForParent(studentId);
+    if (!studentId || studentId === 'custom') {
+      return;
+    }
+    const found = students.find(s => s.id === studentId);
+    if (found) {
+      setNewParentChildName(found.name || '');
+      setNewParentChildRoll(found.roll || '');
+      setNewParentChildEmail(found.email || `${(found.name || 'student').toLowerCase().replace(/\s+/g, '')}@aspire.edu`);
+      setNewParentChildCourse(found.course || '12th Science');
+    }
+  };
+
+  // Add Parent Handler with Bidirectional Student Linkage
   const handleAddParent = (e) => {
     e.preventDefault();
     if (!newParentName || !newParentPhone) return;
+
+    // Prevent duplicate entry by phone or email
+    const cleanPhoneDigits = newParentPhone.replace(/\D/g, '');
+    const cleanEmail = (newParentEmail || '').trim().toLowerCase();
+    const isDuplicate = parents.some(p => {
+      const pPhoneDigits = (p.phone || '').replace(/\D/g, '');
+      const pEmail = (p.email || '').trim().toLowerCase();
+      if (cleanPhoneDigits && pPhoneDigits === cleanPhoneDigits) return true;
+      if (cleanEmail && pEmail && pEmail === cleanEmail) return true;
+      return false;
+    });
+
+    if (isDuplicate) {
+      setExportFeedback('⚠️ A parent with this phone or email is already registered.');
+      setTimeout(() => setExportFeedback(''), 3000);
+      setShowAddParentModal(false);
+      return;
+    }
+
+    const childName = newParentChildName.trim() || 'Student';
+    const childRoll = newParentChildRoll.trim() || (students.length + 101).toString();
+    const childEmail = newParentChildEmail.trim() || `${childName.toLowerCase().replace(/\s+/g, '')}@aspire.edu`;
+    const childCourse = newParentChildCourse.trim() || '12th Science';
+
+    // Find matching enrolled student
+    const matchedStudent = students.find(s =>
+      (selectedStudentIdForParent && selectedStudentIdForParent !== 'custom' && s.id === selectedStudentIdForParent) ||
+      (s.roll && s.roll === childRoll) ||
+      (s.name.toLowerCase() === childName.toLowerCase())
+    );
+
+    const parentId = `par-${Date.now()}`;
+    const studentId = matchedStudent ? matchedStudent.id : `s-${Date.now()}`;
+
     const newPar = {
-      id: `par-${Date.now()}`,
+      id: parentId,
       name: newParentName.trim(),
       phone: newParentPhone.trim(),
       email: newParentEmail.trim() || `${newParentName.toLowerCase().replace(/\s+/g, '')}@gmail.com`,
-      linkedChildName: newParentChildName.trim() || 'Aryan Gupta',
-      linkedChildEmail: newParentChildEmail.trim() || `${(newParentChildName || 'student').toLowerCase().replace(/\s+/g, '')}@aspire.edu`,
-      linkedChildRoll: newParentChildRoll.trim() || '106',
-      linkedChildCourse: newParentChildCourse.trim(),
+      studentId: studentId,
+      linkedChildId: studentId,
+      linkedChildName: childName,
+      linkedChildEmail: childEmail,
+      linkedChildRoll: childRoll,
+      linkedChildCourse: childCourse,
       status: 'Active'
     };
-    setParents([newPar, ...parents]);
+
+    // 1. Update parents directory state and persist
+    const updatedParents = [newPar, ...parents];
+    const saved = saveStoredParents(updatedParents);
+    setParents(saved || updatedParents);
+
+    if (newPar.email) {
+      addRegisteredUser({
+        name: newPar.name,
+        email: newPar.email,
+        password: newPar.phone || 'parent@123',
+        role: 'parent',
+        phone: newPar.phone,
+        linkedChildName: childName
+      });
+    }
+
+    // 2. Connect parent details to student in students state
+    if (matchedStudent) {
+      setStudents(prev => prev.map(s => {
+        if (s.id === matchedStudent.id) {
+          return {
+            ...s,
+            parentName: newParentName.trim(),
+            parentPhone: newParentPhone.trim(),
+            parentEmail: newParentEmail.trim(),
+            parentId: parentId,
+            parentStatus: 'Linked'
+          };
+        }
+        return s;
+      }));
+    } else {
+      // If student was newly entered, add to students list with linked parent details
+      const newStd = {
+        id: studentId,
+        name: childName,
+        roll: childRoll,
+        course: childCourse,
+        email: childEmail,
+        attendance: 'Present',
+        score: '85%',
+        status: 'Active',
+        parentName: newParentName.trim(),
+        parentPhone: newParentPhone.trim(),
+        parentEmail: newParentEmail.trim(),
+        parentId: parentId,
+        parentStatus: 'Linked'
+      };
+      setStudents(prev => [newStd, ...prev]);
+    }
+
     setNewParentName('');
     setNewParentPhone('');
     setNewParentEmail('');
     setNewParentChildName('');
     setNewParentChildEmail('');
     setNewParentChildRoll('');
+    setSelectedStudentIdForParent('');
     setShowAddParentModal(false);
+
+    setExportFeedback(`✓ Parent "${newParentName.trim()}" successfully linked to student "${childName}" (Roll #${childRoll})!`);
+    setTimeout(() => setExportFeedback(''), 4500);
   };
 
   return (
@@ -102,9 +249,11 @@ export default function AdminDashboard({ user, onLogout }) {
       }}>
         {/* Brand Header */}
         <div style={{ padding: '24px 20px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #1e3a8a, #0ea5e9)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '18px' }}>
-            ▲
-          </div>
+          <img
+            src="/logo.png"
+            alt="ASPIRE Logo"
+            style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'contain' }}
+          />
           <div>
             <h3 style={{ fontSize: '16px', fontWeight: 800, letterSpacing: '0.02em', color: '#ffffff' }}>ASPIRE</h3>
             <span style={{ fontSize: '10px', color: 'var(--accent-400)', fontWeight: 600 }}>ADMIN DESK</span>
@@ -119,7 +268,17 @@ export default function AdminDashboard({ user, onLogout }) {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveMenu(item.id)}
+                onClick={() => {
+                  if (item.id === 'materials') {
+                    setShowMaterialsModal(true);
+                    return;
+                  }
+                  if (item.id === 'tests') {
+                    setShowTestsModal(true);
+                    return;
+                  }
+                  setActiveMenu(item.id);
+                }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -201,6 +360,113 @@ export default function AdminDashboard({ user, onLogout }) {
                   <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{stat.change}</span>
                 </div>
               ))}
+            </div>
+
+            {/* Academic Quick Actions: Study Materials & Tests */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--brand-900)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Academic Quick Actions
+                </span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Direct Access to Content & Examinations</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                <div
+                  className="card"
+                  onClick={() => setShowMaterialsModal(true)}
+                  style={{
+                    padding: '16px 20px',
+                    cursor: 'pointer',
+                    background: 'linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%)',
+                    border: '1.5px solid #bae6fd',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <BookOpen size={24} />
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--brand-900)', margin: '0 0 2px 0' }}>
+                        Study Materials
+                      </h4>
+                      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
+                        Notes & lectures
+                      </p>
+                    </div>
+                  </div>
+                  <span className="btn-primary" style={{ padding: '6px 14px', fontSize: '12px' }}>
+                    Open →
+                  </span>
+                </div>
+
+                <div
+                  className="card"
+                  onClick={() => setShowTestsModal(true)}
+                  style={{
+                    padding: '16px 20px',
+                    cursor: 'pointer',
+                    background: 'linear-gradient(135deg, #fef2f2 0%, #ffffff 100%)',
+                    border: '1.5px solid #fecaca',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#fee2e2', color: '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <FileCheck size={24} />
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--brand-900)', margin: '0 0 2px 0' }}>
+                        Tests & Exams
+                      </h4>
+                      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
+                        Papers & schedule
+                      </p>
+                    </div>
+                  </div>
+                  <span className="btn-primary" style={{ padding: '6px 14px', fontSize: '12px', background: 'var(--brand-900)' }}>
+                    Open →
+                  </span>
+                </div>
+
+                <div
+                  className="card"
+                  onClick={() => setShowMarksModal(true)}
+                  style={{
+                    padding: '16px 20px',
+                    cursor: 'pointer',
+                    background: 'linear-gradient(135deg, #fffbeb 0%, #ffffff 100%)',
+                    border: '1.5px solid #fde68a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Award size={24} />
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--brand-900)', margin: '0 0 2px 0' }}>
+                        Marks Entry
+                      </h4>
+                      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
+                        Upload test scores
+                      </p>
+                    </div>
+                  </div>
+                  <span className="btn-primary" style={{ padding: '6px 14px', fontSize: '12px', background: '#d97706' }}>
+                    Marks →
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* 2 Analytics Charts (Attendance Area Chart & Fee Collection Bar Chart) */}
@@ -311,17 +577,30 @@ export default function AdminDashboard({ user, onLogout }) {
                   <th style={{ padding: '10px' }}>Roll #</th>
                   <th style={{ padding: '10px' }}>Student Name</th>
                   <th style={{ padding: '10px' }}>Enrolled Course</th>
+                  <th style={{ padding: '10px' }}>Parent / Guardian</th>
                   <th style={{ padding: '10px' }}>Today Attendance</th>
                   <th style={{ padding: '10px' }}>Average Score</th>
                   <th style={{ padding: '10px' }}>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {students.map(std => (
+                {students
+                  .filter(std => std.name.toLowerCase().includes(searchTerm.toLowerCase()) || (std.roll && std.roll.includes(searchTerm)))
+                  .map(std => (
                   <tr key={std.id} style={{ borderBottom: '1px solid var(--border)' }}>
                     <td style={{ padding: '12px 10px', fontWeight: 700 }}>{std.roll}</td>
                     <td style={{ padding: '12px 10px', fontWeight: 600 }}>{std.name}</td>
                     <td style={{ padding: '12px 10px', color: 'var(--text-secondary)' }}>{std.course}</td>
+                    <td style={{ padding: '12px 10px' }}>
+                      {std.parentName ? (
+                        <div>
+                          <span style={{ fontWeight: 600, color: 'var(--brand-900)', display: 'block' }}>{std.parentName}</span>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{std.parentPhone || 'Linked'}</span>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>Not Linked</span>
+                      )}
+                    </td>
                     <td style={{ padding: '12px 10px' }}>
                       <span className={`badge ${std.attendance === 'Present' ? 'badge-success' : 'badge-danger'}`}>
                         {std.attendance}
@@ -459,7 +738,7 @@ export default function AdminDashboard({ user, onLogout }) {
               <h4 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '16px' }}>Add New Student</h4>
               <form onSubmit={handleAddStudent} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Full Name</label>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Full Name *</label>
                   <input
                     type="text"
                     required
@@ -470,16 +749,37 @@ export default function AdminDashboard({ user, onLogout }) {
                   />
                 </div>
                 <div>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Email ID *</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="student@example.com"
+                    value={newStudentEmail}
+                    onChange={e => setNewStudentEmail(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Password *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Set login password (e.g. student@123)"
+                    value={newStudentPassword}
+                    onChange={e => setNewStudentPassword(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px' }}
+                  />
+                </div>
+                <div>
                   <label style={{ fontSize: '12px', fontWeight: 600 }}>Enrolled Stream</label>
                   <select
                     value={newStudentCourse}
                     onChange={e => setNewStudentCourse(e.target.value)}
                     style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px' }}
                   >
-                    <option value="Std. 12 • JEE">Std. 12 • JEE Main + Adv</option>
-                    <option value="Std. 12 • NEET">Std. 12 • NEET Medical</option>
-                    <option value="Std. 11 • Science">Std. 11 • Science</option>
-                    <option value="Std. 10 • Foundation">Std. 10 • Foundation</option>
+                    {COURSE_OPTIONS.map(course => (
+                      <option key={course} value={course}>{course}</option>
+                    ))}
                   </select>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
@@ -535,6 +835,34 @@ export default function AdminDashboard({ user, onLogout }) {
                     style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px' }}
                   />
                 </div>
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px', marginTop: '4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--brand-800)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Linked Student Connection
+                    </span>
+                    {selectedStudentIdForParent && selectedStudentIdForParent !== 'custom' && (
+                      <span className="badge badge-success" style={{ fontSize: '10px' }}>✓ Enrolled Student Linked</span>
+                    )}
+                  </div>
+
+                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                    Choose Enrolled Student to Auto-Fill & Link
+                  </label>
+                  <select
+                    value={selectedStudentIdForParent}
+                    onChange={e => handleSelectStudentForParent(e.target.value)}
+                    style={{ width: '100%', padding: '9px 10px', borderRadius: '8px', border: '1.5px solid var(--brand-500)', marginTop: '4px', background: '#f0f9ff', fontWeight: 600, fontSize: '12.5px', color: 'var(--brand-900)' }}
+                  >
+                    <option value="">-- Select Enrolled Student (Auto-fills details) --</option>
+                    {students.map(std => (
+                      <option key={std.id} value={std.id}>
+                        {std.name} (Roll #{std.roll} • {std.course})
+                      </option>
+                    ))}
+                    <option value="custom">+ Enter New Student Manually</option>
+                  </select>
+                </div>
+
                 <div>
                   <label style={{ fontSize: '12px', fontWeight: 600 }}>Linked Student Name *</label>
                   <input
@@ -542,7 +870,12 @@ export default function AdminDashboard({ user, onLogout }) {
                     required
                     placeholder="e.g. Aryan Gupta"
                     value={newParentChildName}
-                    onChange={e => setNewParentChildName(e.target.value)}
+                    onChange={e => {
+                      setNewParentChildName(e.target.value);
+                      if (selectedStudentIdForParent && selectedStudentIdForParent !== 'custom') {
+                        setSelectedStudentIdForParent('custom');
+                      }
+                    }}
                     style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px' }}
                   />
                 </div>
@@ -573,10 +906,9 @@ export default function AdminDashboard({ user, onLogout }) {
                     onChange={e => setNewParentChildCourse(e.target.value)}
                     style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px' }}
                   >
-                    <option value="Std. 12 • Science • JEE">Std. 12 • Science • JEE</option>
-                    <option value="Std. 12 • Science • NEET">Std. 12 • Science • NEET</option>
-                    <option value="Std. 11 • Science • JEE">Std. 11 • Science • JEE</option>
-                    <option value="Std. 10 • Foundation">Std. 10 • Foundation</option>
+                    {COURSE_OPTIONS.map(course => (
+                      <option key={course} value={course}>{course}</option>
+                    ))}
                   </select>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
@@ -592,6 +924,24 @@ export default function AdminDashboard({ user, onLogout }) {
           </div>
         )}
       </main>
+
+      {/* ── Study Materials Modal ── */}
+      <AdminStudyMaterialsModal
+        isOpen={showMaterialsModal}
+        onClose={() => setShowMaterialsModal(false)}
+      />
+
+      {/* ── Tests & Exams Modal ── */}
+      <AdminTestsModal
+        isOpen={showTestsModal}
+        onClose={() => setShowTestsModal(false)}
+      />
+
+      {/* ── Marks Management & Upload Modal ── */}
+      <AdminMarksModal
+        isOpen={showMarksModal}
+        onClose={() => setShowMarksModal(false)}
+      />
     </div>
   );
 }

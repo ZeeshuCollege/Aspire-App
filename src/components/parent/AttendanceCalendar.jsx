@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle2, XCircle, Check, X, Calendar, 
   Clock, BookOpen, User, Sparkles, Filter, Info 
 } from 'lucide-react';
+import { getStudentTodayAttendance } from '../../lib/attendanceService';
 
 export const mock30Lectures = [
   { id: 1, number: 1, subject: 'Physics', topic: 'Vectors & Kinematics', date: '01 Mar 2025', time: '10:00 AM', faculty: 'Ms. Priya Shah', status: 'Present' },
@@ -39,13 +40,43 @@ export const mock30Lectures = [
 
 export default function AttendanceCalendar() {
   const [filter, setFilter] = useState('all'); // 'all' | 'present' | 'absent'
-  const [selectedLecture, setSelectedLecture] = useState(mock30Lectures[29]); // Default to latest lecture #30
+  const [allLectures, setAllLectures] = useState(mock30Lectures);
+  const [selectedLecture, setSelectedLecture] = useState(mock30Lectures[29]);
 
-  const presentCount = mock30Lectures.filter(l => l.status === 'Present').length;
-  const absentCount = mock30Lectures.length - presentCount;
-  const attendanceRate = Math.round((presentCount / mock30Lectures.length) * 100);
+  // Sync today's attendance if marked by teacher
+  useEffect(() => {
+    const checkTodayRecord = () => {
+      const todayRecord = getStudentTodayAttendance('1');
+      if (todayRecord) {
+        const todayItem = {
+          id: 999,
+          number: 31,
+          subject: todayRecord.subject || 'Physics',
+          topic: "Today's Lecture (Live)",
+          date: 'Today',
+          time: todayRecord.time || '10:00 AM',
+          faculty: todayRecord.teacher_name || 'Ms. Priya Shah',
+          status: todayRecord.status
+        };
+        setAllLectures(prev => {
+          const withoutToday = prev.filter(l => l.id !== 999);
+          return [...withoutToday, todayItem];
+        });
+        setSelectedLecture(todayItem);
+      }
+    };
 
-  const displayedLectures = mock30Lectures.filter(l => {
+    checkTodayRecord();
+    const handleUpdate = () => checkTodayRecord();
+    window.addEventListener('aspire:attendance-updated', handleUpdate);
+    return () => window.removeEventListener('aspire:attendance-updated', handleUpdate);
+  }, []);
+
+  const presentCount = allLectures.filter(l => l.status === 'Present').length;
+  const absentCount = allLectures.length - presentCount;
+  const attendanceRate = Math.round((presentCount / allLectures.length) * 100);
+
+  const displayedLectures = allLectures.filter(l => {
     if (filter === 'present') return l.status === 'Present';
     if (filter === 'absent') return l.status === 'Absent';
     return true;
@@ -358,7 +389,7 @@ export default function AttendanceCalendar() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <BookOpen size={13} color="#8b5cf6" />
-              <span>Std. 12 JEE Batch</span>
+              <span>JEE (Mains + Adv) Batch</span>
             </div>
           </div>
         </div>

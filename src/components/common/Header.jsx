@@ -1,9 +1,7 @@
 import React from 'react';
-import { Bell, ChevronDown } from 'lucide-react';
+import { Bell } from 'lucide-react';
 
-export default function Header({ currentRole, setRole, user, onOpenLogin, onLogout, onOpenNotifications, unreadCount = 0 }) {
-  const roles = ['student', 'teacher', 'parent', 'admin'];
-
+export default function Header({ currentRole, user, onOpenLogin, onLogout, onOpenNotifications, unreadCount = 0 }) {
   return (
     <header style={{
       display: 'flex',
@@ -19,21 +17,17 @@ export default function Header({ currentRole, setRole, user, onOpenLogin, onLogo
     }}>
       {/* Brand & Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{
-          width: '36px',
-          height: '36px',
-          background: 'linear-gradient(135deg, var(--brand-800) 0%, var(--accent-500) 100%)',
-          borderRadius: '10px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#ffffff',
-          fontWeight: 800,
-          fontSize: '18px',
-          boxShadow: '0 3px 10px rgba(30, 58, 138, 0.25)'
-        }}>
-          ▲
-        </div>
+        <img
+          src="/logo.png"
+          alt="ASPIRE Logo"
+          style={{
+            width: '38px',
+            height: '38px',
+            borderRadius: '50%',
+            objectFit: 'contain',
+            boxShadow: '0 2px 8px rgba(30, 58, 138, 0.2)'
+          }}
+        />
         <div>
           <h2 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--brand-900)', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
             ASPIRE
@@ -44,32 +38,20 @@ export default function Header({ currentRole, setRole, user, onOpenLogin, onLogo
         </div>
       </div>
 
-      {/* Right Controls: Role Toggle & Enlarged Notifications Bell */}
+      {/* Right Controls: Role Badge & Notifications Bell */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* Dynamic Role Quick Toggle */}
-        <div style={{ position: 'relative' }}>
-          <select
-            value={currentRole}
-            onChange={(e) => setRole(e.target.value)}
-            style={{
-              appearance: 'none',
-              background: 'var(--surface-alt)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-full)',
-              padding: '7px 28px 7px 12px',
-              fontSize: '12px',
-              fontWeight: 700,
-              color: 'var(--brand-800)',
-              cursor: 'pointer',
-              textTransform: 'capitalize'
-            }}
-          >
-            {roles.map(r => (
-              <option key={r} value={r}>{r.toUpperCase()}</option>
-            ))}
-          </select>
-          <ChevronDown size={14} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-secondary)' }} />
-        </div>
+        <span style={{
+          padding: '6px 14px',
+          borderRadius: '999px',
+          background: 'var(--surface-alt)',
+          border: '1px solid var(--border)',
+          fontSize: '11px',
+          fontWeight: 800,
+          color: 'var(--brand-900)',
+          letterSpacing: '0.04em'
+        }}>
+          {currentRole?.toUpperCase() || 'ADMIN'}
+        </span>
 
         {/* 20% Enlarged Notifications Icon shifted to the right */}
         <button

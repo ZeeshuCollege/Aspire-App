@@ -21,7 +21,7 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
     name: '',
     email: '',
     phone: '',
-    bloodGroup: 'B+',
+    bloodGroup: '',
     course: '',
     rollNumber: '',
     parentName: '',
@@ -36,18 +36,18 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
   useEffect(() => {
     if (user) {
       setFormData({
-        name: user.name || (isTeacher ? 'Ms. Priya Shah' : isParent ? 'Amit Sharma' : 'Rohan Sharma'),
-        email: user.email || (isTeacher ? 'priya.shah@aspirelearning.com' : isParent ? 'amit.sharma@gmail.com' : 'rohan.sharma@gmail.com'),
-        phone: user.phone || (isTeacher ? '+91 98209 87654' : isParent ? '+91 98200 11223' : '+91 98201 23456'),
-        bloodGroup: user.bloodGroup || (isTeacher ? 'O+' : 'B+'),
-        course: user.course || 'Std. 12 • Science • JEE',
-        rollNumber: user.rollNumber || 'ASPIRE-2025-104',
-        parentName: user.parentName || 'Amit Sharma',
-        parentPhone: user.parentPhone || '+91 77385 78685',
+        name: user.name || (isTeacher ? 'Ms. Priya Shah' : isParent ? 'Amit Sharma' : 'Student'),
+        email: user.email || '',
+        phone: user.phone || '',
+        bloodGroup: user.bloodGroup || '',
+        course: user.course || '12th Science',
+        rollNumber: user.rollNumber || (isTeacher ? 'FAC-104' : isParent ? '' : 'ASPIRE-2025-104'),
+        parentName: user.parentName || '',
+        parentPhone: user.parentPhone || '',
         subject: user.subjects || user.subject || 'Physics',
         employeeId: user.employeeId || 'FAC-104',
         linkedChildName: user.linkedChild?.name || 'Rohan Sharma',
-        linkedChildClass: user.linkedChild?.class || 'Std. 12 • Science'
+        linkedChildClass: user.linkedChild?.class || '12th Science'
       });
       setIsEditing(false);
       setSaveSuccess(false);
@@ -117,8 +117,8 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
       // Student cannot change course name and roll number
       updatedUser.course = user?.course || formData.course;
       updatedUser.rollNumber = user?.rollNumber || formData.rollNumber;
-      updatedUser.parentName = formData.parentName.trim();
-      updatedUser.parentPhone = formData.parentPhone.trim();
+      if (user?.parentName) updatedUser.parentName = user.parentName;
+      if (user?.parentPhone) updatedUser.parentPhone = user.parentPhone;
     }
 
     if (onSaveUser) {
@@ -160,9 +160,7 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
         { key: 'email', label: 'Email Id', value: formData.email, icon: Mail, iconColor: '#0ea5e9', iconBg: '#f0f9ff', canCopy: true },
         { key: 'phone', label: 'Phone Number', value: formData.phone, icon: Phone, iconColor: '#10b981', iconBg: '#ecfdf5', canCopy: true },
         { key: 'course', label: 'Course / Stream', value: formData.course, icon: BookOpen, iconColor: '#2563eb', iconBg: '#eff6ff' },
-        { key: 'bloodGroup', label: 'Blood Group', value: formData.bloodGroup, icon: Heart, iconColor: '#ef4444', iconBg: '#fef2f2', isBadge: true },
-        { key: 'parentName', label: "Parent's Name", value: formData.parentName, icon: Users, iconColor: '#d97706', iconBg: '#fffbeb' },
-        { key: 'parentPhone', label: "Parent's Phone Number", value: formData.parentPhone, icon: PhoneCall, iconColor: '#16a34a', iconBg: '#f0fdf4', canCopy: true }
+        { key: 'bloodGroup', label: 'Blood Group', value: formData.bloodGroup, icon: Heart, iconColor: '#ef4444', iconBg: '#fef2f2', isBadge: true }
       ];
     }
 
@@ -384,13 +382,13 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
                               marginTop: '2px',
                               padding: '2px 10px',
                               borderRadius: 'var(--radius-full)',
-                              background: '#fef2f2',
-                              color: '#dc2626',
-                              border: '1px solid #fecaca',
-                              fontSize: '13px',
-                              fontWeight: 800
+                              background: item.value ? '#fef2f2' : 'var(--surface-alt)',
+                              color: item.value ? '#dc2626' : 'var(--text-muted)',
+                              border: item.value ? '1px solid #fecaca' : '1px solid var(--border)',
+                              fontSize: item.value ? '13px' : '12px',
+                              fontWeight: item.value ? 800 : 500
                             }}>
-                              {item.value}
+                              {item.value || 'Not Specified'}
                             </span>
                           ) : (
                             <span style={{
@@ -510,11 +508,12 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
                     Blood Group
                   </label>
                   <select
-                    value={formData.bloodGroup}
+                    value={formData.bloodGroup || ''}
                     onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
                     className="input-field"
                     style={{ width: '100%', padding: '9px 12px', fontSize: '13px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)' }}
                   >
+                    <option value="">Select your blood group</option>
                     {BLOOD_GROUPS.map(bg => (
                       <option key={bg} value={bg}>{bg}</option>
                     ))}
@@ -525,7 +524,7 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
               {/* Role-Specific Fields */}
               <div className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--surface)' }}>
                 <h5 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--brand-900)', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }}>
-                  {isTeacher ? 'Academic & Faculty Details' : isParent ? 'Child & Family Details' : 'Student & Parent Details'}
+                  {isTeacher ? 'Academic & Faculty Details' : isParent ? 'Child & Family Details' : 'Academic & Student Details'}
                 </h5>
 
                 {isTeacher ? (
@@ -645,36 +644,6 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
                         value={formData.rollNumber}
                         className="input-field"
                         style={{ width: '100%', padding: '9px 12px', fontSize: '13px', borderRadius: '8px', border: '1px solid var(--border)', background: '#f1f5f9', color: '#64748b', cursor: 'not-allowed' }}
-                      />
-                    </div>
-
-                    {/* Parent's Name - Editable */}
-                    <div>
-                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                        Parent's Name
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.parentName}
-                        onChange={(e) => setFormData({ ...formData, parentName: e.target.value })}
-                        className="input-field"
-                        style={{ width: '100%', padding: '9px 12px', fontSize: '13px', borderRadius: '8px', border: '1px solid var(--border)' }}
-                        placeholder="Guardian / Parent name"
-                      />
-                    </div>
-
-                    {/* Parent's Phone Number - Editable */}
-                    <div>
-                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                        Parent's Phone Number
-                      </label>
-                      <input
-                        type="tel"
-                        value={formData.parentPhone}
-                        onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })}
-                        className="input-field"
-                        style={{ width: '100%', padding: '9px 12px', fontSize: '13px', borderRadius: '8px', border: '1px solid var(--border)' }}
-                        placeholder="+91 XXXXX XXXXX"
                       />
                     </div>
                   </>

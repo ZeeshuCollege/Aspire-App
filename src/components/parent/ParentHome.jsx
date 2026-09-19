@@ -4,7 +4,7 @@ import { User, Calendar, BarChart2, DollarSign, ChevronRight } from 'lucide-reac
 export default function ParentHome({ user, onNavigate, onOpenTestPaper }) {
   const child = user.linkedChild || {
     name: 'Rohan Sharma',
-    class: 'Std. 12 • Science',
+    class: '12th Science',
     attendance: 92,
     tests: 86,
     performance: 78

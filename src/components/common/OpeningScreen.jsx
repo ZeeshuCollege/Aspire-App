@@ -1,0 +1,226 @@
+import React, { useState, useEffect } from 'react';
+
+export default function OpeningScreen({ isLoggedIn, onOpenLogin, onProceed }) {
+  const [isExiting, setIsExiting] = useState(false);
+
+  // When already logged in, show as opening splash screen with no button and auto-proceed
+  useEffect(() => {
+    if (isLoggedIn) {
+      const timer = setTimeout(() => {
+        handleProceed();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoggedIn]);
+
+  const handleProceed = () => {
+    if (isExiting) return;
+    setIsExiting(true);
+    setTimeout(() => {
+      onProceed();
+    }, 420);
+  };
+
+  return (
+    <div
+      onClick={isLoggedIn ? handleProceed : undefined}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1200,
+        background: '#ffffff',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        overflow: 'hidden',
+        userSelect: 'none',
+        opacity: isExiting ? 0 : 1,
+        transform: isExiting ? 'scale(1.03)' : 'scale(1)',
+        transition: 'opacity 0.42s cubic-bezier(0.4, 0, 0.2, 1), transform 0.42s cubic-bezier(0.4, 0, 0.2, 1)',
+        cursor: isLoggedIn ? 'pointer' : 'default'
+      }}
+    >
+      {/* Soft Pastel Organic Background Blobs matching screenshot */}
+      <div style={{
+        position: 'absolute',
+        top: '-30px',
+        left: '-30px',
+        width: '180px',
+        height: '200px',
+        background: '#fed7aa',
+        opacity: 0.55,
+        borderRadius: '40% 60% 70% 30% / 40% 50% 60% 50%',
+        filter: 'blur(30px)',
+        pointerEvents: 'none'
+      }} />
+
+      <div style={{
+        position: 'absolute',
+        top: '-20px',
+        right: '-30px',
+        width: '190px',
+        height: '210px',
+        background: '#bae6fd',
+        opacity: 0.65,
+        borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%',
+        filter: 'blur(32px)',
+        pointerEvents: 'none'
+      }} />
+
+      <div style={{
+        position: 'absolute',
+        bottom: '80px',
+        left: '-40px',
+        width: '210px',
+        height: '230px',
+        background: '#e0e7ff',
+        opacity: 0.65,
+        borderRadius: '50% 50% 40% 60% / 50% 40% 60% 50%',
+        filter: 'blur(36px)',
+        pointerEvents: 'none'
+      }} />
+
+      <div style={{
+        position: 'absolute',
+        bottom: '120px',
+        right: '-30px',
+        width: '170px',
+        height: '200px',
+        background: '#fecdd3',
+        opacity: 0.55,
+        borderRadius: '40% 60% 50% 50% / 60% 40% 50% 50%',
+        filter: 'blur(32px)',
+        pointerEvents: 'none'
+      }} />
+
+      <div style={{
+        position: 'absolute',
+        bottom: '-20px',
+        left: '15%',
+        right: '15%',
+        height: '110px',
+        background: '#e0f2fe',
+        opacity: 0.6,
+        borderRadius: '50%',
+        filter: 'blur(28px)',
+        pointerEvents: 'none'
+      }} />
+
+      {/* Top spacer / status bar area */}
+      <div style={{ height: '50px', width: '100%', flexShrink: 0 }} />
+
+      {/* Center Branding & Tagline Content */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10,
+        padding: '0 24px',
+        width: '100%',
+        boxSizing: 'border-box'
+      }}>
+        {/* Official ASPIRE 3D Medallion Logo */}
+        <div style={{
+          width: '175px',
+          height: '175px',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          filter: 'drop-shadow(0 14px 28px rgba(15, 46, 90, 0.22))'
+        }}>
+          <img
+            src="/logo.png"
+            alt="ASPIRE Learning Centre"
+            style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              objectFit: 'contain'
+            }}
+          />
+        </div>
+
+        {/* Tagline */}
+        <div style={{ textAlign: 'center', marginTop: '54px' }}>
+          <h2 style={{
+            fontSize: '24px',
+            fontWeight: 800,
+            color: '#1e293b',
+            lineHeight: 1.35,
+            margin: 0,
+            letterSpacing: '-0.01em'
+          }}>
+            Better Learning<br />Bigger Dreams
+          </h2>
+        </div>
+      </div>
+
+      {/* Bottom Area: Shows ONLY Login button if not logged in, NO buttons if already logged in */}
+      <div style={{
+        width: '100%',
+        padding: '0 32px 48px 32px',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10,
+        minHeight: '110px'
+      }}>
+        {!isLoggedIn ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenLogin();
+            }}
+            style={{
+              width: '100%',
+              maxWidth: '300px',
+              padding: '16px 28px',
+              borderRadius: '999px',
+              background: 'linear-gradient(135deg, #0b2545 0%, #133a68 100%)',
+              color: '#ffffff',
+              fontSize: '16px',
+              fontWeight: 700,
+              letterSpacing: '0.02em',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 8px 24px rgba(11, 37, 69, 0.28)',
+              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            onTouchStart={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+            onTouchEnd={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            Login
+          </button>
+        ) : (
+          /* When already logged in, no button is shown - subtle splash hint */
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8px',
+            opacity: 0.7
+          }}>
+            <div style={{
+              width: '24px',
+              height: '4px',
+              borderRadius: '999px',
+              background: '#94a3b8',
+              animation: 'pulse 1.5s infinite'
+            }} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

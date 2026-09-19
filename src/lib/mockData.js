@@ -5,51 +5,6 @@
 export const DEFAULT_GREY_AVATAR = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"><rect width="128" height="128" rx="28" fill="%23e2e8f0"/><circle cx="64" cy="48" r="22" fill="%2394a3b8"/><path d="M26 108c0-20.987 17.013-38 38-38s38 17.013 38 38v4H26v-4z" fill="%2394a3b8"/></svg>`;
 
 export const mockUsers = {
-  student: {
-    id: 'std-104',
-    name: 'Rohan Sharma',
-    role: 'student',
-    course: 'Std. 12 • Science • JEE',
-    rollNumber: 'ASPIRE-2025-104',
-    email: 'rohan.sharma@gmail.com',
-    phone: '+91 98201 23456',
-    bloodGroup: 'B+',
-    parentName: 'Amit Sharma',
-    parentPhone: '+91 77385 78685',
-    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
-    overallAttendance: 89,
-    overallPerformance: 78
-  },
-  teacher: {
-    id: 'tch-018',
-    name: 'Ms. Priya Shah',
-    role: 'teacher',
-    subject: 'Physics',
-    subjects: 'Physics',
-    designation: 'Senior Physics Faculty',
-    department: 'Science & Competitive Exams',
-    employeeId: 'ASPIRE-FAC-018',
-    email: 'priya.shah@aspirelearning.com',
-    phone: '+91 98209 87654',
-    bloodGroup: 'O+',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
-    assignedBatches: ['JEE 12 - A', 'Class 11 - A', 'Class 10 - A']
-  },
-  parent: {
-    id: 'par-052',
-    name: 'Amit Sharma',
-    role: 'parent',
-    email: 'amit.sharma@yahoo.com',
-    phone: '+917738578685',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    linkedChild: {
-      name: 'Rohan Sharma',
-      class: 'Std. 12 • Science',
-      attendance: 92,
-      tests: 86,
-      performance: 78
-    }
-  },
   admin: {
     id: 'adm-001',
     name: 'ASPIRE Admin',
@@ -57,6 +12,51 @@ export const mockUsers = {
     email: 'aspirelearningcentre@outlook.com',
     phone: '+917738578685',
     avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80'
+  },
+  student: {
+    id: 'std-empty',
+    name: 'Student',
+    role: 'student',
+    course: '12th Science',
+    rollNumber: '',
+    email: '',
+    phone: '',
+    bloodGroup: '',
+    parentName: '',
+    parentPhone: '',
+    avatar: DEFAULT_GREY_AVATAR,
+    overallAttendance: 0,
+    overallPerformance: 0
+  },
+  teacher: {
+    id: 'tch-empty',
+    name: 'Teacher',
+    role: 'teacher',
+    subject: '',
+    subjects: '',
+    designation: 'Faculty',
+    department: 'Academics',
+    employeeId: '',
+    email: '',
+    phone: '',
+    bloodGroup: '',
+    avatar: DEFAULT_GREY_AVATAR,
+    assignedBatches: []
+  },
+  parent: {
+    id: 'par-empty',
+    name: 'Parent',
+    role: 'parent',
+    email: '',
+    phone: '',
+    avatar: DEFAULT_GREY_AVATAR,
+    linkedChild: {
+      name: '',
+      class: '',
+      attendance: 0,
+      tests: 0,
+      performance: 0
+    }
   }
 };
 
@@ -70,49 +70,92 @@ export const mockSchedule = [
 export const mockTests = [
   {
     id: 't-01',
-    code: 'Physics Test 01',
-    subject: 'Physics',
-    chapter: 'Mechanics',
-    date: '18 Apr 2025',
-    duration: '90 min',
+    title: 'GATE 2022 General Aptitude Test',
+    code: 'GATE-2022-GA',
+    course: 'JEE (Mains + Adv)',
+    subject: 'Physics (JEE)',
+    chapter: 'Verbal & Numerical Ability',
+    date: '19 Sep 2026',
+    duration: '180 min',
     maxMarks: 100,
+    passingMarks: 35,
+    size: '507 KB',
     status: 'Upcoming',
-    paperUrl: 'mock_physics_test_01.pdf',
-    instructions: '1. All questions are compulsory.\n2. Negative marking: -1 for incorrect MCQ responses.\n3. Calculator is strictly prohibited.'
+    mode: 'Offline Classroom Paper',
+    paperUrl: 'https://drive.google.com/file/d/1fRm5DBtyZYxEYMpTtQ2ujCBvME4zz749/preview',
+    attachmentUrl: 'https://drive.google.com/file/d/1fRm5DBtyZYxEYMpTtQ2ujCBvME4zz749/preview',
+    instructions: '1. All questions are compulsory.\n2. Negative marking: -0.33 for 1-mark questions, -0.66 for 2-mark questions.\n3. Calculator is strictly prohibited.'
   },
   {
     id: 't-02',
-    code: 'Chemistry Test 02',
-    subject: 'Chemistry',
-    chapter: 'Organic Chemistry',
-    date: '22 Apr 2025',
+    title: 'Physics Mechanics Unit Test 01',
+    code: 'PHY-JEE-T01',
+    course: 'JEE (Mains + Adv)',
+    subject: 'Physics (JEE)',
+    chapter: 'Kinematics & Laws of Motion',
+    date: '18 Apr 2025',
     duration: '90 min',
     maxMarks: 100,
+    passingMarks: 40,
+    size: '2.1 MB',
     status: 'Upcoming',
-    paperUrl: 'mock_chemistry_test_02.pdf',
-    instructions: '1. Standard JEE pattern.\n2. Verify all chemical equations.'
+    mode: 'Offline Classroom Paper',
+    paperUrl: 'https://drive.google.com/file/d/1fRm5DBtyZYxEYMpTtQ2ujCBvME4zz749/preview',
+    attachmentUrl: 'https://drive.google.com/file/d/1fRm5DBtyZYxEYMpTtQ2ujCBvME4zz749/preview',
+    instructions: '1. All questions are compulsory.\n2. Negative marking: -1 for incorrect MCQ responses.\n3. Calculator is strictly prohibited.'
   },
   {
     id: 't-03',
-    code: 'Mathematics Test 01',
-    subject: 'Mathematics',
-    chapter: 'Trigonometry',
-    date: '26 Apr 2025',
+    title: 'Organic Chemistry Periodic Test 02',
+    code: 'CHEM-NEET-T02',
+    course: 'NEET',
+    subject: 'Chemistry (NEET)',
+    chapter: 'Organic Chemistry Reactions',
+    date: '22 Apr 2025',
     duration: '90 min',
     maxMarks: 100,
+    passingMarks: 40,
+    size: '1.8 MB',
     status: 'Upcoming',
-    paperUrl: 'mock_maths_test_01.pdf',
-    instructions: '1. Show all intermediate derivation steps where required.'
+    mode: 'Offline Classroom Paper',
+    paperUrl: 'https://drive.google.com/file/d/1fRm5DBtyZYxEYMpTtQ2ujCBvME4zz749/preview',
+    attachmentUrl: 'https://drive.google.com/file/d/1fRm5DBtyZYxEYMpTtQ2ujCBvME4zz749/preview',
+    instructions: '1. Standard JEE/NEET pattern.\n2. Verify all chemical equations.'
   },
   {
     id: 't-04',
-    code: 'Physics Unit Test 1',
-    subject: 'Physics',
+    title: 'Mathematics Trigonometry Test 01',
+    code: 'MATH-JEE-T01',
+    course: '11th Science',
+    subject: 'Maths (JEE)',
+    chapter: 'Trigonometric Equations',
+    date: '26 Apr 2025',
+    duration: '90 min',
+    maxMarks: 100,
+    passingMarks: 35,
+    size: '3.4 MB',
+    status: 'Upcoming',
+    mode: 'Offline Classroom Paper',
+    paperUrl: 'https://drive.google.com/file/d/1fRm5DBtyZYxEYMpTtQ2ujCBvME4zz749/preview',
+    attachmentUrl: 'https://drive.google.com/file/d/1fRm5DBtyZYxEYMpTtQ2ujCBvME4zz749/preview',
+    instructions: '1. Show all intermediate derivation steps where required.'
+  },
+  {
+    id: 't-05',
+    title: 'Physics Unit Test 1 (Kinematics)',
+    code: 'PHY-UT-01',
+    course: '12th Science',
+    subject: 'Physics (JEE)',
     chapter: 'Kinematics & Laws of Motion',
     date: '10 Apr 2025',
     duration: '90 min',
     maxMarks: 100,
+    passingMarks: 40,
+    size: '1.5 MB',
     status: 'Completed',
+    mode: 'Offline Classroom Paper',
+    paperUrl: 'https://drive.google.com/file/d/1fRm5DBtyZYxEYMpTtQ2ujCBvME4zz749/preview',
+    attachmentUrl: 'https://drive.google.com/file/d/1fRm5DBtyZYxEYMpTtQ2ujCBvME4zz749/preview',
     marksObtained: 88,
     percentage: 88,
     rank: 4,
@@ -123,10 +166,66 @@ export const mockTests = [
 ];
 
 export const mockStudyMaterials = [
-  { id: 'm-1', title: 'Mechanics & Newton Laws', subject: 'Physics', chapter: 'Chapter 1', type: 'PDF', size: '3.4 MB', date: '12 Apr 2025' },
-  { id: 'm-2', title: 'Organic Chemistry Reactions', subject: 'Chemistry', chapter: 'Chapter 3', type: 'PDF', size: '1.8 MB', date: '10 Apr 2025' },
-  { id: 'm-3', title: 'Trigonometry Formulas & Problems', subject: 'Mathematics', chapter: 'Chapter 4', type: 'PDF', size: '4.2 MB', date: '08 Apr 2025' },
-  { id: 'm-4', title: 'Cell Structure & Genetics', subject: 'Biology', chapter: 'Chapter 2', type: 'Video', size: '45 MB', date: '05 Apr 2025' }
+  { 
+    id: 'm-1', 
+    title: 'GATE 2022 General Aptitude Question Paper', 
+    course: 'JEE (Mains + Adv)', 
+    subject: 'Physics (JEE)', 
+    chapter: 'Verbal & Numerical Ability', 
+    type: 'PDF', 
+    size: '507 KB', 
+    date: '19 Sep 2026',
+    attachmentUrl: 'https://drive.google.com/file/d/1fRm5DBtyZYxEYMpTtQ2ujCBvME4zz749/preview',
+    description: 'Official GATE 2022 General Aptitude previous year question paper with 43 pages.'
+  },
+  { 
+    id: 'm-2', 
+    title: 'Mechanics & Newton Laws of Motion', 
+    course: '12th Science', 
+    subject: 'Physics (JEE)', 
+    chapter: 'Chapter 1', 
+    type: 'PDF', 
+    size: '3.4 MB', 
+    date: '12 Apr 2025',
+    attachmentUrl: 'https://drive.google.com/file/d/1fRm5DBtyZYxEYMpTtQ2ujCBvME4zz749/preview',
+    description: 'Complete handwritten classroom notes on Newton’s 3 Laws and Free Body Diagrams.'
+  },
+  { 
+    id: 'm-3', 
+    title: 'Organic Chemistry Reaction Roadmaps', 
+    course: 'NEET', 
+    subject: 'Chemistry (NEET)', 
+    chapter: 'Chapter 3', 
+    type: 'PDF', 
+    size: '1.8 MB', 
+    date: '10 Apr 2025',
+    attachmentUrl: 'https://drive.google.com/file/d/1fRm5DBtyZYxEYMpTtQ2ujCBvME4zz749/preview',
+    description: 'Full reaction schemes and mechanisms for electrophilic substitution.'
+  },
+  { 
+    id: 'm-4', 
+    title: 'Trigonometry Formulas & Solved Problems', 
+    course: '11th Science', 
+    subject: 'Maths (JEE)', 
+    chapter: 'Chapter 4', 
+    type: 'PDF', 
+    size: '4.2 MB', 
+    date: '08 Apr 2025',
+    attachmentUrl: 'https://drive.google.com/file/d/1fRm5DBtyZYxEYMpTtQ2ujCBvME4zz749/preview',
+    description: 'All trigonometric ratios, multiple angle expansions, and standard JEE problems.'
+  },
+  { 
+    id: 'm-5', 
+    title: 'Cell Structure & Molecular Genetics Lecture', 
+    course: 'NEET', 
+    subject: 'Biology (NEET)', 
+    chapter: 'Chapter 2', 
+    type: 'Video', 
+    size: '45 MB', 
+    date: '05 Apr 2025',
+    attachmentUrl: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+    description: 'High definition recorded video lecture covering cell division and DNA structure.'
+  }
 ];
 
 export const mockBatches = [
@@ -138,9 +237,9 @@ export const mockBatches = [
     time: '10:00 AM - 1:00 PM',
     status: 'Active',
     room: 'Room 204',
-    courseName: 'Std. 12 Science • JEE Advanced Physics Mastery',
+    courseName: 'JEE (Mains + Adv) • Physics Mastery',
     courseCode: 'PHY-JEE-12A',
-    faculty: 'Ms. Priya Shah (Physics Specialist)',
+    faculty: 'Ms. Priya Shah (Physics)',
     syllabusProgress: 72,
     currentChapter: 'Mechanics & Newton\'s Laws of Motion',
     academicYear: '2024–2025',
@@ -155,7 +254,7 @@ export const mockBatches = [
     time: '11:00 AM - 2:00 PM',
     status: 'Active',
     room: 'Room 201',
-    courseName: 'Std. 12 Medical • NEET Physics Intensive',
+    courseName: 'NEET • Physics Intensive',
     courseCode: 'PHY-NEET-12B',
     faculty: 'Ms. Priya Shah',
     syllabusProgress: 68,
@@ -172,7 +271,7 @@ export const mockBatches = [
     time: '08:00 AM - 11:00 AM',
     status: 'Active',
     room: 'Room 105',
-    courseName: 'Std. 11 Foundation • Physics Fundamentals',
+    courseName: '11th Science • Physics Fundamentals',
     courseCode: 'PHY-FND-11A',
     faculty: 'Ms. Priya Shah',
     syllabusProgress: 60,
@@ -189,7 +288,7 @@ export const mockBatches = [
     time: '02:00 PM - 05:00 PM',
     status: 'Active',
     room: 'Room 102',
-    courseName: 'Std. 10 Board Accelerator • General Science',
+    courseName: 'Std 10th • General Science',
     courseCode: 'SCI-BRD-10A',
     faculty: 'Ms. Priya Shah',
     syllabusProgress: 80,
@@ -200,290 +299,19 @@ export const mockBatches = [
   }
 ];
 
-export const mockBatchStudents = [
-  {
-    id: 's-104',
-    name: 'Rohan Sharma',
-    roll: '104',
-    rollNumber: 'ASPIRE-2025-104',
-    email: 'rohan.sharma@gmail.com',
-    phone: '+91 98201 23456',
-    course: 'Std. 12 • Science • JEE',
-    bloodGroup: 'B+',
-    parentName: 'Amit Sharma',
-    parentPhone: '+91 77385 78685',
-    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
-    todayAttendance: 'Present',
-    attendanceRate: 89,
-    attendedCount: 25,
-    totalCount: 28,
-    recentAttendance: ['Present', 'Present', 'Absent', 'Present', 'Present'],
-    latestTest: {
-      subject: 'Physics',
-      title: 'Physics Mechanics & Laws of Motion',
-      date: '10 Apr 2025',
-      score: 88,
-      maxMarks: 100,
-      percentage: 88,
-      rank: 4,
-      classAverage: 71,
-      correct: 22,
-      incorrect: 2,
-      unattempted: 1,
-      status: 'Passed (Distinction)',
-      grade: 'A'
-    }
-  },
-  {
-    id: 's-101',
-    name: 'Aarav Mehta',
-    roll: '101',
-    rollNumber: 'ASPIRE-2025-101',
-    email: 'aarav.mehta@gmail.com',
-    phone: '+91 98111 22334',
-    course: 'Std. 12 • Science • JEE',
-    bloodGroup: 'O+',
-    parentName: 'Rajesh Mehta',
-    parentPhone: '+91 98222 33445',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-    todayAttendance: 'Present',
-    attendanceRate: 94,
-    attendedCount: 27,
-    totalCount: 28,
-    recentAttendance: ['Present', 'Present', 'Present', 'Present', 'Present'],
-    latestTest: {
-      subject: 'Physics',
-      title: 'Physics Mechanics & Laws of Motion',
-      date: '10 Apr 2025',
-      score: 96,
-      maxMarks: 100,
-      percentage: 96,
-      rank: 1,
-      classAverage: 71,
-      correct: 24,
-      incorrect: 1,
-      unattempted: 0,
-      status: 'Top Performer (Rank 1)',
-      grade: 'A+'
-    }
-  },
-  {
-    id: 's-102',
-    name: 'Diya Patel',
-    roll: '102',
-    rollNumber: 'ASPIRE-2025-102',
-    email: 'diya.patel@gmail.com',
-    phone: '+91 98222 55667',
-    course: 'Std. 12 • Science • JEE',
-    bloodGroup: 'A+',
-    parentName: 'Sanjay Patel',
-    parentPhone: '+91 98333 44556',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-    todayAttendance: 'Present',
-    attendanceRate: 91,
-    attendedCount: 26,
-    totalCount: 28,
-    recentAttendance: ['Present', 'Present', 'Present', 'Absent', 'Present'],
-    latestTest: {
-      subject: 'Physics',
-      title: 'Physics Mechanics & Laws of Motion',
-      date: '10 Apr 2025',
-      score: 85,
-      maxMarks: 100,
-      percentage: 85,
-      rank: 6,
-      classAverage: 71,
-      correct: 21,
-      incorrect: 3,
-      unattempted: 1,
-      status: 'Passed (Grade A)',
-      grade: 'A'
-    }
-  },
-  {
-    id: 's-103',
-    name: 'Karan Malhotra',
-    roll: '103',
-    rollNumber: 'ASPIRE-2025-103',
-    email: 'karan.m@gmail.com',
-    phone: '+91 98333 77889',
-    course: 'Std. 12 • Science • JEE',
-    bloodGroup: 'AB+',
-    parentName: 'Vikram Malhotra',
-    parentPhone: '+91 98444 55667',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80',
-    todayAttendance: 'Absent',
-    attendanceRate: 82,
-    attendedCount: 23,
-    totalCount: 28,
-    recentAttendance: ['Present', 'Absent', 'Present', 'Present', 'Absent'],
-    latestTest: {
-      subject: 'Physics',
-      title: 'Physics Mechanics & Laws of Motion',
-      date: '10 Apr 2025',
-      score: 74,
-      maxMarks: 100,
-      percentage: 74,
-      rank: 14,
-      classAverage: 71,
-      correct: 18,
-      incorrect: 5,
-      unattempted: 2,
-      status: 'Passed',
-      grade: 'B+'
-    }
-  },
-  {
-    id: 's-105',
-    name: 'Sneha Iyer',
-    roll: '105',
-    rollNumber: 'ASPIRE-2025-105',
-    email: 'sneha.iyer@gmail.com',
-    phone: '+91 98444 88990',
-    course: 'Std. 12 • Science • JEE',
-    bloodGroup: 'O-',
-    parentName: 'Raman Iyer',
-    parentPhone: '+91 98555 66778',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
-    todayAttendance: 'Present',
-    attendanceRate: 96,
-    attendedCount: 27,
-    totalCount: 28,
-    recentAttendance: ['Present', 'Present', 'Present', 'Present', 'Present'],
-    latestTest: {
-      subject: 'Physics',
-      title: 'Physics Mechanics & Laws of Motion',
-      date: '10 Apr 2025',
-      score: 92,
-      maxMarks: 100,
-      percentage: 92,
-      rank: 2,
-      classAverage: 71,
-      correct: 23,
-      incorrect: 1,
-      unattempted: 1,
-      status: 'Top Performer (Rank 2)',
-      grade: 'A+'
-    }
-  },
-  {
-    id: 's-106',
-    name: 'Riya Sen',
-    roll: '106',
-    rollNumber: 'ASPIRE-2025-106',
-    email: 'riya.sen@gmail.com',
-    phone: '+91 98555 11223',
-    course: 'Std. 12 • Science • JEE',
-    bloodGroup: 'B-',
-    parentName: 'Debashis Sen',
-    parentPhone: '+91 98666 77889',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
-    todayAttendance: 'Absent',
-    attendanceRate: 75,
-    attendedCount: 21,
-    totalCount: 28,
-    recentAttendance: ['Absent', 'Present', 'Absent', 'Present', 'Absent'],
-    latestTest: {
-      subject: 'Physics',
-      title: 'Physics Mechanics & Laws of Motion',
-      date: '10 Apr 2025',
-      score: 62,
-      maxMarks: 100,
-      percentage: 62,
-      rank: 22,
-      classAverage: 71,
-      correct: 15,
-      incorrect: 8,
-      unattempted: 2,
-      status: 'Needs Attention',
-      grade: 'C'
-    }
-  },
-  {
-    id: 's-107',
-    name: 'Siddharth Rao',
-    roll: '107',
-    rollNumber: 'ASPIRE-2025-107',
-    email: 'siddharth.rao@gmail.com',
-    phone: '+91 98666 33445',
-    course: 'Std. 12 • Science • JEE',
-    bloodGroup: 'A-',
-    parentName: 'Venkat Rao',
-    parentPhone: '+91 98777 88990',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    todayAttendance: 'Present',
-    attendanceRate: 88,
-    attendedCount: 24,
-    totalCount: 28,
-    recentAttendance: ['Present', 'Present', 'Present', 'Present', 'Absent'],
-    latestTest: {
-      subject: 'Physics',
-      title: 'Physics Mechanics & Laws of Motion',
-      date: '10 Apr 2025',
-      score: 81,
-      maxMarks: 100,
-      percentage: 81,
-      rank: 9,
-      classAverage: 71,
-      correct: 20,
-      incorrect: 4,
-      unattempted: 1,
-      status: 'Passed (Grade A)',
-      grade: 'A'
-    }
-  },
-  {
-    id: 's-108',
-    name: 'Ananya Deshmukh',
-    roll: '108',
-    rollNumber: 'ASPIRE-2025-108',
-    email: 'ananya.d@gmail.com',
-    phone: '+91 98777 55667',
-    course: 'Std. 12 • Science • JEE',
-    bloodGroup: 'B+',
-    parentName: 'Prasad Deshmukh',
-    parentPhone: '+91 98888 99001',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    todayAttendance: 'Present',
-    attendanceRate: 92,
-    attendedCount: 26,
-    totalCount: 28,
-    recentAttendance: ['Present', 'Present', 'Present', 'Present', 'Present'],
-    latestTest: {
-      subject: 'Physics',
-      title: 'Physics Mechanics & Laws of Motion',
-      date: '10 Apr 2025',
-      score: 89,
-      maxMarks: 100,
-      percentage: 89,
-      rank: 3,
-      classAverage: 71,
-      correct: 22,
-      incorrect: 2,
-      unattempted: 1,
-      status: 'Top Performer (Rank 3)',
-      grade: 'A'
-    }
-  }
-];
+export const mockBatchStudents = [];
 
-export const mockStudentsList = mockBatchStudents;
+export const mockStudentsList = [];
 
-export const mockTeachersList = [
-  { id: 't-1', name: 'Ms. Priya Shah', subject: 'Physics', batches: 'JEE 12-A, Class 11-A', status: 'Active' },
-  { id: 't-2', name: 'Mr. Rahul Verma', subject: 'Chemistry', batches: 'NEET 12-B, Class 10-A', status: 'Active' },
-  { id: 't-3', name: 'Ms. Neha Kapoor', subject: 'Mathematics', batches: 'JEE 12-A, Class 11-A', status: 'Active' },
-  { id: 't-4', name: 'Mr. Suresh Iyer', subject: 'Biology', batches: 'NEET 12-B', status: 'Active' }
-];
+export const mockTeachersList = [];
 
 export const mockAdminStats = {
-  totalStudents: 248,
-  presentToday: 218,
-  totalTeachers: 18,
-  pendingFees: '₹1,25,000'
+  totalStudents: 0,
+  presentToday: 0,
+  totalTeachers: 0,
+  pendingFees: '₹0'
 };
 
-// Notices and Announcements ordered from latest to oldest
 export const mockNotices = [
   {
     id: 'notif-1',
@@ -590,60 +418,4 @@ export const mockLectureAttendance = [
   { id: 'lec-01', lectureNumber: 54, date: '02 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Physics', topic: 'Ray Optics and Optical Instruments', faculty: 'Ms. Priya Shah', status: 'Present', recordedAt: '09:55 AM' }
 ];
 
-export const mockParentsList = [
-  {
-    id: 'par-1',
-    name: 'Amit Sharma',
-    phone: '+91 77385 78685',
-    email: 'amit.sharma@yahoo.com',
-    linkedChildName: 'Rohan Sharma',
-    linkedChildEmail: 'rohan.sharma@aspire.edu',
-    linkedChildRoll: '104',
-    linkedChildCourse: 'Std. 12 • Science • JEE',
-    status: 'Active'
-  },
-  {
-    id: 'par-2',
-    name: 'Rajesh Mehta',
-    phone: '+91 98222 33445',
-    email: 'rajesh.mehta@gmail.com',
-    linkedChildName: 'Aarav Mehta',
-    linkedChildEmail: 'aarav.mehta@aspire.edu',
-    linkedChildRoll: '101',
-    linkedChildCourse: 'Std. 12 • Science • JEE',
-    status: 'Active'
-  },
-  {
-    id: 'par-3',
-    name: 'Sunita Deshmukh',
-    phone: '+91 98333 44556',
-    email: 'sunita.deshmukh@gmail.com',
-    linkedChildName: 'Ananya Deshmukh',
-    linkedChildEmail: 'ananya.deshmukh@aspire.edu',
-    linkedChildRoll: '102',
-    linkedChildCourse: 'Std. 12 • Science • NEET',
-    status: 'Active'
-  },
-  {
-    id: 'par-4',
-    name: 'Vikram Verma',
-    phone: '+91 98444 55667',
-    email: 'vikram.verma@gmail.com',
-    linkedChildName: 'Kabir Verma',
-    linkedChildEmail: 'kabir.verma@aspire.edu',
-    linkedChildRoll: '103',
-    linkedChildCourse: 'Std. 11 • Science • JEE',
-    status: 'Active'
-  },
-  {
-    id: 'par-5',
-    name: 'Manoj Patel',
-    phone: '+91 98555 66778',
-    email: 'manoj.patel@gmail.com',
-    linkedChildName: 'Riya Patel',
-    linkedChildEmail: 'riya.patel@aspire.edu',
-    linkedChildRoll: '105',
-    linkedChildCourse: 'Std. 10 • Foundation',
-    status: 'Active'
-  }
-];
+export const mockParentsList = [];

@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 import { supabase } from '../../lib/supabaseClient';
+import { authenticateLocalUser } from '../../lib/userAuthStore';
 import { sendWhatsAppOtp, verifyWhatsAppOtp } from '../../lib/whatsappService';
 import { X, Mail, Phone, Lock, Eye, EyeOff, MessageSquare, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 
-export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRole = 'student' }) {
+export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRole = 'admin' }) {
   const [role, setRole] = useState(defaultRole);
-  const [email, setEmail] = useState(defaultRole === 'admin' ? 'aspirelearningcentre@outlook.com' : 'rohan.sharma@gmail.com');
-  const [password, setPassword] = useState(defaultRole === 'admin' ? 'ZP&786' : 'Aspire@2025');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -29,63 +34,119 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRol
     setTimeout(() => {
       onClose();
       setIsClosing(false);
+      setError('');
+      setSuccessMsg('');
+      setAuthView('login');
     }, 380);
   };
 
-  // Handle Manual Email / Password Login via Supabase
+  // Handle Manual Email / Password Login — Local auth first, then Supabase
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPass = (password || '').trim();
+
+    if (!cleanEmail || !cleanPass) {
+      setError('Please enter your email and password.');
+      return;
+    }
+
     setLoading(true);
+    setIsVerifying(true);
+
+    const minDelay = new Promise(resolve => setTimeout(resolve, 1000));
 
     try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password
-      });
+      let authUser = null;
 
-      if (authError) {
-        // Fallback for mock demo accounts if not yet created in Supabase
-        if (email.includes('aspire') || email.includes('rohan') || email.includes('priya') || email.includes('amit')) {
-          onLoginSuccess({
-            email,
-            role,
-            name: role === 'student' ? 'Rohan Sharma' : role === 'teacher' ? 'Ms. Priya Shah' : role === 'parent' ? 'Amit Sharma' : 'ASPIRE Admin'
+      // 1. Admin hardcoded check
+      if (cleanEmail === 'aspirelearningcentre@outlook.com' && cleanPass === 'ZP&786') {
+        authUser = {
+          id: 'admin-1',
+          email: 'aspirelearningcentre@outlook.com',
+          role: 'admin',
+          name: 'ASPIRE Admin'
+        };
+      } else {
+        // 2. Check locally stored institute users (students/teachers/parents added by Admin)
+        const localUser = authenticateLocalUser(cleanEmail, cleanPass);
+        if (localUser) {
+          authUser = {
+            id: localUser.id,
+            email: localUser.email,
+            role: localUser.role,
+            name: localUser.name,
+            course: localUser.course,
+            rollNumber: localUser.rollNumber,
+            phone: localUser.phone || '',
+            bloodGroup: localUser.bloodGroup || ''
+          };
+        } else {
+          // 3. Try Supabase Auth (for users created via Admin API — already confirmed, no email needed)
+          const { data, error: authError } = await supabase.auth.signInWithPassword({
+            email: cleanEmail,
+            password: cleanPass
           });
-          onClose();
-          return;
+
+          if (!authError && data?.user) {
+            const userMeta = data.user.user_metadata || {};
+            authUser = {
+              id: data.user.id,
+              email: data.user.email,
+              role: userMeta.role || 'student',
+              name: userMeta.full_name || data.user.email.split('@')[0],
+              course: userMeta.course,
+              rollNumber: userMeta.rollNumber,
+              phone: userMeta.phone || '',
+              bloodGroup: userMeta.bloodGroup || ''
+            };
+          }
         }
-        throw authError;
       }
 
-      // Successful live login
-      const userMeta = data.user.user_metadata || {};
-      onLoginSuccess({
-        id: data.user.id,
-        email: data.user.email,
-        role: userMeta.role || role,
-        name: userMeta.full_name || 'ASPIRE User'
-      });
+      await minDelay;
+
+      if (!authUser) {
+        setIsVerifying(false);
+        setLoading(false);
+        setError('Email or password not found. If you were recently enrolled, please ask your Admin to re-add your account.');
+        return;
+      }
+
+      setIsVerifying(false);
+      setLoading(false);
+      onLoginSuccess(authUser);
       onClose();
     } catch (err) {
-      setError(err.message || 'Invalid email or password.');
-    } finally {
+      await minDelay;
+      setIsVerifying(false);
       setLoading(false);
+      setError('Login failed. Please check your credentials and try again.');
     }
   };
 
-  // Handle Google OAuth Sign-In via Supabase
+  // Handle Google OAuth Sign-In via Supabase with Instant Mobile Deep Link
   const handleGoogleLogin = async () => {
     setError('');
     setLoading(true);
     try {
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      const isNative = Capacitor.isNativePlatform();
+      const redirectUrl = isNative ? 'com.aspire.learning://auth' : window.location.origin;
+
+      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: redirectUrl,
+          skipBrowserRedirect: isNative
         }
       });
       if (oauthError) throw oauthError;
+
+      if (isNative && data?.url) {
+        await Browser.open({ url: data.url, windowName: '_self' });
+      }
     } catch (err) {
       setError(err.message || 'Google sign-in error.');
       setLoading(false);
@@ -244,21 +305,19 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRol
         <div style={{ padding: '28px 24px' }}>
           {/* Header Branding */}
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-            <div style={{
-              width: '44px',
-              height: '44px',
-              background: 'linear-gradient(135deg, var(--brand-800) 0%, var(--accent-500) 100%)',
-              borderRadius: '12px',
-              margin: '0 auto 12px auto',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff',
-              fontWeight: 800,
-              fontSize: '22px'
-            }}>
-              ▲
-            </div>
+            <img
+              src="/logo.png"
+              alt="ASPIRE Logo"
+              style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                objectFit: 'contain',
+                margin: '0 auto 12px auto',
+                display: 'block',
+                boxShadow: '0 4px 12px rgba(30, 58, 138, 0.2)'
+              }}
+            />
             <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--brand-900)' }}>
               {authView === 'login' ? 'Welcome Back' : 'Account Recovery'}
             </h3>
@@ -311,49 +370,19 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRol
              ==================================================================== */}
           {authView === 'login' && (
             <>
-              {/* Role Segmented Pills (from ASPIRE THEME.png Row 1 Screen 2) */}
-              <div className="tab-container" style={{ marginBottom: '20px' }}>
-                {['student', 'teacher', 'parent', 'admin'].map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => {
-                      setRole(r);
-                      if (r === 'admin') {
-                        setEmail('aspirelearningcentre@outlook.com');
-                        setPassword('ZP&786');
-                      } else if (r === 'student') {
-                        setEmail('rohan.sharma@gmail.com');
-                        setPassword('Aspire@2025');
-                      } else if (r === 'teacher') {
-                        setEmail('priya.shah@aspirelearning.com');
-                        setPassword('Aspire@2025');
-                      } else {
-                        setEmail('amit.sharma@yahoo.com');
-                        setPassword('Aspire@2025');
-                      }
-                    }}
-                    className={`tab-btn ${role === r ? 'active' : ''}`}
-                    style={{ textTransform: 'capitalize' }}
-                  >
-                    {r}
-                  </button>
-                ))}
-              </div>
-
               {/* Login Form */}
               <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
                   <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-                    Email or Mobile Number
+                    Email Address
                   </label>
                   <div style={{ position: 'relative' }}>
                     <input
-                      type="text"
+                      type="email"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="e.g. rohan@gmail.com or 9820123456"
+                      placeholder="Enter your registered email"
                       style={{
                         width: '100%',
                         padding: '12px 14px 12px 38px',
@@ -478,7 +507,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRol
                   type="text"
                   value={resetIdentifier}
                   onChange={(e) => setResetIdentifier(e.target.value)}
-                  placeholder="e.g. 9820123456 or rohan@gmail.com"
+                  placeholder="e.g. 9820123456 or registered email"
                   style={{
                     width: '100%',
                     padding: '12px 14px',
@@ -697,6 +726,19 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRol
           )}
         </div>
       </div>
+
+      {/* Full-Screen Loading Shade with 4-Dot Bouncing Animation (1 sec) */}
+      {isVerifying && typeof document !== 'undefined' && createPortal(
+        <div className="login-loading-shade">
+          <div className="bouncing-dots-loader">
+            <div className="dot" />
+            <div className="dot" />
+            <div className="dot" />
+            <div className="dot" />
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

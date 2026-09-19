@@ -19,7 +19,7 @@ export default function ManagePasswordModal({ isOpen, onClose, user }) {
   const [changeLoading, setChangeLoading] = useState(false);
 
   // Form State: Forget Password
-  const [emailInput, setEmailInput] = useState(user?.email || 'rohan.sharma@gmail.com');
+  const [emailInput, setEmailInput] = useState(user?.email || '');
   const [forgetError, setForgetError] = useState('');
   const [forgetSuccess, setForgetSuccess] = useState(false);
   const [forgetLoading, setForgetLoading] = useState(false);

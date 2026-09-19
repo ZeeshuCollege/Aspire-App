@@ -1,16 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { mockAdminStats, mockStudentsList, mockTeachersList, mockBatches, mockNotices as initialNotices, mockParentsList } from '../../lib/mockData';
+import { mockAdminStats, mockBatches, mockNotices as initialNotices } from '../../lib/mockData';
+import {
+  getStoredStudents, saveStoredStudents,
+  getStoredTeachers, saveStoredTeachers,
+  getStoredParents, saveStoredParents, deleteStoredParent,
+  addRegisteredUser
+} from '../../lib/userAuthStore';
 import {
   Users, UserCheck, BookOpen, CheckSquare, Plus, Search,
-  Download, Settings, ShieldCheck, ChevronRight, Bell, DollarSign, Calendar
+  Download, Settings, ShieldCheck, ChevronRight, Bell, DollarSign, Calendar, FileCheck, FileText, Trash2, Award
 } from 'lucide-react';
 import ScreenSlider from '../common/ScreenSlider';
+import AdminStudyMaterialsModal, { SUBJECT_OPTIONS, COURSE_OPTIONS } from './AdminStudyMaterialsModal';
+import AdminTestsModal from './AdminTestsModal';
+import AdminTimetableModal from './AdminTimetableModal';
+import AdminAttendanceModal from './AdminAttendanceModal';
+import AdminMarksModal from './AdminMarksModal';
 
 export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }) {
   // Data States
-  const [students, setStudents] = useState(mockStudentsList);
-  const [teachers, setTeachers] = useState(mockTeachersList);
-  const [parents, setParents] = useState(mockParentsList);
+  const [students, setStudents] = useState(getStoredStudents);
+  const [teachers, setTeachers] = useState(getStoredTeachers);
+  const [parents, setParents] = useState(getStoredParents);
   const [searchTerm, setSearchTerm] = useState('');
   const [parentSearchTerm, setParentSearchTerm] = useState('');
 
@@ -20,6 +31,11 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
   const [showAbsentModal, setShowAbsentModal] = useState(false);
   const [selectedAbsentStudent, setSelectedAbsentStudent] = useState(null);
   const [showNoticesModal, setShowNoticesModal] = useState(false);
+  const [showMaterialsModal, setShowMaterialsModal] = useState(false);
+  const [showTestsModal, setShowTestsModal] = useState(false);
+  const [showTimetableModal, setShowTimetableModal] = useState(false);
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const [showMarksModal, setShowMarksModal] = useState(false);
   const [notices, setNotices] = useState(initialNotices);
   const [showAddNoticeForm, setShowAddNoticeForm] = useState(false);
   const [newNoticeTitle, setNewNoticeTitle] = useState('');
@@ -32,18 +48,20 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentEmail, setNewStudentEmail] = useState('');
   const [newStudentPassword, setNewStudentPassword] = useState('');
-  const [newStudentCourse, setNewStudentCourse] = useState('Std. 12 • JEE');
+  const [newStudentCourse, setNewStudentCourse] = useState('12th Science');
 
   // Add Parent Modal States
   const [showAddParentModal, setShowAddParentModal] = useState(false);
   const [isParentModalClosing, setIsParentModalClosing] = useState(false);
+  const [isSubmittingParent, setIsSubmittingParent] = useState(false);
   const [newParentName, setNewParentName] = useState('');
   const [newParentPhone, setNewParentPhone] = useState('');
   const [newParentEmail, setNewParentEmail] = useState('');
   const [newParentChildName, setNewParentChildName] = useState('');
   const [newParentChildEmail, setNewParentChildEmail] = useState('');
   const [newParentChildRoll, setNewParentChildRoll] = useState('');
-  const [newParentChildCourse, setNewParentChildCourse] = useState('Std. 12 • Science • JEE');
+  const [newParentChildCourse, setNewParentChildCourse] = useState('12th Science');
+  const [selectedStudentIdForParent, setSelectedStudentIdForParent] = useState('');
 
   // Add Faculty Modal States
   const [showAddFacultyModal, setShowAddFacultyModal] = useState(false);
@@ -59,10 +77,13 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
   const [showAddCourseModal, setShowAddCourseModal] = useState(false);
   const [isCourseModalClosing, setIsCourseModalClosing] = useState(false);
   const [courses, setCourses] = useState([
-    { id: 'c-1', name: 'Std. 9 - 10 Foundation', code: 'FND-9-10', subjects: ['Mathematics', 'Science', 'English'], faculty: ['Ms. Priya Shah'] },
-    { id: 'c-2', name: 'Std. 11 - 12 Science', code: 'SCI-11-12', subjects: ['Physics', 'Chemistry', 'Mathematics'], faculty: ['Ms. Priya Shah', 'Mr. Rahul Verma'] },
-    { id: 'c-3', name: 'NEET Medical', code: 'NEET-MED', subjects: ['Biology', 'Chemistry', 'Physics'], faculty: ['Mr. Rahul Verma', 'Mr. Suresh Iyer'] },
-    { id: 'c-4', name: 'JEE Main + Advanced', code: 'JEE-ENG', subjects: ['Physics', 'Chemistry', 'Mathematics'], faculty: ['Ms. Priya Shah', 'Ms. Neha Kapoor'] }
+    { id: 'c-1', name: 'Std 9th', code: 'STD-9', subjects: ['English (9th)', 'Maths (9th)', 'Science (9th)'], faculty: ['Ms. Priya Shah'] },
+    { id: 'c-2', name: 'Std 10th', code: 'STD-10', subjects: ['English (10th)', 'Maths (10th)', 'Science (10th)'], faculty: ['Ms. Priya Shah'] },
+    { id: 'c-3', name: '11th Science', code: 'SCI-11', subjects: ['English (11th)', 'Geography (11th)', 'History (11th)'], faculty: ['Mr. Rahul Verma'] },
+    { id: 'c-4', name: '12th Science', code: 'SCI-12', subjects: ['English (12th)', 'Geography (12th)', 'History (12th)'], faculty: ['Mr. Rahul Verma'] },
+    { id: 'c-5', name: 'NEET', code: 'NEET', subjects: ['Physics (NEET)', 'Chemistry (NEET)', 'Biology (NEET)'], faculty: ['Mr. Rahul Verma', 'Mr. Suresh Iyer'] },
+    { id: 'c-6', name: 'JEE (Mains + Adv)', code: 'JEE', subjects: ['Physics (JEE)', 'Chemistry (JEE)', 'Maths (JEE)'], faculty: ['Ms. Priya Shah', 'Ms. Neha Kapoor'] },
+    { id: 'c-7', name: 'MHT-CET', code: 'MHT-CET', subjects: ['Physics (JEE)', 'Chemistry (JEE)', 'Maths (JEE)'], faculty: ['Ms. Priya Shah'] }
   ]);
   const [newCourseName, setNewCourseName] = useState('');
   const [newCourseSubjects, setNewCourseSubjects] = useState([]);
@@ -73,7 +94,6 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
 
   const NOTICE_CATEGORIES = ['General', 'Test', 'Attendance', 'Fee', 'Holiday', 'Exam'];
   const BATCH_OPTIONS = ['JEE 12-A', 'JEE 12-B', 'NEET 12-A', 'NEET 12-B', 'Class 11-A', 'Class 11-B', 'Class 10-A', 'Class 10-B', 'Foundation 9-A'];
-  const SUBJECT_OPTIONS = ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'English', 'Computer Science'];
   const FACULTY_OPTIONS = ['Ms. Priya Shah', 'Mr. Rahul Verma', 'Ms. Neha Kapoor', 'Mr. Suresh Iyer'];
 
   const absentStudents = [
@@ -124,31 +144,153 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
     setTimeout(() => {
       setShowAddParentModal(false);
       setIsParentModalClosing(false);
+      setIsSubmittingParent(false);
     }, 380);
+  };
+
+  // Auto-fill student details when selected in Add Parent modal
+  const handleSelectStudentForParent = (studentId) => {
+    setSelectedStudentIdForParent(studentId);
+    if (!studentId || studentId === 'custom') {
+      return;
+    }
+    const found = students.find(s => s.id === studentId);
+    if (found) {
+      setNewParentChildName(found.name || '');
+      setNewParentChildRoll(found.roll || '');
+      setNewParentChildEmail(found.email || `${(found.name || 'student').toLowerCase().replace(/\s+/g, '')}@aspire.edu`);
+      setNewParentChildCourse(found.course || '12th Science');
+    }
   };
 
   const handleAddParent = (e) => {
     e.preventDefault();
+    if (isSubmittingParent) return;
     if (!newParentName || !newParentPhone) return;
+
+    // Prevent duplicate entry by phone or email
+    const cleanPhoneDigits = newParentPhone.replace(/\D/g, '');
+    const cleanEmail = (newParentEmail || '').trim().toLowerCase();
+    const isDuplicate = parents.some(p => {
+      const pPhoneDigits = (p.phone || '').replace(/\D/g, '');
+      const pEmail = (p.email || '').trim().toLowerCase();
+      if (cleanPhoneDigits && pPhoneDigits === cleanPhoneDigits) return true;
+      if (cleanEmail && pEmail && pEmail === cleanEmail) return true;
+      return false;
+    });
+
+    if (isDuplicate) {
+      setExportFeedback('⚠️ A parent with this phone or email is already registered.');
+      setTimeout(() => setExportFeedback(''), 3000);
+      handleCloseAddParentModal();
+      return;
+    }
+
+    setIsSubmittingParent(true);
+
+    const childName = newParentChildName.trim() || 'Student';
+    const childRoll = newParentChildRoll.trim() || (students.length + 101).toString();
+    const childEmail = newParentChildEmail.trim() || `${childName.toLowerCase().replace(/\s+/g, '')}@aspire.edu`;
+    const childCourse = newParentChildCourse.trim() || '12th Science';
+
+    // Find matching enrolled student
+    const matchedStudent = students.find(s =>
+      (selectedStudentIdForParent && selectedStudentIdForParent !== 'custom' && s.id === selectedStudentIdForParent) ||
+      (s.roll && s.roll === childRoll) ||
+      (s.name.toLowerCase() === childName.toLowerCase())
+    );
+
+    const parentId = `par-${Date.now()}`;
+    const studentId = matchedStudent ? matchedStudent.id : `s-${Date.now()}`;
+
+    const parentEmailClean = (newParentEmail.trim() || `${newParentName.trim().toLowerCase().replace(/\s+/g, '')}@gmail.com`).toLowerCase();
+    const parentPassClean = newParentPhone.trim() || 'parent@123';
+
     const newPar = {
-      id: `par-${Date.now()}`,
+      id: parentId,
       name: newParentName.trim(),
       phone: newParentPhone.trim(),
-      email: newParentEmail.trim() || `${newParentName.toLowerCase().replace(/\s+/g, '')}@gmail.com`,
-      linkedChildName: newParentChildName.trim() || 'Rohan Sharma',
-      linkedChildEmail: newParentChildEmail.trim() || `${(newParentChildName || 'student').toLowerCase().replace(/\s+/g, '')}@aspire.edu`,
-      linkedChildRoll: newParentChildRoll.trim() || '104',
-      linkedChildCourse: newParentChildCourse.trim(),
+      email: parentEmailClean,
+      password: parentPassClean,
+      studentId: studentId,
+      linkedChildId: studentId,
+      linkedChildName: childName,
+      linkedChildEmail: childEmail,
+      linkedChildRoll: childRoll,
+      linkedChildCourse: childCourse,
       status: 'Active'
     };
-    setParents(prev => [newPar, ...prev]);
+
+    // 1. Update parents list and persist
+    setParents(prev => {
+      const updated = [newPar, ...prev];
+      return saveStoredParents(updated);
+    });
+
+    // Register parent credentials
+    if (newPar.email) {
+      addRegisteredUser({
+        name: newPar.name,
+        email: parentEmailClean,
+        password: parentPassClean,
+        role: 'parent',
+        phone: newPar.phone,
+        linkedChildName: childName
+      });
+    }
+
+    // 2. Connect parent details to student in students state
+    if (matchedStudent) {
+      setStudents(prev => prev.map(s => {
+        if (s.id === matchedStudent.id) {
+          return {
+            ...s,
+            parentName: newParentName.trim(),
+            parentPhone: newParentPhone.trim(),
+            parentEmail: newParentEmail.trim(),
+            parentId: parentId,
+            parentStatus: 'Linked'
+          };
+        }
+        return s;
+      }));
+    } else {
+      const newStd = {
+        id: studentId,
+        name: childName,
+        roll: childRoll,
+        course: childCourse,
+        email: childEmail,
+        attendance: 'Present',
+        score: '85%',
+        status: 'Active',
+        parentName: newParentName.trim(),
+        parentPhone: newParentPhone.trim(),
+        parentEmail: newParentEmail.trim(),
+        parentId: parentId,
+        parentStatus: 'Linked'
+      };
+      setStudents(prev => [newStd, ...prev]);
+    }
+
     setNewParentName('');
     setNewParentPhone('');
     setNewParentEmail('');
     setNewParentChildName('');
     setNewParentChildEmail('');
     setNewParentChildRoll('');
+    setSelectedStudentIdForParent('');
     handleCloseAddParentModal();
+
+    setExportFeedback(`✓ Parent "${newParentName.trim()}" linked to student "${childName}"!`);
+    setTimeout(() => setExportFeedback(''), 3500);
+  };
+
+  const handleDeleteParent = (parentId) => {
+    const updated = deleteStoredParent(parentId);
+    setParents(updated);
+    setExportFeedback('Parent removed.');
+    setTimeout(() => setExportFeedback(''), 2500);
   };
 
   const handleCloseAddFacultyModal = () => {
@@ -208,6 +350,26 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
         e.detail?.markHandled();
         return;
       }
+      if (showMaterialsModal) {
+        setShowMaterialsModal(false);
+        e.detail?.markHandled();
+        return;
+      }
+      if (showTestsModal) {
+        setShowTestsModal(false);
+        e.detail?.markHandled();
+        return;
+      }
+      if (showAttendanceModal) {
+        setShowAttendanceModal(false);
+        e.detail?.markHandled();
+        return;
+      }
+      if (showMarksModal) {
+        setShowMarksModal(false);
+        e.detail?.markHandled();
+        return;
+      }
       if (showTeachersModal) {
         setShowTeachersModal(false);
         e.detail?.markHandled();
@@ -245,21 +407,41 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
   }, [
     selectedAbsentStudent, showAddNoticeForm, showNoticesModal,
     showAbsentModal, showTeachersModal, showStudentsModal,
-    showAddModal, showAddParentModal, showAddFacultyModal, showAddCourseModal
+    showAddModal, showAddParentModal, showAddFacultyModal, showAddCourseModal,
+    showMaterialsModal, showTestsModal, showTimetableModal, showAttendanceModal, showMarksModal
   ]);
 
-  const handleAddFaculty = (e) => {
+  const handleAddFaculty = async (e) => {
     e.preventDefault();
-    if (!newFacultyName || !newFacultyEmail || !newFacultyPassword || newFacultyBatches.length === 0 || newFacultySubjects.length === 0) return;
+    if (!newFacultyName.trim() || !newFacultyEmail.trim() || !newFacultyPassword.trim() || newFacultyBatches.length === 0 || newFacultySubjects.length === 0) return;
+    const cleanName = newFacultyName.trim();
+    const cleanEmail = newFacultyEmail.trim().toLowerCase();
+    const cleanPassword = newFacultyPassword.trim();
+
     const newT = {
       id: `t-${Date.now()}`,
-      name: newFacultyName,
-      email: newFacultyEmail,
+      name: cleanName,
+      email: cleanEmail,
+      password: cleanPassword,
       subject: newFacultySubjects.join(', '),
       batches: newFacultyBatches.join(', '),
       status: 'Active'
     };
-    setTeachers(prev => [newT, ...prev]);
+    setTeachers(prev => {
+      const updated = [newT, ...prev];
+      saveStoredTeachers(updated);
+      return updated;
+    });
+
+    await addRegisteredUser({
+      name: cleanName,
+      email: cleanEmail,
+      password: cleanPassword,
+      role: 'teacher',
+      batches: newFacultyBatches,
+      subjects: newFacultySubjects
+    });
+
     setNewFacultyName('');
     setNewFacultyEmail('');
     setNewFacultyPassword('');
@@ -273,24 +455,54 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
     setTimeout(() => setExportFeedback(''), 2500);
   };
 
-  const handleAddStudent = (e) => {
+  const handleAddStudent = async (e) => {
     e.preventDefault();
-    if (!newStudentName || !newStudentEmail || !newStudentPassword) return;
+    const trimmedName = newStudentName.trim();
+    const trimmedEmail = newStudentEmail.trim().toLowerCase();
+    const trimmedPass = newStudentPassword.trim();
+    if (!trimmedName || !trimmedEmail || !trimmedPass) {
+      alert('Please fill in all fields: Name, Email, and Password.');
+      return;
+    }
+    const rollNo = (students.length + 101).toString();
+
     const newStd = {
       id: `s-${Date.now()}`,
-      name: newStudentName,
-      email: newStudentEmail,
-      roll: (students.length + 101).toString(),
+      name: trimmedName,
+      email: trimmedEmail,
+      password: trimmedPass,
+      roll: rollNo,
+      rollNumber: `ASPIRE-2025-${rollNo}`,
       course: newStudentCourse,
       attendance: 'Present',
       score: '85%',
-      status: 'Active'
+      status: 'Active',
+      phone: '',
+      bloodGroup: ''
     };
-    setStudents([newStd, ...students]);
+    const updated = [newStd, ...students];
+    setStudents(updated);
+    saveStoredStudents(updated);
+
+    // Save credentials so student can log in immediately
+    await addRegisteredUser({
+      name: trimmedName,
+      email: trimmedEmail,
+      password: trimmedPass,
+      role: 'student',
+      course: newStudentCourse,
+      rollNumber: `ASPIRE-2025-${rollNo}`,
+      phone: '',
+      bloodGroup: ''
+    });
+
     setNewStudentName('');
     setNewStudentEmail('');
     setNewStudentPassword('');
     handleCloseAddModal();
+
+    // Confirm to admin exactly what was saved
+    alert(`✅ Student enrolled!\n\nEmail: ${trimmedEmail}\nPassword: ${trimmedPass}\n\nThe student can now log in with these credentials.`);
   };
 
   const adminTabs = [
@@ -357,27 +569,200 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
 
           </div>
 
-          {/* Attendance Overview Weekly Trend */}
-          <div className="card" style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h4 style={{ fontSize: '14px', fontWeight: 700 }}>Attendance Overview</h4>
-              <span style={{ fontSize: '11px', color: 'var(--accent-500)', fontWeight: 600 }}>Weekly (88% Avg)</span>
+          {/* Academic Quick Actions: Study Materials, Tests, Timetable & Attendance */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Academic Quick Actions
+              </span>
+              <span style={{ fontSize: '10px', color: 'var(--brand-700)', fontWeight: 600 }}>
+                Administration Hub
+              </span>
             </div>
-
-            <div style={{ height: '110px', display: 'flex', alignItems: 'flex-end', gap: '10px', paddingBottom: '8px', borderBottom: '1px solid var(--border)' }}>
-              {[
-                { day: 'Mon', val: 85 },
-                { day: 'Tue', val: 92 },
-                { day: 'Wed', val: 88 },
-                { day: 'Thu', val: 90 },
-                { day: 'Fri', val: 89 },
-                { day: 'Sat', val: 84 }
-              ].map(bar => (
-                <div key={bar.day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                  <div style={{ width: '100%', height: `${bar.val * 0.85}px`, background: 'linear-gradient(180deg, #0ea5e9 0%, #e0f2fe 100%)', borderRadius: '4px 4px 0 0' }} />
-                  <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{bar.day}</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              {/* Study Materials Button */}
+              <div
+                className="card"
+                onClick={() => setShowMaterialsModal(true)}
+                style={{
+                  padding: '14px',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%)',
+                  border: '1.5px solid #bae6fd',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  transition: 'transform 0.15s ease'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <BookOpen size={19} />
+                  </div>
+                  <span className="badge badge-info" style={{ fontSize: '10px', padding: '2px 7px' }}>
+                    Files
+                  </span>
                 </div>
-              ))}
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: '4px 0 2px 0' }}>
+                    Study Materials
+                  </h4>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    Notes, DPPs & Videos
+                  </span>
+                </div>
+              </div>
+
+              {/* Tests & Papers Button */}
+              <div
+                className="card"
+                onClick={() => setShowTestsModal(true)}
+                style={{
+                  padding: '14px',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #fef2f2 0%, #ffffff 100%)',
+                  border: '1.5px solid #fecaca',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  transition: 'transform 0.15s ease'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#fee2e2', color: '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <FileCheck size={19} />
+                  </div>
+                  <span className="badge badge-danger" style={{ fontSize: '10px', padding: '2px 7px' }}>
+                    Exams
+                  </span>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: '4px 0 2px 0' }}>
+                    Tests & Papers
+                  </h4>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    Papers & Solutions
+                  </span>
+                </div>
+              </div>
+
+              {/* Timetable Button */}
+              <div
+                className="card"
+                onClick={() => setShowTimetableModal(true)}
+                style={{
+                  padding: '14px',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #f5f3ff 0%, #ffffff 100%)',
+                  border: '1.5px solid #ddd6fe',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  transition: 'transform 0.15s ease'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#ede9fe', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Calendar size={19} />
+                  </div>
+                  <span style={{
+                    fontSize: '10px',
+                    padding: '2px 7px',
+                    borderRadius: '999px',
+                    fontWeight: 700,
+                    background: '#ede9fe',
+                    color: '#6d28d9'
+                  }}>
+                    Classes
+                  </span>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: '4px 0 2px 0' }}>
+                    Timetable
+                  </h4>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    Add & Delete Lectures
+                  </span>
+                </div>
+              </div>
+
+              {/* Attendance Button */}
+              <div
+                className="card"
+                onClick={() => setShowAttendanceModal(true)}
+                style={{
+                  padding: '14px',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%)',
+                  border: '1.5px solid #a7f3d0',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  transition: 'transform 0.15s ease'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#d1fae5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <CheckSquare size={19} />
+                  </div>
+                  <span className="badge badge-success" style={{ fontSize: '10px', padding: '2px 7px' }}>
+                    Analytics
+                  </span>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: '4px 0 2px 0' }}>
+                    Attendance
+                  </h4>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    Student, Course & Subject
+                  </span>
+                </div>
+              </div>
+
+              {/* Marks Button */}
+              <div
+                className="card"
+                onClick={() => setShowMarksModal(true)}
+                style={{
+                  padding: '14px',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #fef3c7 0%, #ffffff 100%)',
+                  border: '1.5px solid #fde68a',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  transition: 'transform 0.15s ease'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Award size={19} />
+                  </div>
+                  <span style={{
+                    fontSize: '10px',
+                    padding: '2px 7px',
+                    borderRadius: '999px',
+                    fontWeight: 700,
+                    background: '#fef3c7',
+                    color: '#b45309'
+                  }}>
+                    Scores
+                  </span>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: '4px 0 2px 0' }}>
+                    Marks
+                  </h4>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    Upload & Grade Tests
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -448,6 +833,15 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
                   <div>
                     <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{std.name}</h5>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Roll #{std.roll} • {std.course}</span>
+                    {std.parentName ? (
+                      <div style={{ fontSize: '11.5px', color: 'var(--brand-700)', fontWeight: 600, marginTop: '3px' }}>
+                        👨‍👦 Parent: {std.parentName} {std.parentPhone ? `(${std.parentPhone})` : ''}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px', fontStyle: 'italic' }}>
+                        No parent linked
+                      </div>
+                    )}
                   </div>
                   <span className="badge badge-success">{std.status}</span>
                 </div>
@@ -540,25 +934,48 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
                         </div>
                       )}
                     </div>
-                    <a
-                      href={`tel:${p.phone.replace(/\s+/g, '')}`}
-                      style={{
-                        padding: '6px 12px',
-                        background: '#ffffff',
-                        border: '1px solid var(--border)',
-                        borderRadius: '6px',
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        color: 'var(--brand-800)',
-                        textDecoration: 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-                      }}
-                    >
-                      Call
-                    </a>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <a
+                        href={`tel:${p.phone.replace(/\s+/g, '')}`}
+                        style={{
+                          padding: '6px 12px',
+                          background: '#ffffff',
+                          border: '1px solid var(--border)',
+                          borderRadius: '6px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          color: 'var(--brand-800)',
+                          textDecoration: 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                        }}
+                      >
+                        Call
+                      </a>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteParent(p.id);
+                        }}
+                        style={{
+                          padding: '6px 8px',
+                          background: '#fee2e2',
+                          border: '1px solid #fca5a5',
+                          borderRadius: '6px',
+                          color: '#dc2626',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                        }}
+                        title="Remove Parent"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -730,14 +1147,15 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
                 />
               </div>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Password</label>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Password (visible)</label>
                 <input
-                  type="password"
+                  type="text"
+                  autoComplete="off"
                   required
                   placeholder="Set login password"
                   value={newStudentPassword}
                   onChange={e => setNewStudentPassword(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px' }}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', fontFamily: 'monospace' }}
                 />
               </div>
               <div>
@@ -747,10 +1165,9 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
                   onChange={e => setNewStudentCourse(e.target.value)}
                   style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px' }}
                 >
-                  <option value="Std. 12 • JEE">Std. 12 • JEE Main + Adv</option>
-                  <option value="Std. 12 • NEET">Std. 12 • NEET Medical</option>
-                  <option value="Std. 11 • Science">Std. 11 • Science</option>
-                  <option value="Std. 10 • Foundation">Std. 10 • Foundation</option>
+                  {COURSE_OPTIONS.map(course => (
+                    <option key={course} value={course}>{course}</option>
+                  ))}
                 </select>
               </div>
               <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
@@ -814,9 +1231,31 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
               </div>
 
               <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--brand-800)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Linked Student Details
-                </span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--brand-800)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Linked Student Connection
+                  </span>
+                  {selectedStudentIdForParent && selectedStudentIdForParent !== 'custom' && (
+                    <span className="badge badge-success" style={{ fontSize: '9.5px' }}>✓ Linked</span>
+                  )}
+                </div>
+
+                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  Select Enrolled Student to Auto-Link
+                </label>
+                <select
+                  value={selectedStudentIdForParent}
+                  onChange={e => handleSelectStudentForParent(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid var(--brand-500)', marginTop: '4px', fontSize: '13px', background: '#f0f9ff', fontWeight: 600, color: 'var(--brand-900)' }}
+                >
+                  <option value="">-- Choose Existing Student --</option>
+                  {students.map(std => (
+                    <option key={std.id} value={std.id}>
+                      {std.name} (Roll #{std.roll} • {std.course})
+                    </option>
+                  ))}
+                  <option value="custom">+ Enter New Student Manually</option>
+                </select>
               </div>
 
               <div>
@@ -826,7 +1265,12 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
                   required
                   placeholder="e.g. Aryan Gupta"
                   value={newParentChildName}
-                  onChange={e => setNewParentChildName(e.target.value)}
+                  onChange={e => {
+                    setNewParentChildName(e.target.value);
+                    if (selectedStudentIdForParent && selectedStudentIdForParent !== 'custom') {
+                      setSelectedStudentIdForParent('custom');
+                    }
+                  }}
                   style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px' }}
                 />
               </div>
@@ -860,12 +1304,9 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
                   onChange={e => setNewParentChildCourse(e.target.value)}
                   style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', background: 'var(--surface)' }}
                 >
-                  <option value="Std. 12 • Science • JEE">Std. 12 • Science • JEE</option>
-                  <option value="Std. 12 • Science • NEET">Std. 12 • Science • NEET</option>
-                  <option value="Std. 11 • Science • JEE">Std. 11 • Science • JEE</option>
-                  <option value="Std. 11 • Science • NEET">Std. 11 • Science • NEET</option>
-                  <option value="Std. 10 • Foundation">Std. 10 • Foundation</option>
-                  <option value="Std. 9 • Foundation">Std. 9 • Foundation</option>
+                  {COURSE_OPTIONS.map(course => (
+                    <option key={course} value={course}>{course}</option>
+                  ))}
                 </select>
               </div>
 
@@ -873,8 +1314,19 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
                 <button type="button" onClick={handleCloseAddParentModal} className="btn-secondary" style={{ flex: 1, fontSize: '13px', padding: '10px' }}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary" style={{ flex: 1, fontSize: '13px', padding: '10px' }}>
-                  Add Parent
+                <button
+                  type="submit"
+                  disabled={isSubmittingParent}
+                  className="btn-primary"
+                  style={{
+                    flex: 1,
+                    fontSize: '13px',
+                    padding: '10px',
+                    opacity: isSubmittingParent ? 0.65 : 1,
+                    cursor: isSubmittingParent ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {isSubmittingParent ? 'Adding...' : 'Add Parent'}
                 </button>
               </div>
             </form>
@@ -1092,7 +1544,12 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
                 <div key={s.id} className="card" style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{s.name}</h5>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{s.course}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Roll #{s.roll} • {s.course}</span>
+                    {s.parentName && (
+                      <div style={{ fontSize: '11px', color: 'var(--brand-700)', fontWeight: 600, marginTop: '2px' }}>
+                        Parent: {s.parentName} ({s.parentPhone || 'Linked'})
+                      </div>
+                    )}
                   </div>
                   <span className="badge badge-success">{s.status}</span>
                 </div>
@@ -1266,6 +1723,36 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
           </div>
         </div>
       )}
+
+      {/* ── Study Materials Modal ── */}
+      <AdminStudyMaterialsModal
+        isOpen={showMaterialsModal}
+        onClose={() => setShowMaterialsModal(false)}
+      />
+
+      {/* ── Tests & Exams Modal ── */}
+      <AdminTestsModal
+        isOpen={showTestsModal}
+        onClose={() => setShowTestsModal(false)}
+      />
+
+      {/* ── Timetable Modal ── */}
+      <AdminTimetableModal
+        isOpen={showTimetableModal}
+        onClose={() => setShowTimetableModal(false)}
+      />
+
+      {/* ── Attendance Analytics Modal ── */}
+      <AdminAttendanceModal
+        isOpen={showAttendanceModal}
+        onClose={() => setShowAttendanceModal(false)}
+      />
+
+      {/* ── Marks Management & Upload Modal ── */}
+      <AdminMarksModal
+        isOpen={showMarksModal}
+        onClose={() => setShowMarksModal(false)}
+      />
     </>
   );
 }

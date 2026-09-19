@@ -7,6 +7,11 @@ import ProtectedPdfViewer from './components/common/ProtectedPdfViewer';
 import ScreenSlider from './components/common/ScreenSlider';
 import LoginModal from './components/auth/LoginModal';
 import NotificationsModal from './components/common/NotificationsModal';
+import PermissionsModal from './components/common/PermissionsModal';
+import OpeningScreen from './components/common/OpeningScreen';
+import { isFirstLaunch } from './lib/permissions';
+import { Browser } from '@capacitor/browser';
+import { supabase } from './lib/supabaseClient';
 
 // Student Views
 import StudentHome from './components/student/StudentHome';
@@ -32,17 +37,38 @@ import ParentFees from './components/parent/ParentFees';
 import AdminMobileDashboard from './components/admin/AdminMobileDashboard';
 
 export default function App() {
-  const [currentRole, setCurrentRole] = useState('student');
+  const [currentRole, setCurrentRole] = useState(() => {
+    try {
+      return localStorage.getItem('aspire_user_role') || 'admin';
+    } catch (e) {
+      return 'admin';
+    }
+  });
   const [activeTab, setActiveTab] = useState('home');
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isCreateTestOpen, setIsCreateTestOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
   const [notices, setNotices] = useState(mockNotices);
   const [pdfViewerData, setPdfViewerData] = useState(null);
 
+  // Authentication & Opening Screen States
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aspire_is_logged_in');
+      if (saved !== null) return saved === 'true';
+      return false;
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const [showOpeningScreen, setShowOpeningScreen] = useState(true);
+  const [isLandingFade, setIsLandingFade] = useState(false);
+
   // Profile loading & saving helper for Students, Teachers & Parents
   const getUserForRole = (role) => {
-    const base = mockUsers[role] || mockUsers.student;
+    const base = mockUsers[role] || mockUsers.admin;
     try {
       const saved = localStorage.getItem(`aspire_${role}_profile`);
       if (saved) {
@@ -60,8 +86,17 @@ export default function App() {
     return base;
   };
 
-  // Active user profile matching current role (with persistent custom details & avatar support)
-  const [currentUser, setCurrentUser] = useState(() => getUserForRole('student'));
+  // Active user profile matching current role (persists when logged in)
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const savedAuth = localStorage.getItem('aspire_is_logged_in');
+      if (savedAuth === 'true') {
+        const savedRole = localStorage.getItem('aspire_user_role') || 'admin';
+        return getUserForRole(savedRole);
+      }
+    } catch (e) {}
+    return null;
+  });
 
   const handleUpdateAvatar = (newAvatar) => {
     try {
@@ -97,34 +132,77 @@ export default function App() {
     setNotices(prev => prev.map(n => n.id === id ? ({ ...n, read: true }) : n));
   };
 
-  // Teacher submits attendance → generate live notifications for each student/parent
+  // Teacher submits attendance → generate live notifications for parents & students
   const handleAttendanceSubmit = ({ batchName, subject, time, students }) => {
     const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-    const newNotifs = students.map(s => ({
-      id: `att-${s.id}-${Date.now()}`,
-      title: `Attendance Marked: ${s.name}`,
-      message: `${s.name} is ${s.status} for today's ${time} ${subject} lecture (${batchName}). Marked by teacher.`,
-      category: 'Attendance',
-      priority: s.status === 'Absent' ? 'high' : 'normal',
-      timestamp: 'Just now',
-      date: today,
-      read: false
-    }));
+    const newNotifs = students.map(s => {
+      const isAbsent = s.status === 'Absent';
+      return {
+        id: `att-${s.id}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        title: isAbsent ? `⚠️ Attendance Alert: ${s.name} Absent` : `✅ Attendance: ${s.name} Present`,
+        message: isAbsent
+          ? `Parent Alert: ${s.name} was marked ABSENT for today's ${time} ${subject} class (${batchName}). Please contact institute if this is an error.`
+          : `${s.name} attended today's ${time} ${subject} class (${batchName}). Marked by faculty.`,
+        category: 'Attendance',
+        priority: isAbsent ? 'high' : 'normal',
+        timestamp: 'Just now',
+        date: today,
+        read: false
+      };
+    });
     setNotices(prev => [...newNotifs, ...prev]);
   };
+
+  // Listen for admin attendance corrections
+  useEffect(() => {
+    const handleAttendanceChange = (e) => {
+      if (e.detail?.updatedBy === 'admin') {
+        const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        const { studentId, newStatus } = e.detail;
+        setNotices(prev => [{
+          id: `admin-att-${studentId}-${Date.now()}`,
+          title: `Attendance Corrected by Admin`,
+          message: `Attendance status for student #${studentId} was updated to ${newStatus} by Institute Admin.`,
+          category: 'Attendance',
+          priority: 'normal',
+          timestamp: 'Just now',
+          date: today,
+          read: false
+        }, ...prev]);
+      }
+    };
+    window.addEventListener('aspire:attendance-updated', handleAttendanceChange);
+    return () => window.removeEventListener('aspire:attendance-updated', handleAttendanceChange);
+  }, []);
 
   // State refs for the back button listener to prevent stale closures
   const activeTabRef = useRef(activeTab);
   const isLoginOpenRef = useRef(isLoginOpen);
   const isCreateTestOpenRef = useRef(isCreateTestOpen);
   const isNotificationsOpenRef = useRef(isNotificationsOpen);
+  const isPermissionsOpenRef = useRef(isPermissionsOpen);
   const pdfViewerDataRef = useRef(pdfViewerData);
+  const showOpeningScreenRef = useRef(showOpeningScreen);
+  const isLoggedInRef = useRef(isLoggedIn);
 
   useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
   useEffect(() => { isLoginOpenRef.current = isLoginOpen; }, [isLoginOpen]);
   useEffect(() => { isCreateTestOpenRef.current = isCreateTestOpen; }, [isCreateTestOpen]);
   useEffect(() => { isNotificationsOpenRef.current = isNotificationsOpen; }, [isNotificationsOpen]);
+  useEffect(() => { isPermissionsOpenRef.current = isPermissionsOpen; }, [isPermissionsOpen]);
   useEffect(() => { pdfViewerDataRef.current = pdfViewerData; }, [pdfViewerData]);
+  useEffect(() => { showOpeningScreenRef.current = showOpeningScreen; }, [showOpeningScreen]);
+  useEffect(() => { isLoggedInRef.current = isLoggedIn; }, [isLoggedIn]);
+
+  // First-time download/launch check: automatically prompt for mobile device permissions once entered
+  useEffect(() => {
+    if (isFirstLaunch() && !showOpeningScreen && isLoggedIn) {
+      const timer = setTimeout(() => {
+        setIsPermissionsOpen(true);
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [showOpeningScreen, isLoggedIn]);
 
   // Keep browser/webview history in sync: push state when leaving home
   useEffect(() => {
@@ -147,7 +225,10 @@ export default function App() {
       window.dispatchEvent(event);
       if (handledByChild) return;
 
-      // 2. Close top-level overlay modals if any are open
+      if (isPermissionsOpenRef.current) {
+        setIsPermissionsOpen(false);
+        return;
+      }
       if (pdfViewerDataRef.current) {
         setPdfViewerData(null);
         return;
@@ -162,6 +243,14 @@ export default function App() {
       }
       if (isLoginOpenRef.current) {
         setIsLoginOpen(false);
+        return;
+      }
+
+      // If on opening screen and not logged in, back exits app
+      if (showOpeningScreenRef.current && !isLoggedInRef.current) {
+        try {
+          CapApp.exitApp();
+        } catch (err) {}
         return;
       }
 
@@ -223,11 +312,17 @@ export default function App() {
   };
 
   const handleLoginSuccess = (userAuth) => {
-    let matched = mockUsers[userAuth.role] || {
-      ...mockUsers.student,
-      name: userAuth.name,
-      email: userAuth.email,
-      role: userAuth.role
+    const base = mockUsers[userAuth.role] || mockUsers.student;
+    let matched = {
+      ...base,
+      id: userAuth.id || base.id,
+      name: userAuth.name || base.name,
+      email: userAuth.email || base.email,
+      phone: userAuth.phone !== undefined ? userAuth.phone : '',
+      bloodGroup: userAuth.bloodGroup !== undefined ? userAuth.bloodGroup : '',
+      role: userAuth.role || 'student',
+      course: userAuth.course || base.course,
+      rollNumber: userAuth.rollNumber || base.rollNumber
     };
     if (userAuth.role === 'student') {
       try {
@@ -239,13 +334,104 @@ export default function App() {
     }
     setCurrentRole(userAuth.role);
     setCurrentUser(matched);
+    setIsLoggedIn(true);
+    try {
+      localStorage.setItem('aspire_is_logged_in', 'true');
+      localStorage.setItem('aspire_user_role', userAuth.role);
+      localStorage.setItem(`aspire_${userAuth.role}_profile`, JSON.stringify(matched));
+    } catch (e) {}
     setActiveTab('home');
+    setShowOpeningScreen(false);
+    setIsLandingFade(true);
+    setTimeout(() => {
+      setIsLandingFade(false);
+    }, 850);
   };
 
   const handleLogout = () => {
+    try {
+      localStorage.removeItem('aspire_is_logged_in');
+    } catch (e) {}
+    setIsLoggedIn(false);
     setCurrentUser(null);
-    setIsLoginOpen(true);
+    setShowOpeningScreen(true);
+    setIsLoginOpen(false);
   };
+
+  // Mobile OAuth redirect deep link listener (com.aspire.learning://auth#access_token=...)
+  useEffect(() => {
+    let urlListener = null;
+
+    const initOAuthListener = async () => {
+      try {
+        urlListener = await CapApp.addListener('appUrlOpen', async (data) => {
+          try {
+            await Browser.close();
+          } catch (e) {}
+
+          const rawUrl = data?.url;
+          if (!rawUrl) return;
+
+          // Parse hash fragment from OAuth callback
+          if (rawUrl.includes('access_token')) {
+            const hashIndex = rawUrl.indexOf('#');
+            if (hashIndex !== -1) {
+              const hash = rawUrl.substring(hashIndex + 1);
+              const params = new URLSearchParams(hash);
+              const accessToken = params.get('access_token');
+              const refreshToken = params.get('refresh_token');
+
+              if (accessToken) {
+                const { data: sessionData, error: sessionErr } = await supabase.auth.setSession({
+                  access_token: accessToken,
+                  refresh_token: refreshToken || ''
+                });
+
+                if (!sessionErr && sessionData?.user) {
+                  const userMeta = sessionData.user.user_metadata || {};
+                  handleLoginSuccess({
+                    id: sessionData.user.id,
+                    email: sessionData.user.email,
+                    role: userMeta.role || 'student',
+                    name: userMeta.full_name || sessionData.user.email?.split('@')[0] || 'ASPIRE User'
+                  });
+                }
+              }
+            }
+          }
+        });
+      } catch (err) {
+        console.error('Deep link listener error:', err);
+      }
+    };
+
+    initOAuthListener();
+
+    // Supabase auth state change subscription
+    const { data: authSub } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session?.user) {
+        try {
+          await Browser.close();
+        } catch (e) {}
+        const userMeta = session.user.user_metadata || {};
+        handleLoginSuccess({
+          id: session.user.id,
+          email: session.user.email,
+          role: userMeta.role || 'student',
+          name: userMeta.full_name || session.user.email?.split('@')[0] || 'ASPIRE User'
+        });
+      }
+    });
+
+    return () => {
+      if (urlListener && urlListener.remove) {
+        urlListener.remove();
+      }
+      if (authSub?.subscription) {
+        authSub.subscription.unsubscribe();
+      }
+    };
+  }, []);
 
   // Student Screens (5 Tabs matching BottomNav)
   const studentTabs = [
@@ -285,6 +471,7 @@ export default function App() {
           onLogout={handleLogout}
           onUpdateAvatar={handleUpdateAvatar}
           onUpdateUser={handleUpdateUser}
+          onOpenPermissions={() => setIsPermissionsOpen(true)}
         />
       )
     }
@@ -325,6 +512,7 @@ export default function App() {
           user={currentUser || mockUsers.teacher}
           onLogout={handleLogout}
           onUpdateUser={handleUpdateUser}
+          onOpenPermissions={() => setIsPermissionsOpen(true)}
         />
       )
     }
@@ -367,6 +555,7 @@ export default function App() {
           user={currentUser || mockUsers.parent}
           onLogout={handleLogout}
           onUpdateUser={handleUpdateUser}
+          onOpenPermissions={() => setIsPermissionsOpen(true)}
         />
       )
     }
@@ -378,7 +567,6 @@ export default function App() {
       {/* Universal Header */}
       <Header
         currentRole={currentRole}
-        setRole={handleRoleChange}
         user={currentUser}
         onOpenLogin={() => setIsLoginOpen(true)}
         onLogout={handleLogout}
@@ -387,7 +575,11 @@ export default function App() {
       />
 
       {/* Main Role-Specific Viewport with Hardware-Accelerated Sliding Track */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+      <main
+        key={isLandingFade ? 'landing-main' : 'default-main'}
+        className={isLandingFade ? 'home-fade-landing' : ''}
+        style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}
+      >
         {/* STUDENT SCREENS */}
         {currentRole === 'student' && (
           <ScreenSlider
@@ -470,6 +662,21 @@ export default function App() {
         onMarkAllRead={handleMarkAllNoticesRead}
         onNoticeClick={handleNoticeClick}
       />
+
+      {/* Device Permissions Onboarding & Management Modal */}
+      <PermissionsModal
+        isOpen={isPermissionsOpen}
+        onClose={() => setIsPermissionsOpen(false)}
+      />
+
+      {/* Opening Screen (Splash / Welcome Screen) */}
+      {showOpeningScreen && (
+        <OpeningScreen
+          isLoggedIn={isLoggedIn}
+          onOpenLogin={() => setIsLoginOpen(true)}
+          onProceed={() => setShowOpeningScreen(false)}
+        />
+      )}
     </div>
   );
 }

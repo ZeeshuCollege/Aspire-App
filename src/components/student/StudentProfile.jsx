@@ -4,7 +4,7 @@ import PersonalDetailsModal from './PersonalDetailsModal';
 import ManagePasswordModal from './ManagePasswordModal';
 import ChangeAvatarModal from '../common/ChangeAvatarModal';
 
-export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdateUser }) {
+export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdateUser, onOpenPermissions }) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isManagePasswordOpen, setIsManagePasswordOpen] = useState(false);
   const [isChangeAvatarOpen, setIsChangeAvatarOpen] = useState(false);
@@ -20,7 +20,7 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
     ? `Parent of ${user.linkedChild?.name || 'Rohan Sharma'}`
     : isAdmin
     ? 'System Administrator'
-    : (user.course || 'Std. 12 • Science • JEE');
+    : (user.course || '12th Science');
 
   // Dynamic Verification Badge
   const roleBadgeLabel = isTeacher
@@ -43,6 +43,7 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
   const menuItems = [
     { icon: User, label: 'Personal Details', badge: personalDetailsBadge },
     { icon: Lock, label: 'Manage Password', badge: null },
+    { icon: ShieldCheck, label: 'Device Permissions', badge: 'Active' },
     { icon: HelpCircle, label: 'Help & Support', badge: null }
   ];
 
@@ -108,6 +109,8 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
                   setIsDetailsOpen(true);
                 } else if (item.label === 'Manage Password') {
                   setIsManagePasswordOpen(true);
+                } else if (item.label === 'Device Permissions' && onOpenPermissions) {
+                  onOpenPermissions();
                 }
               }}
               style={{
