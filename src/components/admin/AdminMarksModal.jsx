@@ -50,6 +50,49 @@ export default function AdminMarksModal({ isOpen, onClose }) {
   const [successToast, setSuccessToast] = useState('');
   const [isClosing, setIsClosing] = useState(false);
 
+  // Compute live test metrics (Always at top level to maintain Hook call order)
+  const stats = useMemo(() => {
+    let totalPresent = 0;
+    let totalAbsent = 0;
+    let totalScoreSum = 0;
+    let evaluatedCount = 0;
+    let passedCount = 0;
+    let highest = -1;
+    let lowest = 9999;
+
+    studentsList.forEach(std => {
+      const entry = studentMarks[std.id];
+      if (!entry) return;
+      if (entry.isAbsent) {
+        totalAbsent += 1;
+        return;
+      }
+      if (entry.score !== '' && !isNaN(Number(entry.score))) {
+        const s = Number(entry.score);
+        totalPresent += 1;
+        evaluatedCount += 1;
+        totalScoreSum += s;
+        if (s >= Number(passingMarks)) passedCount += 1;
+        if (s > highest) highest = s;
+        if (s < lowest) lowest = s;
+      }
+    });
+
+    const avg = evaluatedCount > 0 ? (totalScoreSum / evaluatedCount).toFixed(1) : '—';
+    const passRate = evaluatedCount > 0 ? Math.round((passedCount / evaluatedCount) * 100) : 0;
+
+    return {
+      totalStudents: studentsList.length,
+      evaluatedCount,
+      totalPresent,
+      totalAbsent,
+      avgScore: avg,
+      highestScore: highest >= 0 ? highest : '—',
+      lowestScore: lowest <= 100 ? lowest : '—',
+      passRate
+    };
+  }, [studentsList, studentMarks, passingMarks]);
+
   // Load students & existing marks on mount or test change
   useEffect(() => {
     if (!isOpen) return;
@@ -201,49 +244,6 @@ export default function AdminMarksModal({ isOpen, onClose }) {
     setSuccessToast(`✓ Filled passing marks (${passingMarks}) for unentered students.`);
     setTimeout(() => setSuccessToast(''), 2500);
   };
-
-  // Compute live test metrics
-  const stats = useMemo(() => {
-    let totalPresent = 0;
-    let totalAbsent = 0;
-    let totalScoreSum = 0;
-    let evaluatedCount = 0;
-    let passedCount = 0;
-    let highest = -1;
-    let lowest = 9999;
-
-    studentsList.forEach(std => {
-      const entry = studentMarks[std.id];
-      if (!entry) return;
-      if (entry.isAbsent) {
-        totalAbsent += 1;
-        return;
-      }
-      if (entry.score !== '' && !isNaN(Number(entry.score))) {
-        const s = Number(entry.score);
-        totalPresent += 1;
-        evaluatedCount += 1;
-        totalScoreSum += s;
-        if (s >= Number(passingMarks)) passedCount += 1;
-        if (s > highest) highest = s;
-        if (s < lowest) lowest = s;
-      }
-    });
-
-    const avg = evaluatedCount > 0 ? (totalScoreSum / evaluatedCount).toFixed(1) : '—';
-    const passRate = evaluatedCount > 0 ? Math.round((passedCount / evaluatedCount) * 100) : 0;
-
-    return {
-      totalStudents: studentsList.length,
-      evaluatedCount,
-      totalPresent,
-      totalAbsent,
-      avgScore: avg,
-      highestScore: highest >= 0 ? highest : '—',
-      lowestScore: lowest <= 100 ? lowest : '—',
-      passRate
-    };
-  }, [studentsList, studentMarks, passingMarks]);
 
   // Helper for Grade Badge
   const getGradeInfo = (scoreStr, isAbsent) => {
