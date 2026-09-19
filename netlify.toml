@@ -1,0 +1,17 @@
+# Netlify configuration for Vite React SPA
+
+[build]
+  # Command to build the production bundle
+  command = "npm run build"
+  # Directory that contains the deploy-ready HTML and assets
+  publish = "dist"
+
+[build.environment]
+  # Specify Node.js runtime version
+  NODE_VERSION = "20"
+
+# SPA Fallback - redirect all routing to index.html with HTTP 200
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
