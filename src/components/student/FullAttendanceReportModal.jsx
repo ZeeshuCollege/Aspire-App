@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Calendar, CheckCircle2, XCircle, Clock, Filter, Search, BookOpen, UserCheck, ChevronRight, Award } from 'lucide-react';
+import { X, Calendar, CheckCircle2, XCircle, Clock, Search, UserCheck, Award } from 'lucide-react';
 import { mockLectureAttendance } from '../../lib/mockData';
 
 export default function FullAttendanceReportModal({ isOpen, onClose }) {

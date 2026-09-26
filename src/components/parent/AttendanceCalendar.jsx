@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle2, XCircle, Check, X, Calendar, 
-  Clock, BookOpen, User, Sparkles, Filter, Info 
+  Clock, BookOpen, User 
 } from 'lucide-react';
 import { getStudentTodayAttendance } from '../../lib/attendanceService';
 

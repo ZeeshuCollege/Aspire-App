@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { App as CapApp } from '@capacitor/app';
-import { mockUsers, mockNotices } from './lib/mockData';
+import { mockUsers, mockNotices, DEFAULT_GREY_AVATAR } from './lib/mockData';
 import Header from './components/common/Header';
 import BottomNav from './components/common/BottomNav';
 import ProtectedPdfViewer from './components/common/ProtectedPdfViewer';
@@ -23,7 +23,6 @@ import StudentProfile from './components/student/StudentProfile';
 // Teacher Views
 import TeacherDashboard from './components/teacher/TeacherDashboard';
 import MyBatches from './components/teacher/MyBatches';
-import AttendanceMarker from './components/teacher/AttendanceMarker';
 import CreateTestModal from './components/teacher/CreateTestModal';
 import TeacherPerformance from './components/teacher/TeacherPerformance';
 
@@ -72,18 +71,17 @@ export default function App() {
     try {
       const saved = localStorage.getItem(`aspire_${role}_profile`);
       if (saved) {
-        return { ...base, ...JSON.parse(saved) };
-      }
-      if (role === 'student') {
-        const savedAvatar = localStorage.getItem('aspire_student_avatar');
-        if (savedAvatar) {
-          return { ...base, avatar: savedAvatar };
-        }
+        const parsed = JSON.parse(saved);
+        return {
+          ...base,
+          ...parsed,
+          avatar: parsed.avatar || base.avatar || DEFAULT_GREY_AVATAR
+        };
       }
     } catch (e) {
       console.error(e);
     }
-    return base;
+    return { ...base, avatar: base.avatar || DEFAULT_GREY_AVATAR };
   };
 
   // Active user profile matching current role (persists when logged in)
@@ -99,10 +97,12 @@ export default function App() {
   });
 
   const handleUpdateAvatar = (newAvatar) => {
-    try {
-      localStorage.setItem('aspire_student_avatar', newAvatar);
-    } catch (e) {
-      console.error(e);
+    if (currentUser?.id || currentUser?.email) {
+      try {
+        localStorage.setItem(`aspire_avatar_${currentUser.id || currentUser.email}`, newAvatar);
+      } catch (e) {
+        console.error(e);
+      }
     }
     setCurrentUser(prev => prev ? { ...prev, avatar: newAvatar } : prev);
   };
@@ -292,12 +292,6 @@ export default function App() {
     };
   }, []);
 
-  // Switch role and update active user & tab
-  const handleRoleChange = (role) => {
-    setCurrentRole(role);
-    setCurrentUser(getUserForRole(role));
-    setActiveTab('home');
-  };
 
   const handleStudentNavigate = (tab) => {
     if (tab === 'attendance') {
@@ -313,6 +307,17 @@ export default function App() {
 
   const handleLoginSuccess = (userAuth) => {
     const base = mockUsers[userAuth.role] || mockUsers.student;
+    const userIdentifier = userAuth.id || userAuth.email;
+    let userAvatar = userAuth.avatar;
+    if (!userAvatar && userIdentifier) {
+      try {
+        userAvatar = localStorage.getItem(`aspire_avatar_${userIdentifier}`);
+      } catch (e) {}
+    }
+    if (!userAvatar) {
+      userAvatar = base.avatar || DEFAULT_GREY_AVATAR;
+    }
+
     let matched = {
       ...base,
       id: userAuth.id || base.id,
@@ -322,16 +327,9 @@ export default function App() {
       bloodGroup: userAuth.bloodGroup !== undefined ? userAuth.bloodGroup : '',
       role: userAuth.role || 'student',
       course: userAuth.course || base.course,
-      rollNumber: userAuth.rollNumber || base.rollNumber
+      rollNumber: userAuth.rollNumber || base.rollNumber,
+      avatar: userAvatar
     };
-    if (userAuth.role === 'student') {
-      try {
-        const savedAvatar = localStorage.getItem('aspire_student_avatar');
-        if (savedAvatar) {
-          matched = { ...matched, avatar: savedAvatar };
-        }
-      } catch (e) {}
-    }
     setCurrentRole(userAuth.role);
     setCurrentUser(matched);
     setIsLoggedIn(true);
@@ -410,14 +408,24 @@ export default function App() {
     // Supabase auth state change subscription
     const { data: authSub } = supabase.auth.onAuthStateChange(async (event, session) => {
       if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session?.user) {
+        const currentSavedRole = localStorage.getItem('aspire_user_role');
+        const currentSavedLoggedIn = localStorage.getItem('aspire_is_logged_in');
+        const userMeta = session.user.user_metadata || {};
+        const incomingRole = userMeta.role || 'student';
+
+        // Retain active Admin session; ignore background auth changes from created students/teachers/parents
+        if (currentSavedLoggedIn === 'true' && currentSavedRole === 'admin' && incomingRole !== 'admin') {
+          console.info('[ASPIRE] Retaining active Admin session; ignoring background auth event for:', session.user.email);
+          return;
+        }
+
         try {
           await Browser.close();
         } catch (e) {}
-        const userMeta = session.user.user_metadata || {};
         handleLoginSuccess({
           id: session.user.id,
           email: session.user.email,
-          role: userMeta.role || 'student',
+          role: incomingRole,
           name: userMeta.full_name || session.user.email?.split('@')[0] || 'ASPIRE User'
         });
       }

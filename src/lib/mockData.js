@@ -7,11 +7,11 @@ export const DEFAULT_GREY_AVATAR = `data:image/svg+xml;utf8,<svg xmlns="http://w
 export const mockUsers = {
   admin: {
     id: 'adm-001',
-    name: 'ASPIRE Admin',
+    name: 'Zeeshan (Admin)',
     role: 'admin',
-    email: 'aspirelearningcentre@outlook.com',
+    email: 'pinjari.work@gmail.com',
     phone: '+917738578685',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80'
+    avatar: DEFAULT_GREY_AVATAR
   },
   student: {
     id: 'std-empty',
@@ -417,5 +417,3 @@ export const mockLectureAttendance = [
   { id: 'lec-03', lectureNumber: 56, date: '03 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Mathematics', topic: 'Complex Numbers & De Moivre Theorem', faculty: 'Mr. Neha Kapoor', status: 'Present', recordedAt: '09:56 AM' },
   { id: 'lec-01', lectureNumber: 54, date: '02 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Physics', topic: 'Ray Optics and Optical Instruments', faculty: 'Ms. Priya Shah', status: 'Present', recordedAt: '09:55 AM' }
 ];
-
-export const mockParentsList = [];

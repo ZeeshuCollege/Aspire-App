@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Camera, Mic, HardDrive, ShieldCheck, CheckCircle2, AlertCircle, ChevronRight, Sparkles, Loader2 } from 'lucide-react';
+import { Bell, Camera, Mic, HardDrive, ShieldCheck, CheckCircle2, AlertCircle, Sparkles, Loader2 } from 'lucide-react';
 import {
   checkCurrentPermissions,
   requestAllPermissions,

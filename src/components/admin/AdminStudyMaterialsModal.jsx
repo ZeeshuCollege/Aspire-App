@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, Plus, Search, BookOpen, FileText, Video, Calendar, 
-  ExternalLink, Copy, Check, Trash2, Layers, Filter, Eye, ChevronRight, ArrowLeft
+  ExternalLink, Copy, Check, Trash2, Layers, ChevronRight, ArrowLeft
 } from 'lucide-react';
 import { mockStudyMaterials } from '../../lib/mockData';
 

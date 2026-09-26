@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { mockAdminStats, mockBatches, mockNotices as initialNotices } from '../../lib/mockData';
+import { mockNotices as initialNotices, DEFAULT_GREY_AVATAR } from '../../lib/mockData';
 import {
   getStoredStudents, saveStoredStudents,
   getStoredTeachers, saveStoredTeachers,
@@ -7,8 +7,9 @@ import {
   addRegisteredUser
 } from '../../lib/userAuthStore';
 import {
-  Users, UserCheck, BookOpen, CheckSquare, Plus, Search,
-  Download, Settings, ShieldCheck, ChevronRight, Bell, DollarSign, Calendar, FileCheck, FileText, Trash2, Award
+  BookOpen, CheckSquare, Plus, Search,
+  Download, ChevronRight, Calendar, FileCheck, Trash2, Award,
+  Eye, EyeOff
 } from 'lucide-react';
 import ScreenSlider from '../common/ScreenSlider';
 import AdminStudyMaterialsModal, { SUBJECT_OPTIONS, COURSE_OPTIONS } from './AdminStudyMaterialsModal';
@@ -57,6 +58,8 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
   const [newParentName, setNewParentName] = useState('');
   const [newParentPhone, setNewParentPhone] = useState('');
   const [newParentEmail, setNewParentEmail] = useState('');
+  const [newParentPassword, setNewParentPassword] = useState('');
+  const [showParentPassword, setShowParentPassword] = useState(false);
   const [newParentChildName, setNewParentChildName] = useState('');
   const [newParentChildEmail, setNewParentChildEmail] = useState('');
   const [newParentChildRoll, setNewParentChildRoll] = useState('');
@@ -72,6 +75,21 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
   const [newFacultyBatches, setNewFacultyBatches] = useState([]);
   const [newFacultySubjects, setNewFacultySubjects] = useState([]);
   const [exportFeedback, setExportFeedback] = useState('');
+
+  // Universal Add User Modal States (Student, Teacher, Parent, Admin)
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [isUserModalClosing, setIsUserModalClosing] = useState(false);
+  const [newUserRole, setNewUserRole] = useState('student');
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserPhone, setNewUserPhone] = useState('');
+  const [newUserCourse, setNewUserCourse] = useState('12th Science');
+  const [newUserBatches, setNewUserBatches] = useState([]);
+  const [newUserSubjects, setNewUserSubjects] = useState([]);
+  const [newUserChildName, setNewUserChildName] = useState('');
+  const [newUserChildRoll, setNewUserChildRoll] = useState('');
+  const [isSubmittingUser, setIsSubmittingUser] = useState(false);
 
   // Add Course Modal States
   const [showAddCourseModal, setShowAddCourseModal] = useState(false);
@@ -145,6 +163,8 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
       setShowAddParentModal(false);
       setIsParentModalClosing(false);
       setIsSubmittingParent(false);
+      setNewParentPassword('');
+      setShowParentPassword(false);
     }, 380);
   };
 
@@ -163,7 +183,7 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
     }
   };
 
-  const handleAddParent = (e) => {
+  const handleAddParent = async (e) => {
     e.preventDefault();
     if (isSubmittingParent) return;
     if (!newParentName || !newParentPhone) return;
@@ -204,7 +224,7 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
     const studentId = matchedStudent ? matchedStudent.id : `s-${Date.now()}`;
 
     const parentEmailClean = (newParentEmail.trim() || `${newParentName.trim().toLowerCase().replace(/\s+/g, '')}@gmail.com`).toLowerCase();
-    const parentPassClean = newParentPhone.trim() || 'parent@123';
+    const parentPassClean = (newParentPassword || '').trim() || newParentPhone.trim() || 'parent@123';
 
     const newPar = {
       id: parentId,
@@ -218,7 +238,8 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
       linkedChildEmail: childEmail,
       linkedChildRoll: childRoll,
       linkedChildCourse: childCourse,
-      status: 'Active'
+      status: 'Active',
+      avatar: DEFAULT_GREY_AVATAR
     };
 
     // 1. Update parents list and persist
@@ -229,7 +250,7 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
 
     // Register parent credentials
     if (newPar.email) {
-      addRegisteredUser({
+      await addRegisteredUser({
         name: newPar.name,
         email: parentEmailClean,
         password: parentPassClean,
@@ -276,6 +297,8 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
     setNewParentName('');
     setNewParentPhone('');
     setNewParentEmail('');
+    setNewParentPassword('');
+    setShowParentPassword(false);
     setNewParentChildName('');
     setNewParentChildEmail('');
     setNewParentChildRoll('');
@@ -380,6 +403,11 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
         e.detail?.markHandled();
         return;
       }
+      if (showAddUserModal) {
+        setShowAddUserModal(false);
+        e.detail?.markHandled();
+        return;
+      }
       if (showAddModal) {
         setShowAddModal(false);
         e.detail?.markHandled();
@@ -407,9 +435,125 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
   }, [
     selectedAbsentStudent, showAddNoticeForm, showNoticesModal,
     showAbsentModal, showTeachersModal, showStudentsModal,
-    showAddModal, showAddParentModal, showAddFacultyModal, showAddCourseModal,
+    showAddUserModal, showAddModal, showAddParentModal, showAddFacultyModal, showAddCourseModal,
     showMaterialsModal, showTestsModal, showTimetableModal, showAttendanceModal, showMarksModal
   ]);
+
+  const handleCloseAddUserModal = () => {
+    setIsUserModalClosing(true);
+    setTimeout(() => {
+      setShowAddUserModal(false);
+      setIsUserModalClosing(false);
+    }, 280);
+  };
+
+  const toggleUserBatch = (b) => setNewUserBatches(prev => prev.includes(b) ? prev.filter(x => x !== b) : [...prev, b]);
+  const toggleUserSubject = (s) => setNewUserSubjects(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+
+  const handleAddUniversalUser = async (e) => {
+    e.preventDefault();
+    if (isSubmittingUser) return;
+    const cleanName = newUserName.trim();
+    const cleanEmail = newUserEmail.trim().toLowerCase();
+    const cleanPassword = newUserPassword.trim();
+    const cleanPhone = newUserPhone.trim();
+
+    if (!cleanName || !cleanEmail || !cleanPassword) {
+      alert('Please fill in required fields: Name, Email, and Password.');
+      return;
+    }
+
+    setIsSubmittingUser(true);
+
+    try {
+      const res = await addRegisteredUser({
+        name: cleanName,
+        email: cleanEmail,
+        password: cleanPassword,
+        role: newUserRole,
+        phone: cleanPhone,
+        course: newUserCourse,
+        batches: newUserBatches,
+        subjects: newUserSubjects,
+        linkedChildName: newUserChildName,
+        rollNumber: newUserChildRoll || (newUserRole === 'student' ? (students.length + 101).toString() : '')
+      });
+
+      if (newUserRole === 'student') {
+        const rollNo = (students.length + 101).toString();
+        const newStd = {
+          id: res?.id || `s-${Date.now()}`,
+          name: cleanName,
+          email: cleanEmail,
+          password: cleanPassword,
+          roll: rollNo,
+          rollNumber: `ASPIRE-2025-${rollNo}`,
+          course: newUserCourse || '12th Science',
+          attendance: 'Present',
+          score: '85%',
+          status: 'Active',
+          phone: cleanPhone,
+          bloodGroup: '',
+          avatar: DEFAULT_GREY_AVATAR
+        };
+        const updated = [newStd, ...students];
+        setStudents(updated);
+        saveStoredStudents(updated);
+      } else if (newUserRole === 'teacher') {
+        const newT = {
+          id: res?.id || `t-${Date.now()}`,
+          name: cleanName,
+          email: cleanEmail,
+          password: cleanPassword,
+          subject: newUserSubjects.join(', ') || 'General',
+          batches: newUserBatches.join(', ') || 'All Batches',
+          status: 'Active',
+          avatar: DEFAULT_GREY_AVATAR
+        };
+        setTeachers(prev => {
+          const updated = [newT, ...prev];
+          saveStoredTeachers(updated);
+          return updated;
+        });
+      } else if (newUserRole === 'parent') {
+        const newPar = {
+          id: res?.id || `par-${Date.now()}`,
+          name: cleanName,
+          phone: cleanPhone || '9876543210',
+          email: cleanEmail,
+          password: cleanPassword,
+          linkedChildName: newUserChildName || 'Student',
+          linkedChildRoll: newUserChildRoll || '101',
+          linkedChildCourse: newUserCourse || '12th Science',
+          status: 'Active',
+          avatar: DEFAULT_GREY_AVATAR
+        };
+        setParents(prev => {
+          const updated = [newPar, ...prev];
+          saveStoredParents(updated);
+          return updated;
+        });
+      }
+
+      setExportFeedback(`✓ User "${cleanName}" (${newUserRole.toUpperCase()}) saved and stored in Supabase!`);
+      setTimeout(() => setExportFeedback(''), 4500);
+
+      setNewUserName('');
+      setNewUserEmail('');
+      setNewUserPassword('');
+      setNewUserPhone('');
+      setNewUserRole('student');
+      setNewUserBatches([]);
+      setNewUserSubjects([]);
+      setNewUserChildName('');
+      setNewUserChildRoll('');
+      handleCloseAddUserModal();
+    } catch (err) {
+      alert('Error saving user: ' + err.message);
+    } finally {
+      setIsSubmittingUser(false);
+    }
+  };
 
   const handleAddFaculty = async (e) => {
     e.preventDefault();
@@ -425,7 +569,8 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
       password: cleanPassword,
       subject: newFacultySubjects.join(', '),
       batches: newFacultyBatches.join(', '),
-      status: 'Active'
+      status: 'Active',
+      avatar: DEFAULT_GREY_AVATAR
     };
     setTeachers(prev => {
       const updated = [newT, ...prev];
@@ -478,7 +623,8 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
       score: '85%',
       status: 'Active',
       phone: '',
-      bloodGroup: ''
+      bloodGroup: '',
+      avatar: DEFAULT_GREY_AVATAR
     };
     const updated = [newStd, ...students];
     setStudents(updated);
@@ -517,8 +663,29 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
               </span>
               <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--brand-900)' }}>Admin Portal</h2>
             </div>
-
+            <button
+              onClick={() => setShowAddUserModal(true)}
+              className="btn-primary"
+              style={{ padding: '8px 14px', fontSize: '12px', gap: '6px', display: 'flex', alignItems: 'center', borderRadius: '8px' }}
+            >
+              <Plus size={15} /> Add User
+            </button>
           </div>
+
+          {/* Feedback Toast */}
+          {exportFeedback && (
+            <div style={{
+              padding: '10px 14px',
+              background: 'var(--brand-50)',
+              border: '1px solid var(--brand-500)',
+              borderRadius: '10px',
+              fontSize: '12px',
+              fontWeight: 700,
+              color: 'var(--brand-900)'
+            }}>
+              {exportFeedback}
+            </div>
+          )}
 
           {/* 4 KPI Cards  (2-col grid, clickable where applicable) */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -829,12 +996,12 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
             {students
               .filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.roll.includes(searchTerm))
               .map(std => (
-                <div key={std.id} className="card" style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{std.name}</h5>
+                <div key={std.id} className="card" style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{std.name}</h5>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Roll #{std.roll} • {std.course}</span>
                     {std.parentName ? (
-                      <div style={{ fontSize: '11.5px', color: 'var(--brand-700)', fontWeight: 600, marginTop: '3px' }}>
+                      <div style={{ fontSize: '11.5px', color: 'var(--brand-700)', fontWeight: 600, marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         👨‍👦 Parent: {std.parentName} {std.parentPhone ? `(${std.parentPhone})` : ''}
                       </div>
                     ) : (
@@ -843,7 +1010,7 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
                       </div>
                     )}
                   </div>
-                  <span className="badge badge-success">{std.status}</span>
+                  <span className="badge badge-success" style={{ flexShrink: 0 }}>{std.status}</span>
                 </div>
               ))}
           </div>
@@ -896,16 +1063,16 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
                 p.phone.includes(parentSearchTerm)
               )
               .map(p => (
-                <div key={p.id} className="card" style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
+                <div key={p.id} className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>{p.name}</h4>
-                      <div style={{ display: 'flex', gap: '12px', marginTop: '3px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 12px', marginTop: '3px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
                         <span>📞 {p.phone}</span>
-                        {p.email && <span>✉️ {p.email}</span>}
+                        {p.email && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>✉️ {p.email}</span>}
                       </div>
                     </div>
-                    <span className="badge badge-success">{p.status}</span>
+                    <span className="badge badge-success" style={{ flexShrink: 0 }}>{p.status}</span>
                   </div>
 
                   {/* Linked Child Info Box */}
@@ -1009,11 +1176,11 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {teachers.map(t => (
-              <div key={t.id} className="card" style={{ padding: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div key={t.id} className="card" style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <h5 style={{ fontSize: '14px', fontWeight: 700 }}>{t.name}</h5>
+                  <h5 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>{t.name}</h5>
                   <span style={{ fontSize: '11px', color: 'var(--accent-500)', fontWeight: 600 }}>{t.subject}</span>
-                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Batches: {t.batches}</p>
+                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', marginBottom: 0 }}>Batches: {t.batches}</p>
                 </div>
                 <span className="badge badge-success" style={{ flexShrink: 0 }}>{t.status}</span>
               </div>
@@ -1228,6 +1395,47 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
                   onChange={e => setNewParentEmail(e.target.value)}
                   style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px' }}
                 />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Set Parent Password *</label>
+                <div style={{ position: 'relative', marginTop: '4px' }}>
+                  <input
+                    type={showParentPassword ? 'text' : 'password'}
+                    required
+                    placeholder="Set login password for parent"
+                    value={newParentPassword}
+                    onChange={e => setNewParentPassword(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 42px 10px 12px',
+                      borderRadius: '10px',
+                      border: '1px solid var(--border)',
+                      fontSize: '13px',
+                      fontFamily: showParentPassword ? 'inherit' : 'monospace'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowParentPassword(!showParentPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--text-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '4px'
+                    }}
+                    title={showParentPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showParentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
 
               <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
@@ -1541,17 +1749,17 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
             </div>
             <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {students.map(s => (
-                <div key={s.id} className="card" style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{s.name}</h5>
+                <div key={s.id} className="card" style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{s.name}</h5>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Roll #{s.roll} • {s.course}</span>
                     {s.parentName && (
-                      <div style={{ fontSize: '11px', color: 'var(--brand-700)', fontWeight: 600, marginTop: '2px' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--brand-700)', fontWeight: 600, marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         Parent: {s.parentName} ({s.parentPhone || 'Linked'})
                       </div>
                     )}
                   </div>
-                  <span className="badge badge-success">{s.status}</span>
+                  <span className="badge badge-success" style={{ flexShrink: 0 }}>{s.status}</span>
                 </div>
               ))}
             </div>
@@ -1753,6 +1961,218 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
         isOpen={showMarksModal}
         onClose={() => setShowMarksModal(false)}
       />
+      {/* ── Add Universal User Modal (Student, Teacher, Parent, Admin) ── */}
+      {showAddUserModal && (
+        <div
+          className={`modal-backdrop-05s ${isUserModalClosing ? 'closing' : ''}`}
+          onClick={(e) => { if (e.target === e.currentTarget) handleCloseAddUserModal(); }}
+        >
+          <div className={`modal-sheet-05s ${isUserModalClosing ? 'closing' : ''}`} style={{ padding: '24px 20px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="sheet-drag-handle" />
+            <h4 style={{ fontSize: '18px', fontWeight: 800, margin: '8px 0 16px 0', color: 'var(--brand-900)' }}>
+              Add New User to Institute
+            </h4>
+            <form onSubmit={handleAddUniversalUser} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* Role Selection */}
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+                  Assign User Role *
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                  {[
+                    { id: 'student', label: 'Student', icon: '🎓' },
+                    { id: 'teacher', label: 'Teacher', icon: '👨‍🏫' },
+                    { id: 'parent', label: 'Parent', icon: '👨‍👩‍👧' },
+                    { id: 'admin', label: 'Admin', icon: '🛡️' }
+                  ].map(r => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => setNewUserRole(r.id)}
+                      style={{
+                        padding: '10px 4px',
+                        borderRadius: '10px',
+                        border: newUserRole === r.id ? '2px solid var(--brand-700)' : '1px solid var(--border)',
+                        background: newUserRole === r.id ? 'var(--brand-50)' : 'var(--surface)',
+                        color: newUserRole === r.id ? 'var(--brand-900)' : 'var(--text-secondary)',
+                        fontWeight: newUserRole === r.id ? 800 : 500,
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '2px',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      <span style={{ fontSize: '16px' }}>{r.icon}</span>
+                      <span>{r.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Full Name"
+                  value={newUserName}
+                  onChange={e => setNewUserName(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Email ID (Login Username) *</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="user@example.com"
+                  value={newUserEmail}
+                  onChange={e => setNewUserEmail(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Password *</label>
+                <input
+                  type="text"
+                  autoComplete="off"
+                  required
+                  placeholder="Login password"
+                  value={newUserPassword}
+                  onChange={e => setNewUserPassword(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', fontFamily: 'monospace' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Phone Number</label>
+                <input
+                  type="tel"
+                  placeholder="+91 98XXX XXXXX"
+                  value={newUserPhone}
+                  onChange={e => setNewUserPhone(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px' }}
+                />
+              </div>
+
+              {newUserRole === 'student' && (
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Enrolled Course</label>
+                  <select
+                    value={newUserCourse}
+                    onChange={e => setNewUserCourse(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px' }}
+                  >
+                    {COURSE_OPTIONS.map(course => (
+                      <option key={course} value={course}>{course}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {newUserRole === 'teacher' && (
+                <>
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Assigned Batches</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+                      {BATCH_OPTIONS.map(b => (
+                        <button
+                          key={b}
+                          type="button"
+                          onClick={() => toggleUserBatch(b)}
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '16px',
+                            fontSize: '11.5px',
+                            fontWeight: 600,
+                            border: newUserBatches.includes(b) ? '2px solid var(--brand-600)' : '1px solid var(--border)',
+                            background: newUserBatches.includes(b) ? 'var(--brand-50)' : 'transparent',
+                            color: newUserBatches.includes(b) ? 'var(--brand-700)' : 'var(--text-secondary)',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {newUserBatches.includes(b) ? '✓ ' : ''}{b}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Subjects Taught</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+                      {SUBJECT_OPTIONS.slice(0, 10).map(s => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => toggleUserSubject(s)}
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '16px',
+                            fontSize: '11.5px',
+                            fontWeight: 600,
+                            border: newUserSubjects.includes(s) ? '2px solid var(--accent-500)' : '1px solid var(--border)',
+                            background: newUserSubjects.includes(s) ? '#f0f9ff' : 'transparent',
+                            color: newUserSubjects.includes(s) ? 'var(--accent-600)' : 'var(--text-secondary)',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {newUserSubjects.includes(s) ? '✓ ' : ''}{s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {newUserRole === 'parent' && (
+                <>
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Linked Student Name</label>
+                    <input
+                      type="text"
+                      placeholder="Student full name"
+                      value={newUserChildName}
+                      onChange={e => setNewUserChildName(e.target.value)}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Student Roll #</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 101"
+                      value={newUserChildRoll}
+                      onChange={e => setNewUserChildRoll(e.target.value)}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px' }}
+                    />
+                  </div>
+                </>
+              )}
+
+              {newUserRole === 'admin' && (
+                <div style={{ padding: '10px 12px', background: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
+                  <span style={{ fontSize: '11.5px', color: '#1e40af', fontWeight: 600 }}>
+                    🛡️ Admin users have complete access to institute governance, students, faculty, timetables, and marks.
+                  </span>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+                <button type="button" onClick={handleCloseAddUserModal} className="btn-secondary" style={{ flex: 1, fontSize: '13px', padding: '10px' }}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={isSubmittingUser} className="btn-primary" style={{ flex: 1, fontSize: '13px', padding: '10px' }}>
+                  {isSubmittingUser ? 'Saving...' : 'Save & Store in Supabase'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

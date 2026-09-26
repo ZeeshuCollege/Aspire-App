@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
-  ArrowLeft, X, Maximize2, ShieldAlert, 
-  Lock, ChevronUp, ChevronDown, BookOpen, Layers, 
-  FileText, CheckCircle2, ShieldCheck, Download
+  ArrowLeft, ChevronUp, ChevronDown, Layers, FileText, CheckCircle2
 } from 'lucide-react';
 
 export default function ProtectedPdfViewer({ 

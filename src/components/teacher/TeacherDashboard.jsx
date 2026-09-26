@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlusCircle, Upload, BookOpen, Clock, ChevronRight, Users } from 'lucide-react';
+import { PlusCircle, Upload, Users } from 'lucide-react';
 
 export default function TeacherDashboard({ user, onNavigate, onOpenCreateTest, onOpenUploadMaterial }) {
   return (

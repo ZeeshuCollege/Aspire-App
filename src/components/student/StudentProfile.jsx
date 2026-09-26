@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Lock, HelpCircle, LogOut, ChevronRight, Award, ShieldCheck, Camera } from 'lucide-react';
+import { User, Lock, HelpCircle, LogOut, ChevronRight, ShieldCheck, Camera } from 'lucide-react';
 import PersonalDetailsModal from './PersonalDetailsModal';
 import ManagePasswordModal from './ManagePasswordModal';
 import ChangeAvatarModal from '../common/ChangeAvatarModal';

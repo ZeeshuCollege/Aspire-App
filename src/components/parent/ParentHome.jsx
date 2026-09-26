@@ -1,5 +1,6 @@
 import React from 'react';
-import { User, Calendar, BarChart2, DollarSign, ChevronRight } from 'lucide-react';
+import { Calendar, BarChart2, DollarSign, ChevronRight } from 'lucide-react';
+import { DEFAULT_GREY_AVATAR } from '../../lib/mockData';
 
 export default function ParentHome({ user, onNavigate, onOpenTestPaper }) {
   const child = user.linkedChild || {
@@ -64,7 +65,7 @@ export default function ParentHome({ user, onNavigate, onOpenTestPaper }) {
       <div className="card" style={{ padding: '18px', background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
           <img
-            src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&auto=format&fit=crop&q=80"
+            src={child.avatar || DEFAULT_GREY_AVATAR}
             alt={child.name}
             style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--brand-800)' }}
           />

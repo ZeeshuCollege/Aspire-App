@@ -4,7 +4,24 @@
  * Secondary: Supabase Auth (when network available)
  */
 
+import { createClient } from '@supabase/supabase-js';
 import { supabase, supabaseAdmin } from './supabaseClient';
+import { DEFAULT_GREY_AVATAR } from './mockData';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://wandukvjtpvgvqhknqqm.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+// Isolated ephemeral client so user registration never logs out the active admin session
+const getEphemeralAuthClient = () => {
+  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      storageKey: 'aspire_ephemeral_auth'
+    }
+  });
+};
 
 const CREDS_KEY = 'aspire_creds_v1';        // email → password map
 const USERS_KEY = 'aspire_users_v1';        // email → full user object
@@ -20,8 +37,12 @@ const getCredMap = () => {
 const getUserMap = () => {
   try { return JSON.parse(localStorage.getItem(USERS_KEY) || '{}'); } catch { return {}; }
 };
-const saveCredMap = (m) => { try { localStorage.setItem(CREDS_KEY, JSON.stringify(m)); } catch {} };
-const saveUserMap = (m) => { try { localStorage.setItem(USERS_KEY, JSON.stringify(m)); } catch {} };
+const saveCredMap = (map) => {
+  try { localStorage.setItem(CREDS_KEY, JSON.stringify(map)); } catch {}
+};
+const saveUserMap = (map) => {
+  try { localStorage.setItem(USERS_KEY, JSON.stringify(map)); } catch {}
+};
 
 // ----- Security Sanitizer -----
 // Strips executable tags and control characters (#13 Sanitize before storing)
@@ -33,26 +54,38 @@ const sanitizeText = (str) => {
 // ----- Public API -----
 
 /**
- * Called by Admin when adding a student/teacher/parent.
- * Saves locally immediately. Also creates in Supabase (no email sent).
+ * Called by Admin when adding a user (student, teacher, parent, admin).
+ * Stores the user in:
+ * 1. Local storage (instant offline fallback)
+ * 2. Supabase Auth (auth.users) with user_metadata containing role
+ * 3. Supabase Database table (public.profiles) with role: 'student' | 'teacher' | 'parent' | 'admin'
  */
 export const addRegisteredUser = async (user) => {
+  if (!user || typeof user !== 'object') return null;
+
   const cleanEmail = sanitizeText(user.email || '').toLowerCase();
   const cleanPassword = (user.password || '').trim();
   if (!cleanEmail || !cleanPassword) return null;
+
+  // Enforce valid role: student, teacher, parent, or admin
+  let rawRole = (user.role || 'student').toLowerCase().trim();
+  if (rawRole === 'faculty') rawRole = 'teacher';
+  const validRoles = ['student', 'teacher', 'parent', 'admin'];
+  const role = validRoles.includes(rawRole) ? rawRole : 'student';
 
   const record = {
     id: user.id || `usr-${Date.now()}`,
     name: sanitizeText(user.name || 'ASPIRE User'),
     email: cleanEmail,
     password: cleanPassword,
-    role: user.role || 'student',
-    course: sanitizeText(user.course || '12th Science'),
-    rollNumber: sanitizeText(user.rollNumber || `ASPIRE-${Date.now().toString().slice(-4)}`),
+    role: role,
+    avatar: user.avatar || DEFAULT_GREY_AVATAR,
+    course: sanitizeText(user.course || ''),
+    rollNumber: sanitizeText(user.rollNumber || ''),
     phone: sanitizeText(user.phone || ''),
     bloodGroup: sanitizeText(user.bloodGroup || ''),
-    batches: user.batches || [],
-    subjects: user.subjects || [],
+    batches: Array.isArray(user.batches) ? user.batches.join(', ') : sanitizeText(user.batches || ''),
+    subjects: Array.isArray(user.subjects) ? user.subjects.join(', ') : sanitizeText(user.subjects || ''),
     linkedChildName: sanitizeText(user.linkedChildName || ''),
     status: 'Active',
     createdAt: new Date().toISOString()
@@ -67,30 +100,107 @@ export const addRegisteredUser = async (user) => {
   users[cleanEmail] = record;
   saveUserMap(users);
 
-  // ── 2. Also push to Supabase Admin API (so Supabase login works too) ──
+  // ── 2. Sync to Supabase Auth & Database Table ──
+  let supabaseUid = null;
+  let supabaseSynced = false;
+
+  const metadataPayload = {
+    full_name: record.name,
+    name: record.name,
+    role: record.role, // 'teacher' | 'student' | 'parent' | 'admin'
+    course: record.course,
+    rollNumber: record.rollNumber,
+    phone: record.phone,
+    batches: record.batches,
+    subjects: record.subjects,
+    linkedChildName: record.linkedChildName
+  };
+
+  // A. Admin API (bypasses email confirmation)
   if (supabaseAdmin) {
     try {
-      const { data: { users: allUsers }, error } = await supabaseAdmin.auth.admin.listUsers();
-      if (!error) {
-        const existingSupaUser = allUsers?.find(u => u.email === cleanEmail);
+      const { data: { users: allUsers }, error: listErr } = await supabaseAdmin.auth.admin.listUsers();
+      if (!listErr && allUsers) {
+        const existingSupaUser = allUsers.find(u => u.email?.toLowerCase() === cleanEmail);
         if (existingSupaUser) {
+          supabaseUid = existingSupaUser.id;
           await supabaseAdmin.auth.admin.updateUserById(existingSupaUser.id, {
             password: cleanPassword,
             email_confirm: true,
-            user_metadata: { full_name: record.name, role: record.role, course: record.course, rollNumber: record.rollNumber }
+            user_metadata: metadataPayload
           });
+          supabaseSynced = true;
         } else {
-          await supabaseAdmin.auth.admin.createUser({
+          const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
             email: cleanEmail,
             password: cleanPassword,
             email_confirm: true,
-            user_metadata: { full_name: record.name, role: record.role, course: record.course, rollNumber: record.rollNumber }
+            user_metadata: metadataPayload
           });
+          if (!createErr && created?.user) {
+            supabaseUid = created.user.id;
+            supabaseSynced = true;
+          }
         }
       }
-    } catch (err) {
-      // Network off or key issue — local auth still works perfectly
-      console.warn('[ASPIRE] Supabase user sync skipped (local auth still active):', err?.message);
+    } catch (adminErr) {
+      console.warn('[ASPIRE] Supabase Admin API sync notice:', adminErr?.message);
+    }
+  }
+
+  // B. Standard Supabase client fallback (via isolated ephemeral client to prevent session hijacking)
+  if (!supabaseSynced && SUPABASE_URL && SUPABASE_ANON_KEY) {
+    try {
+      const ephemeralClient = getEphemeralAuthClient();
+      const { data: signUpData, error: signUpErr } = await ephemeralClient.auth.signUp({
+        email: cleanEmail,
+        password: cleanPassword,
+        options: {
+          data: metadataPayload
+        }
+      });
+      if (!signUpErr && signUpData?.user) {
+        supabaseUid = signUpData.user.id;
+        supabaseSynced = true;
+      }
+    } catch (authErr) {
+      console.warn('[ASPIRE] Supabase ephemeral auth signup notice:', authErr?.message);
+    }
+  }
+
+  // C. Insert / Upsert into public.profiles table
+  const dbClient = supabaseAdmin || supabase;
+  if (dbClient) {
+    try {
+      const profileData = {
+        role: record.role,
+        full_name: record.name,
+        email: cleanEmail,
+        phone: record.phone || null,
+        roll_number: record.rollNumber || null,
+        course: record.course || null,
+        batches: record.batches || null,
+        subjects: record.subjects || null,
+        linked_child_name: record.linkedChildName || null,
+        is_active: true,
+        updated_at: new Date().toISOString()
+      };
+
+      if (supabaseUid) {
+        profileData.id = supabaseUid;
+      }
+
+      const { error: profileErr } = await dbClient
+        .from('profiles')
+        .upsert(profileData, { onConflict: supabaseUid ? 'id' : 'email' });
+
+      if (profileErr) {
+        console.warn('[ASPIRE] Supabase public.profiles upsert notice:', profileErr.message);
+      } else {
+        console.info(`[ASPIRE] Profile row successfully saved in Supabase with role: "${record.role}"`);
+      }
+    } catch (tblErr) {
+      console.warn('[ASPIRE] Supabase profiles table write notice:', tblErr?.message);
     }
   }
 
@@ -105,6 +215,24 @@ export const authenticateLocalUser = (email, password) => {
   const cleanEmail = (email || '').trim().toLowerCase();
   const cleanPass = (password || '').trim();
   if (!cleanEmail || !cleanPass) return null;
+
+  // ── 0. Built-in Admins ──
+  if (cleanEmail === 'pinjari.work@gmail.com' && cleanPass === 'Zeeshan$2006') {
+    return {
+      id: 'admin-pinjari',
+      name: 'Zeeshan (Admin)',
+      email: 'pinjari.work@gmail.com',
+      role: 'admin'
+    };
+  }
+  if (cleanEmail === 'aspirelearningcentre@outlook.com' && cleanPass === 'ZP&786') {
+    return {
+      id: 'admin-1',
+      name: 'ASPIRE Admin',
+      email: 'aspirelearningcentre@outlook.com',
+      role: 'admin'
+    };
+  }
 
   // ── 1. New format: flat creds map (aspire_creds_v1) ──
   try {

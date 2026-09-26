@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { 
-  Award, FileText, CheckCircle2, XCircle, MinusCircle, 
-  TrendingUp, Calendar, ChevronRight, BarChart2, BookOpen, 
-  Search, ShieldCheck, ArrowUpRight 
+  FileText, CheckCircle2, XCircle, MinusCircle, 
+  Calendar, ArrowUpRight 
 } from 'lucide-react';
 
 export const mockLast10Tests = [

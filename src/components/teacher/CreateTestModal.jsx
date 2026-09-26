@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Upload, Calendar, Clock, CheckCircle2 } from 'lucide-react';
+import { X, Upload, CheckCircle2 } from 'lucide-react';
 
 export default function CreateTestModal({ isOpen, onClose, onCreated }) {
   const [testName, setTestName] = useState('');

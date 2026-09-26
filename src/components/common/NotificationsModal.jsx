@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Bell, CheckCheck, FileText, CheckCircle2, BookOpen, AlertTriangle, DollarSign, Calendar, Clock, ChevronRight } from 'lucide-react';
+import { X, Bell, CheckCheck, FileText, CheckCircle2, BookOpen, AlertTriangle, DollarSign, Clock } from 'lucide-react';
 
 export default function NotificationsModal({ isOpen, onClose, notices = [], onMarkAllRead, onNoticeClick }) {
   const [filter, setFilter] = useState('All');

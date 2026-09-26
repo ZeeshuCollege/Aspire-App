@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, User, Mail, Phone, Heart, Users, PhoneCall, 
-  Award, CheckCircle2, XCircle, Calendar, FileText, 
-  ChevronRight, Copy, Check, TrendingUp, BookOpen 
+  Award, CheckCircle2, Calendar, FileText, 
+  Copy, Check 
 } from 'lucide-react';
 
 export default function StudentDetailCardModal({ isOpen, onClose, student, batch }) {

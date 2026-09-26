@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   ArrowLeft, Plus, Search, Calendar, Clock, 
-  User, Trash2, CheckCircle2, AlertCircle, Filter, BookOpen, ChevronRight, X
+  User, Trash2, X
 } from 'lucide-react';
 import { COURSE_OPTIONS, SUBJECT_OPTIONS } from './AdminStudyMaterialsModal';
 

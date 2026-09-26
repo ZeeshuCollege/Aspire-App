@@ -3,15 +3,13 @@ import { mockBatches, mockBatchStudents } from '../../lib/mockData';
 import { 
   Users, Clock, ChevronRight, ArrowLeft, Check, X, 
   Calendar, CheckCheck, Send, CheckCircle2, Search, 
-  BookOpen, Award, FileText, Info, GraduationCap, 
-  Layers, MapPin, UserCheck, Lock, ShieldAlert
+  BookOpen, Info, UserCheck, Lock
 } from 'lucide-react';
 import StudentDetailCardModal from './StudentDetailCardModal';
 import { 
   isBatchAttendanceLocked, 
   getBatchAttendance, 
-  saveBatchAttendance, 
-  getTodayDateKey 
+  saveBatchAttendance 
 } from '../../lib/attendanceService';
 
 export default function MyBatches({ onAttendanceSubmit }) {

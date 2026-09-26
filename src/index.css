@@ -182,6 +182,7 @@ button, input, select, textarea {
   box-shadow: var(--shadow-card);
   padding: 18px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
 }
 
 .card-hover:hover {
@@ -193,11 +194,13 @@ button, input, select, textarea {
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
+  padding: 3px 9px;
   border-radius: var(--radius-full);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   gap: 4px;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .badge-success {

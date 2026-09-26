@@ -5,10 +5,9 @@ import { Browser } from '@capacitor/browser';
 import { supabase } from '../../lib/supabaseClient';
 import { authenticateLocalUser } from '../../lib/userAuthStore';
 import { sendWhatsAppOtp, verifyWhatsAppOtp } from '../../lib/whatsappService';
-import { X, Mail, Phone, Lock, Eye, EyeOff, MessageSquare, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Mail, Lock, Eye, EyeOff, MessageSquare, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 
-export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRole = 'admin' }) {
-  const [role, setRole] = useState(defaultRole);
+export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -26,8 +25,8 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRol
   const [newPassword, setNewPassword] = useState('');
   const [demoOtpHint, setDemoOtpHint] = useState('');
   const [isClosing, setIsClosing] = useState(false);
-  const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutSeconds, setLockoutSeconds] = useState(0);
+  const [failedAttempts, setFailedAttempts] = useState(0);
 
   useEffect(() => {
     if (lockoutSeconds <= 0) return;
@@ -76,13 +75,22 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRol
     try {
       let authUser = null;
 
-      // 1. Admin hardcoded check
-      if (cleanEmail === 'aspirelearningcentre@outlook.com' && cleanPass === 'ZP&786') {
+      // 1. Admin accounts check
+      const adminAccounts = [
+        { email: 'pinjari.work@gmail.com', pass: 'Zeeshan$2006', name: 'Zeeshan (Admin)', id: 'admin-pinjari' },
+        { email: 'aspirelearningcentre@outlook.com', pass: 'ZP&786', name: 'ASPIRE Admin', id: 'admin-1' }
+      ];
+
+      const matchedAdmin = adminAccounts.find(
+        a => a.email.toLowerCase() === cleanEmail && a.pass === cleanPass
+      );
+
+      if (matchedAdmin) {
         authUser = {
-          id: 'admin-1',
-          email: 'aspirelearningcentre@outlook.com',
+          id: matchedAdmin.id,
+          email: matchedAdmin.email,
           role: 'admin',
-          name: 'ASPIRE Admin'
+          name: matchedAdmin.name
         };
       } else {
         // 2. Check locally stored institute users (students/teachers/parents added by Admin)
@@ -149,6 +157,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, defaultRol
       onLoginSuccess(authUser);
       onClose();
     } catch (err) {
+      console.error('[ASPIRE Login Error]:', err);
       await minDelay;
       setIsVerifying(false);
       setLoading(false);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Calendar, BookOpen, FileText, User, Users, CheckSquare, BarChart2, DollarSign, UserCheck, UserPlus } from 'lucide-react';
+import { Home, Calendar, BookOpen, FileText, User, Users, BarChart2, DollarSign, UserCheck, UserPlus } from 'lucide-react';
 
 export default function BottomNav({ role, activeTab, setActiveTab }) {
   // Define nav configurations per role based on ASPIRE THEME.png

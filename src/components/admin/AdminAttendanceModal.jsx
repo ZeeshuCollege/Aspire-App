@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  ArrowLeft, Search, UserCheck, Users, BookOpen, CheckSquare, 
-  Calendar, ChevronRight, Filter, AlertCircle, CheckCircle2, 
-  Clock, TrendingUp, ChevronDown, ChevronUp, X, Check, Lock, Shield
+  ArrowLeft, Search, Users, BookOpen, CheckSquare, 
+  CheckCircle2, ChevronDown, ChevronUp, X, Check 
 } from 'lucide-react';
 import { mockBatchStudents, mockLectureAttendance } from '../../lib/mockData';
 import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
@@ -31,7 +30,6 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('student'); // 'student' | 'course' | 'subject'
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourse, setSelectedCourse] = useState('All');
-  const [selectedFilter, setSelectedFilter] = useState('All'); // 'All' | 'High' | 'Low'
   const [expandedStudentId, setExpandedStudentId] = useState(null);
   const [studentsList, setStudentsList] = useState(mockBatchStudents);
 
@@ -102,10 +100,7 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
       std.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (std.roll && std.roll.includes(searchTerm));
     const matchesCourse = selectedCourse === 'All' || std.course === selectedCourse;
-    const matchesFilter = selectedFilter === 'All' ||
-      (selectedFilter === 'High' && std.attendanceRate >= 90) ||
-      (selectedFilter === 'Low' && std.attendanceRate < 80);
-    return matchesSearch && matchesCourse && matchesFilter;
+    return matchesSearch && matchesCourse;
   });
 
   return (

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Lock, KeyRound, Mail, Eye, EyeOff, CheckCircle2, AlertCircle, Send, ArrowRight } from 'lucide-react';
+import { X, Lock, KeyRound, Mail, Eye, EyeOff, CheckCircle2, AlertCircle, Send } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 
 export default function ManagePasswordModal({ isOpen, onClose, user }) {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { mockTests } from '../../lib/mockData';
-import { FileText, Calendar, Clock, Award, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 export default function TestsView({ onOpenTestPaper }) {
   const [tab, setTab] = useState('upcoming');

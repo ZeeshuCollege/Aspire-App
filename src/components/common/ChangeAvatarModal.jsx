@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Camera, Image, Check, AlertCircle, RefreshCw, Sparkles, Upload, Trash2, UserX } from 'lucide-react';
+import { X, Camera, Image, Check, AlertCircle, RefreshCw, Trash2, UserX } from 'lucide-react';
 import { DEFAULT_GREY_AVATAR } from '../../lib/mockData';
 
 export default function ChangeAvatarModal({ isOpen, onClose, currentAvatar, onSaveAvatar }) {

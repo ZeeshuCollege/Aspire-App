@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Award, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Award, AlertTriangle } from 'lucide-react';
 
 export default function TeacherPerformance() {
   const [tab, setTab] = useState('overview');

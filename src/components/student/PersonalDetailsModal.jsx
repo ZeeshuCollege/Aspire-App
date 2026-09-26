@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { DEFAULT_GREY_AVATAR } from '../../lib/mockData';
 import { createPortal } from 'react-dom';
 import { 
-  X, User, Mail, Phone, BookOpen, Heart, Users, PhoneCall, 
+  X, User, Mail, Phone, BookOpen, Heart, Users, 
   ShieldCheck, Copy, Check, Award, Edit3, Lock,
-  Save, AlertCircle, CheckCircle2 
+  Save, CheckCircle2 
 } from 'lucide-react';
 
 export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser }) {
@@ -14,7 +15,6 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
 
   const isTeacher = user?.role === 'teacher';
   const isParent = user?.role === 'parent';
-  const isAdmin = user?.role === 'admin';
 
   // Form State initialized from user props
   const [formData, setFormData] = useState({
@@ -312,7 +312,7 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
             background: 'var(--surface)'
           }}>
             <img
-              src={user?.avatar || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80'}
+              src={user?.avatar || DEFAULT_GREY_AVATAR}
               alt={formData.name}
               style={{
                 width: '60px',
