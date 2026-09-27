@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   ArrowLeft, Plus, Search, Calendar, Clock, 
-  User, Trash2, X, Check, SkipForward, ChevronRight, BookOpen,
-  UserCheck, CheckSquare, CheckCircle2, AlertCircle, Radio, Users, Sparkles
+  User, Trash2, X, Check, SkipForward,
+  UserCheck, CheckCircle2
 } from 'lucide-react';
 import { COURSE_OPTIONS, SUBJECT_OPTIONS } from './AdminStudyMaterialsModal';
 import { mockBatches } from '../../lib/mockData';

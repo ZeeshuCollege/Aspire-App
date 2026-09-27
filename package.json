@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "cap:sync": "vite build && npx cap sync android",
+    "build:apk": "vite build && npx cap sync android && cd android && gradlew.bat assembleDebug && cd .. && powershell -Command \"Copy-Item android/app/build/outputs/apk/debug/app-debug.apk -Destination AspireLearning.apk -Force\"",
     "preview": "vite preview"
   },
   "dependencies": {

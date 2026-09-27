@@ -15,12 +15,6 @@ export const DURATION_OPTIONS = [
   '200 min'
 ];
 
-export const TEST_MODES = [
-  'Offline Classroom Paper',
-  'Online CBT Exam',
-  'Hybrid (OMR + Online)'
-];
-
 export default function AdminTestsModal({ isOpen, onClose }) {
   const [tests, setTests] = useState(mockTests);
   const [searchTerm, setSearchTerm] = useState('');
