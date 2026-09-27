@@ -18,7 +18,13 @@ import AdminTimetableModal from './AdminTimetableModal';
 import AdminAttendanceModal from './AdminAttendanceModal';
 import AdminMarksModal from './AdminMarksModal';
 
-export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }) {
+export default function AdminMobileDashboard({
+  activeTab,
+  onNavigate,
+  onLogout,
+  notices: propNotices,
+  setNotices: propSetNotices
+}) {
   // Data States
   const [students, setStudents] = useState(getStoredStudents);
   const [teachers, setTeachers] = useState(getStoredTeachers);
@@ -37,11 +43,19 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
   const [showTimetableModal, setShowTimetableModal] = useState(false);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showMarksModal, setShowMarksModal] = useState(false);
-  const [notices, setNotices] = useState(initialNotices);
+  const [notices, setNotices] = useState(propNotices || initialNotices);
+
+  useEffect(() => {
+    if (propNotices) {
+      setNotices(propNotices);
+    }
+  }, [propNotices]);
+
   const [showAddNoticeForm, setShowAddNoticeForm] = useState(false);
   const [newNoticeTitle, setNewNoticeTitle] = useState('');
   const [newNoticeMsg, setNewNoticeMsg] = useState('');
   const [newNoticeCategory, setNewNoticeCategory] = useState('General');
+  const [newNoticeCourses, setNewNoticeCourses] = useState(['All Courses']);
 
   // Add Student Modal States
   const [showAddModal, setShowAddModal] = useState(false);
@@ -125,23 +139,68 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
   const toggleCourseSubject = (s) => setNewCourseSubjects(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
   const toggleCourseFaculty = (f) => setNewCourseFaculty(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f]);
 
+  const handleToggleAllCourses = () => {
+    setNewNoticeCourses(['All Courses']);
+  };
+
+  const handleToggleCourse = (course) => {
+    setNewNoticeCourses(prev => {
+      // If "All Courses" was currently selected, clicking a specific course replaces "All Courses"
+      if (prev.includes('All Courses')) {
+        return [course];
+      }
+      if (prev.includes(course)) {
+        const next = prev.filter(c => c !== course);
+        return next.length === 0 ? ['All Courses'] : next;
+      } else {
+        const next = [...prev, course];
+        // If all individual courses are selected, reset to 'All Courses'
+        if (next.length === COURSE_OPTIONS.length) {
+          return ['All Courses'];
+        }
+        return next;
+      }
+    });
+  };
+
   const handleAddNotice = (e) => {
     e.preventDefault();
-    if (!newNoticeTitle || !newNoticeMsg) return;
-    setNotices(prev => [{
+    if (!newNoticeTitle.trim() || !newNoticeMsg.trim()) return;
+
+    const targetCourses = newNoticeCourses.includes('All Courses') || newNoticeCourses.length === 0
+      ? ['All Courses']
+      : newNoticeCourses;
+
+    const newNotice = {
       id: `notif-${Date.now()}`,
-      title: newNoticeTitle,
-      message: newNoticeMsg,
+      title: newNoticeTitle.trim(),
+      message: newNoticeMsg.trim(),
       category: newNoticeCategory,
+      courses: targetCourses,
+      targetCourses: targetCourses,
       priority: 'normal',
       timestamp: 'Just now',
       date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
       read: false
-    }, ...prev]);
+    };
+
+    if (propSetNotices) {
+      propSetNotices(prev => [newNotice, ...prev]);
+    }
+    setNotices(prev => [newNotice, ...prev]);
+
     setNewNoticeTitle('');
     setNewNoticeMsg('');
     setNewNoticeCategory('General');
+    setNewNoticeCourses(['All Courses']);
     setShowAddNoticeForm(false);
+  };
+
+  const handleDeleteNotice = (noticeId) => {
+    if (propSetNotices) {
+      propSetNotices(prev => prev.filter(n => n.id !== noticeId));
+    }
+    setNotices(prev => prev.filter(n => n.id !== noticeId));
   };
 
   const closeModal = (key, setter) => {
@@ -1798,68 +1857,251 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
           <div className={`modal-sheet-05s ${closingModal === 'notices' ? 'closing' : ''}`}
             style={{ padding: '24px 20px', maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
             <div className="sheet-drag-handle" />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <h4 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--brand-900)' }}>Notices ({notices.length})</h4>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h4 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>Notices ({notices.length})</h4>
+                <span className="badge badge-info" style={{ fontSize: '10px', padding: '2px 8px' }}>Institute Board</span>
+              </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <button onClick={() => setShowAddNoticeForm(f => !f)} className="btn-primary" style={{ padding: '5px 12px', fontSize: '12px' }}>
-                  <Plus size={13} /> Add Notice
+                <button
+                  type="button"
+                  onClick={() => setShowAddNoticeForm(f => !f)}
+                  className="btn-primary"
+                  style={{ padding: '6px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}
+                >
+                  <Plus size={13} /> {showAddNoticeForm ? 'Close' : 'Add Notice'}
                 </button>
-                <button onClick={() => { closeModal('notices', setShowNoticesModal); setShowAddNoticeForm(false); }} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
+                <button
+                  type="button"
+                  onClick={() => { closeModal('notices', setShowNoticesModal); setShowAddNoticeForm(false); }}
+                  style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: 'var(--text-muted)' }}
+                >
+                  ✕
+                </button>
               </div>
             </div>
-            {showAddNoticeForm && (
-              <form onSubmit={handleAddNotice} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px', padding: '14px', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                <input
-                  type="text" required placeholder="Notice title"
-                  value={newNoticeTitle} onChange={e => setNewNoticeTitle(e.target.value)}
-                  style={{ width: '100%', padding: '9px 12px', borderRadius: '10px', border: '1px solid var(--border)', fontSize: '13px' }}
-                />
-                <div>
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>Category</span>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
-                    {NOTICE_CATEGORIES.map(cat => (
+
+            {/* Scrollable Container for Form and Notices — Prevents any box squeezing or clipping */}
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '2px' }}>
+              {showAddNoticeForm && (
+                <form
+                  onSubmit={handleAddNotice}
+                  style={{
+                    flexShrink: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    padding: '16px',
+                    background: 'var(--surface-alt)',
+                    borderRadius: '14px',
+                    border: '1.5px solid var(--border)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                  }}
+                >
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      Notice Title *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. JEE Advanced Mock Test 03 Scheduled"
+                      value={newNoticeTitle}
+                      onChange={e => setNewNoticeTitle(e.target.value)}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', fontSize: '13px', background: 'var(--surface)' }}
+                    />
+                  </div>
+
+                  <div>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Category</span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+                      {NOTICE_CATEGORIES.map(cat => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setNewNoticeCategory(cat)}
+                          style={{
+                            padding: '5px 11px',
+                            borderRadius: '20px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            border: newNoticeCategory === cat ? '2px solid var(--brand-600)' : '1.5px solid var(--border)',
+                            background: newNoticeCategory === cat ? 'var(--brand-50)' : 'var(--surface)',
+                            color: newNoticeCategory === cat ? 'var(--brand-700)' : 'var(--text-secondary)',
+                          }}
+                        >
+                          {newNoticeCategory === cat ? '✓ ' : ''}{cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Multi-Select Course Selection Category */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                        Target Course (Multi-Select) *
+                      </span>
+                      <span style={{ fontSize: '10.5px', color: 'var(--brand-700)', fontWeight: 700 }}>
+                        {newNoticeCourses.includes('All Courses')
+                          ? '🌐 All Students'
+                          : `🎯 ${newNoticeCourses.length} Course${newNoticeCourses.length > 1 ? 's' : ''} Selected`}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {/* All Courses option */}
                       <button
-                        key={cat}
                         type="button"
-                        onClick={() => setNewNoticeCategory(cat)}
+                        onClick={handleToggleAllCourses}
                         style={{
-                          padding: '4px 10px',
+                          padding: '5px 11px',
                           borderRadius: '20px',
                           fontSize: '11px',
                           fontWeight: 600,
                           cursor: 'pointer',
-                          transition: 'all 0.15s',
-                          border: newNoticeCategory === cat ? '2px solid var(--brand-600)' : '1.5px solid var(--border)',
-                          background: newNoticeCategory === cat ? 'var(--brand-50)' : 'transparent',
-                          color: newNoticeCategory === cat ? 'var(--brand-700)' : 'var(--text-secondary)',
+                          transition: 'all 0.15s ease',
+                          border: newNoticeCourses.includes('All Courses') ? '2px solid var(--brand-600)' : '1.5px solid var(--border)',
+                          background: newNoticeCourses.includes('All Courses') ? 'var(--brand-50)' : 'var(--surface)',
+                          color: newNoticeCourses.includes('All Courses') ? 'var(--brand-700)' : 'var(--text-secondary)',
                         }}
                       >
-                        {newNoticeCategory === cat ? '✓ ' : ''}{cat}
+                        {newNoticeCourses.includes('All Courses') ? '✓ ' : ''}🌐 All Courses
                       </button>
+
+                      {/* Individual Course options */}
+                      {COURSE_OPTIONS.map(course => {
+                        const isSelected = !newNoticeCourses.includes('All Courses') && newNoticeCourses.includes(course);
+                        return (
+                          <button
+                            key={course}
+                            type="button"
+                            onClick={() => handleToggleCourse(course)}
+                            style={{
+                              padding: '5px 11px',
+                              borderRadius: '20px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                              border: isSelected ? '2px solid var(--brand-600)' : '1.5px solid var(--border)',
+                              background: isSelected ? 'var(--brand-50)' : 'var(--surface)',
+                              color: isSelected ? 'var(--brand-700)' : 'var(--text-secondary)',
+                            }}
+                          >
+                            {isSelected ? '✓ ' : ''}{course}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '5px', marginBottom: 0, lineHeight: 1.4 }}>
+                      {newNoticeCourses.includes('All Courses')
+                        ? '📢 Notice will be delivered to students across all courses.'
+                        : `🎯 Notice will ONLY be delivered to students enrolled in: ${newNoticeCourses.join(', ')}.`}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
+                      Notice Message *
+                    </label>
+                    <textarea
+                      required
+                      placeholder="Write comprehensive notice message..."
+                      value={newNoticeMsg}
+                      onChange={e => setNewNoticeMsg(e.target.value)}
+                      rows={3}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', fontSize: '13px', resize: 'none', background: 'var(--surface)' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button type="button" onClick={() => setShowAddNoticeForm(false)} className="btn-secondary" style={{ flex: 1, fontSize: '12px', padding: '9px' }}>
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn-primary" style={{ flex: 1, fontSize: '12px', padding: '9px' }}>
+                      Publish Notice
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Notice Cards List — Guaranteed flexShrink: 0 and full content height */}
+              {notices.map(n => (
+                <div
+                  key={n.id}
+                  className="card"
+                  style={{
+                    flexShrink: 0,
+                    minHeight: 'fit-content',
+                    padding: '14px 16px',
+                    borderLeft: `4px solid ${n.priority === 'high' ? '#ef4444' : '#f59e0b'}`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    background: 'var(--surface)',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                    <h5 style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-primary)', flex: 1, margin: 0, lineHeight: 1.35 }}>
+                      {n.title}
+                    </h5>
+                    <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                      {n.timestamp}
+                    </span>
+                  </div>
+
+                  <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5, wordBreak: 'break-word' }}>
+                    {n.message}
+                  </p>
+
+                  {/* Course recipient badges */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center', marginTop: '2px' }}>
+                    <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', marginRight: '2px' }}>Recipients:</span>
+                    {(n.courses || n.targetCourses || ['All Courses']).map((c, idx) => (
+                      <span
+                        key={idx}
+                        className="badge"
+                        style={{
+                          fontSize: '9.5px',
+                          padding: '2px 7px',
+                          background: c === 'All Courses' || c === 'All' ? 'var(--surface-alt)' : '#eff6ff',
+                          color: c === 'All Courses' || c === 'All' ? 'var(--text-secondary)' : '#1d4ed8',
+                          border: c === 'All Courses' || c === 'All' ? '1px solid var(--border)' : '1px solid #bfdbfe'
+                        }}
+                      >
+                        {c === 'All Courses' || c === 'All' ? '🌐 All Courses' : `🎯 ${c}`}
+                      </span>
                     ))}
                   </div>
-                </div>
-                <textarea
-                  required placeholder="Notice message..."
-                  value={newNoticeMsg} onChange={e => setNewNoticeMsg(e.target.value)}
-                  rows={3}
-                  style={{ width: '100%', padding: '9px 12px', borderRadius: '10px', border: '1px solid var(--border)', fontSize: '13px', resize: 'none' }}
-                />
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button type="button" onClick={() => setShowAddNoticeForm(false)} className="btn-secondary" style={{ flex: 1, fontSize: '12px', padding: '8px' }}>Cancel</button>
-                  <button type="submit" className="btn-primary" style={{ flex: 1, fontSize: '12px', padding: '8px' }}>Publish</button>
-                </div>
-              </form>
-            )}
-            <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {notices.map(n => (
-                <div key={n.id} className="card" style={{ padding: '12px 14px', borderLeft: `3px solid ${n.priority === 'high' ? '#ef4444' : '#f59e0b'}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <h5 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', flex: 1, marginRight: '8px' }}>{n.title}</h5>
-                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', flexShrink: 0 }}>{n.timestamp}</span>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', paddingTop: '6px', borderTop: '1px solid #f1f5f9' }}>
+                    <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                      {n.date} • <strong style={{ color: 'var(--text-secondary)' }}>{n.category}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteNotice(n.id)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                        padding: '3px 6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                        fontSize: '11px',
+                        borderRadius: '4px'
+                      }}
+                      title="Delete Notice"
+                    >
+                      <Trash2 size={12} />
+                    </button>
                   </div>
-                  <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.5 }}>{n.message}</p>
-                  <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>{n.date} • {n.category}</span>
                 </div>
               ))}
             </div>
@@ -1874,13 +2116,13 @@ export default function AdminMobileDashboard({ activeTab, onNavigate, onLogout }
           <div className={`modal-sheet-05s ${closingModal === 'absent' ? 'closing' : ''}`}
             style={{ padding: '24px 20px', maxHeight: '88vh', display: 'flex', flexDirection: 'column' }}>
             <div className="sheet-drag-handle" />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexShrink: 0 }}>
               <h4 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--brand-900)' }}>Absent Today ({absentStudents.length})</h4>
               <button onClick={() => closeModal('absent', setShowAbsentModal)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
             </div>
-            <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {absentStudents.map(s => (
-                <div key={s.id} className="card" style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                <div key={s.id} className="card" style={{ flexShrink: 0, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
                   onClick={() => setSelectedAbsentStudent(s)}>
                   <div>
                     <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{s.name}</h5>

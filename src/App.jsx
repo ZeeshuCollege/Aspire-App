@@ -48,7 +48,28 @@ export default function App() {
   const [isCreateTestOpen, setIsCreateTestOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
-  const [notices, setNotices] = useState(mockNotices);
+  const [notices, setNotices] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aspire_notices_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map(n => ({
+            ...n,
+            courses: n.courses || n.targetCourses || ['All Courses']
+          }));
+        }
+      }
+    } catch (e) {}
+    return mockNotices;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('aspire_notices_list', JSON.stringify(notices));
+    } catch (e) {}
+  }, [notices]);
+
   const [pdfViewerData, setPdfViewerData] = useState(null);
 
   // Authentication & Opening Screen States
@@ -122,7 +143,38 @@ export default function App() {
 
   const [classesSubTab, setClassesSubTab] = useState('schedule');
 
-  const unreadNoticesCount = notices.filter(n => !n.read).length;
+  // Filter notices based on role and enrolled course
+  const isNoticeForUser = (notice, user, role) => {
+    if (!notice) return false;
+    // Admins and teachers see all institute notices
+    if (role === 'admin' || role === 'teacher') return true;
+
+    const targetCourses = notice.courses || notice.targetCourses;
+    // If no course restriction or set to All Courses, visible to everyone
+    if (!targetCourses || !Array.isArray(targetCourses) || targetCourses.length === 0) return true;
+    if (targetCourses.includes('All') || targetCourses.includes('All Courses')) return true;
+
+    if (role === 'student') {
+      const studentCourse = (user?.course || user?.enrolledCourse || '12th Science').trim().toLowerCase();
+      return targetCourses.some(c => {
+        const tc = c.trim().toLowerCase();
+        return tc === studentCourse || tc.includes(studentCourse) || studentCourse.includes(tc);
+      });
+    }
+
+    if (role === 'parent') {
+      const childCourse = (user?.linkedChild?.class || user?.linkedChild?.course || user?.childCourse || '12th Science').trim().toLowerCase();
+      return targetCourses.some(c => {
+        const tc = c.trim().toLowerCase();
+        return tc === childCourse || tc.includes(childCourse) || childCourse.includes(tc);
+      });
+    }
+
+    return true;
+  };
+
+  const visibleNotices = notices.filter(n => isNoticeForUser(n, currentUser, currentRole));
+  const unreadNoticesCount = visibleNotices.filter(n => !n.read).length;
 
   const handleMarkAllNoticesRead = () => {
     setNotices(prev => prev.map(n => ({ ...n, read: true })));
@@ -624,6 +676,8 @@ export default function App() {
             activeTab={activeTab}
             onNavigate={(tab) => setActiveTab(tab)}
             onLogout={handleLogout}
+            notices={notices}
+            setNotices={setNotices}
           />
         )}
       </main>
@@ -666,7 +720,7 @@ export default function App() {
       <NotificationsModal
         isOpen={isNotificationsOpen}
         onClose={() => setIsNotificationsOpen(false)}
-        notices={notices}
+        notices={visibleNotices}
         onMarkAllRead={handleMarkAllNoticesRead}
         onNoticeClick={handleNoticeClick}
       />

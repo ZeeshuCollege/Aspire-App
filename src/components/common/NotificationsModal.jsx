@@ -167,6 +167,7 @@ export default function NotificationsModal({ isOpen, onClose, notices = [], onMa
                   key={notice.id}
                   onClick={() => onNoticeClick && onNoticeClick(notice.id)}
                   style={{
+                    flexShrink: 0,
                     background: notice.read ? 'var(--surface)' : 'var(--brand-50)',
                     border: `1px solid ${notice.read ? 'var(--border)' : '#bfdbfe'}`,
                     borderRadius: 'var(--radius-lg)',
@@ -218,6 +219,23 @@ export default function NotificationsModal({ isOpen, onClose, notices = [], onMa
                     <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.5 }}>
                       {notice.message}
                     </p>
+
+                    {/* Course tags if present */}
+                    {notice.courses && notice.courses.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
+                        {notice.courses.map((c, i) => (
+                          <span key={i} className="badge" style={{
+                            fontSize: '9.5px',
+                            padding: '1px 7px',
+                            background: c === 'All Courses' || c === 'All' ? 'var(--surface-alt)' : '#eff6ff',
+                            color: c === 'All Courses' || c === 'All' ? 'var(--text-secondary)' : '#1d4ed8',
+                            border: c === 'All Courses' || c === 'All' ? '1px solid var(--border)' : '1px solid #bfdbfe'
+                          }}>
+                            {c === 'All Courses' || c === 'All' ? '🌐 All Courses' : `🎯 ${c}`}
+                          </span>
+                        ))}
+                      </div>
+                    )}
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px', fontSize: '11px', color: 'var(--text-muted)' }}>
                       <span>{notice.date}</span>
