@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { User, Lock, HelpCircle, LogOut, ChevronRight, ShieldCheck, Camera } from 'lucide-react';
+import { User, Lock, HelpCircle, LogOut, ChevronRight, ShieldCheck, Camera, FileText, Trash2 } from 'lucide-react';
 import PersonalDetailsModal from './PersonalDetailsModal';
 import ManagePasswordModal from './ManagePasswordModal';
 import ChangeAvatarModal from '../common/ChangeAvatarModal';
+import DeleteAccountModal from './DeleteAccountModal';
 
 export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdateUser, onOpenPermissions }) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isManagePasswordOpen, setIsManagePasswordOpen] = useState(false);
   const [isChangeAvatarOpen, setIsChangeAvatarOpen] = useState(false);
+  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
 
   const isTeacher = user?.role === 'teacher';
   const isParent = user?.role === 'parent';
@@ -44,6 +46,8 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
     { icon: User, label: 'Personal Details', badge: personalDetailsBadge },
     { icon: Lock, label: 'Manage Password', badge: null },
     { icon: ShieldCheck, label: 'Device Permissions', badge: 'Active' },
+    { icon: FileText, label: 'Privacy Policy', badge: null },
+    { icon: Trash2, label: 'Delete Account & Data', badge: null, isDanger: true },
     { icon: HelpCircle, label: 'Help & Support', badge: null }
   ];
 
@@ -111,6 +115,12 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
                   setIsManagePasswordOpen(true);
                 } else if (item.label === 'Device Permissions' && onOpenPermissions) {
                   onOpenPermissions();
+                } else if (item.label === 'Privacy Policy') {
+                  window.open('/privacy-policy.html', '_blank');
+                } else if (item.label === 'Delete Account & Data') {
+                  setIsDeleteAccountOpen(true);
+                } else if (item.label === 'Help & Support') {
+                  window.location.href = 'mailto:aspirelearningcentre@outlook.com';
                 }
               }}
               style={{
@@ -124,8 +134,8 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Icon size={18} color="var(--brand-800)" />
-                <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>{item.label}</span>
+                <Icon size={18} color={item.isDanger ? '#dc2626' : 'var(--brand-800)'} />
+                <span style={{ fontSize: '14px', fontWeight: 600, color: item.isDanger ? '#dc2626' : 'var(--text-primary)' }}>{item.label}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {item.badge && (
@@ -159,6 +169,14 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
         onClose={() => setIsChangeAvatarOpen(false)}
         currentAvatar={user.avatar}
         onSaveAvatar={onUpdateAvatar}
+      />
+
+      {/* Delete Account Modal (Google Play Compliance) */}
+      <DeleteAccountModal
+        isOpen={isDeleteAccountOpen}
+        onClose={() => setIsDeleteAccountOpen(false)}
+        user={user}
+        onAccountDeleted={onLogout}
       />
 
       {/* Log Out Button */}

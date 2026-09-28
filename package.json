@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "cap:sync": "vite build && npx cap sync android",
-    "build:apk": "vite build && npx cap sync android && cd android && gradlew.bat assembleDebug && cd .. && powershell -Command \"Copy-Item android/app/build/outputs/apk/debug/app-debug.apk -Destination AspireLearning.apk -Force\"",
+    "build:apk": "vite build && npx cap sync android && cd android && gradlew.bat assembleDebug && cd .. && powershell -Command \"Copy-Item android/app/build/outputs/apk/debug/app-debug.apk -Destination AspireLearning.apk -Force; Copy-Item android/app/build/outputs/apk/debug/app-debug.apk -Destination AspireLearning-debug.apk -Force; Copy-Item android/app/build/outputs/apk/debug/app-debug.apk -Destination public/AspireLearning.apk -Force\"",
+    "bundle:release": "vite build && npx cap sync android && cd android && gradlew.bat bundleRelease && cd .. && powershell -Command \"Copy-Item android/app/build/outputs/bundle/release/app-release.aab -Destination AspireLearning-release.aab -Force\"",
     "preview": "vite preview"
   },
   "dependencies": {

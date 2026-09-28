@@ -78,22 +78,29 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
     try {
       let authUser = null;
 
-      // 1. Admin accounts check
-      const adminAccounts = [
-        { email: 'pinjari.work@gmail.com', pass: 'Zeeshan$2006', name: 'Zeeshan (Admin)', id: 'admin-pinjari' },
-        { email: 'aspirelearningcentre@outlook.com', pass: 'ZP&786', name: 'ASPIRE Admin', id: 'admin-1' }
+      // 1. Google Play Reviewer & Institute Admin accounts
+      const authorizedAccounts = [
+        { email: 'admin.demo@aspire.local', pass: 'AspireDemo@2026', name: 'Play Reviewer (Admin)', role: 'admin', id: 'adm-demo' },
+        { email: 'student.demo@aspire.local', pass: 'AspireDemo@2026', name: 'Rohan Sharma', role: 'student', course: '12th Science', rollNumber: 'ASPIRE-2025-101', id: 'std-demo' },
+        { email: 'parent.demo@aspire.local', pass: 'AspireDemo@2026', name: 'Mr. Sharma (Parent)', role: 'parent', linkedChildName: 'Rohan Sharma', id: 'par-demo' },
+        { email: 'teacher.demo@aspire.local', pass: 'AspireDemo@2026', name: 'Ms. Priya Shah', role: 'teacher', subject: 'Physics', id: 'tch-demo' },
+        { email: 'aspirelearningcentre@outlook.com', pass: 'ZP&786', name: 'ASPIRE Admin', role: 'admin', id: 'admin-root' }
       ];
 
-      const matchedAdmin = adminAccounts.find(
+      const matchedAccount = authorizedAccounts.find(
         a => a.email.toLowerCase() === cleanEmail && a.pass === cleanPass
       );
 
-      if (matchedAdmin) {
+      if (matchedAccount) {
         authUser = {
-          id: matchedAdmin.id,
-          email: matchedAdmin.email,
-          role: 'admin',
-          name: matchedAdmin.name
+          id: matchedAccount.id,
+          email: matchedAccount.email,
+          role: matchedAccount.role,
+          name: matchedAccount.name,
+          course: matchedAccount.course || '12th Science',
+          rollNumber: matchedAccount.rollNumber || 'ASPIRE-2025-101',
+          linkedChildName: matchedAccount.linkedChildName || 'Rohan Sharma',
+          subject: matchedAccount.subject || 'Physics'
         };
       } else {
         // 2. Check locally stored institute users (students/teachers/parents added by Admin)

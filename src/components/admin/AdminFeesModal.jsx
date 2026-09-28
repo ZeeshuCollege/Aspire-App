@@ -12,7 +12,8 @@ import {
   addManualFeeRecord,
   sendFeeNotificationAlert,
   formatFeeAmount,
-  formatFeeFraction
+  formatFeeFraction,
+  fetchFeesFromSupabase
 } from '../../lib/feeService';
 import { getStoredStudents } from '../../lib/userAuthStore';
 import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
@@ -48,12 +49,26 @@ export default function AdminFeesModal({ isOpen, onClose }) {
   const [editPaidFee, setEditPaidFee] = useState('');
   const [editTotalFee, setEditTotalFee] = useState('');
   const [toastMessage, setToastMessage] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  // Load fees on open
+  // Load fees on open (Initial cache + Live Supabase Backend Query)
   useEffect(() => {
     if (!isOpen) return;
-    const data = getStoredFees();
-    setFeesList(data);
+    setFeesList(getStoredFees());
+    setIsSyncing(true);
+
+    fetchFeesFromSupabase()
+      .then(liveData => {
+        if (Array.isArray(liveData) && liveData.length > 0) {
+          setFeesList(liveData);
+        }
+      })
+      .catch(err => {
+        console.warn('[AdminFeesModal] Live Supabase fetch notice:', err?.message);
+      })
+      .finally(() => {
+        setIsSyncing(false);
+      });
   }, [isOpen]);
 
   const showToast = (msg) => {
@@ -207,11 +222,12 @@ export default function AdminFeesModal({ isOpen, onClose }) {
         overflow: 'hidden'
       }}
     >
-      {/* ── Top Navigation Bar ── */}
+      {/* ── Top Navigation Bar (Status bar safe area aware) ── */}
       <div style={{
         background: 'var(--surface)',
         borderBottom: '1px solid var(--border)',
-        padding: '10px 14px',
+        padding: '12px 14px 10px',
+        paddingTop: 'calc(12px + max(var(--safe-area-top, 0px), env(safe-area-inset-top, 0px), 28px))',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -248,8 +264,12 @@ export default function AdminFeesModal({ isOpen, onClose }) {
                 Quick Action
               </span>
             </div>
-            <p style={{ fontSize: '10.5px', color: 'var(--text-secondary)', margin: '2px 0 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              Track dues, full-paid statuses & alerts
+            <p style={{ fontSize: '10.5px', color: 'var(--text-secondary)', margin: '2px 0 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span>Track dues & alerts</span>
+              <span>•</span>
+              <span style={{ color: isSyncing ? '#0284c7' : '#16a34a', fontWeight: 600 }}>
+                {isSyncing ? '⏳ Syncing...' : '☁️ Supabase Backend'}
+              </span>
             </p>
           </div>
         </div>
@@ -399,6 +419,7 @@ export default function AdminFeesModal({ isOpen, onClose }) {
         flex: 1,
         overflowY: 'auto',
         padding: '12px 14px',
+        paddingBottom: 'calc(24px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)))',
         display: 'flex',
         flexDirection: 'column',
         gap: '10px'

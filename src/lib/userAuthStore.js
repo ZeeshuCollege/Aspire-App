@@ -216,13 +216,41 @@ export const authenticateLocalUser = (email, password) => {
   const cleanPass = (password || '').trim();
   if (!cleanEmail || !cleanPass) return null;
 
-  // ── 0. Built-in Admins ──
-  if (cleanEmail === 'pinjari.work@gmail.com' && cleanPass === 'Zeeshan$2006') {
+  // ── 0. Reviewer Demo Accounts & Official Institute Admin ──
+  if (cleanEmail === 'admin.demo@aspire.local' && cleanPass === 'AspireDemo@2026') {
     return {
-      id: 'admin-pinjari',
-      name: 'Zeeshan (Admin)',
-      email: 'pinjari.work@gmail.com',
+      id: 'adm-demo',
+      name: 'Play Reviewer (Admin)',
+      email: 'admin.demo@aspire.local',
       role: 'admin'
+    };
+  }
+  if (cleanEmail === 'student.demo@aspire.local' && cleanPass === 'AspireDemo@2026') {
+    return {
+      id: 'std-demo',
+      name: 'Rohan Sharma',
+      email: 'student.demo@aspire.local',
+      role: 'student',
+      course: '12th Science',
+      rollNumber: 'ASPIRE-2025-101'
+    };
+  }
+  if (cleanEmail === 'parent.demo@aspire.local' && cleanPass === 'AspireDemo@2026') {
+    return {
+      id: 'par-demo',
+      name: 'Mr. Sharma (Parent)',
+      email: 'parent.demo@aspire.local',
+      role: 'parent',
+      linkedChildName: 'Rohan Sharma'
+    };
+  }
+  if (cleanEmail === 'teacher.demo@aspire.local' && cleanPass === 'AspireDemo@2026') {
+    return {
+      id: 'tch-demo',
+      name: 'Ms. Priya Shah',
+      email: 'teacher.demo@aspire.local',
+      role: 'teacher',
+      subject: 'Physics'
     };
   }
   if (cleanEmail === 'aspirelearningcentre@outlook.com' && cleanPass === 'ZP&786') {
@@ -344,11 +372,13 @@ export const deleteStoredStudent = (studentId) => {
     const e = toDelete.email.trim().toLowerCase();
     const creds = getCredMap(); delete creds[e]; saveCredMap(creds);
     const users = getUserMap(); delete users[e]; saveUserMap(users);
-    // Delete from Supabase too
-    supabaseAdmin.auth.admin.listUsers().then(({ data }) => {
-      const u = data?.users?.find(x => x.email === e);
-      if (u) supabaseAdmin.auth.admin.deleteUser(u.id).catch(() => {});
-    }).catch(() => {});
+    // Delete from Supabase if admin client available
+    if (supabaseAdmin?.auth?.admin) {
+      supabaseAdmin.auth.admin.listUsers().then(({ data }) => {
+        const u = data?.users?.find(x => x.email === e);
+        if (u) supabaseAdmin.auth.admin.deleteUser(u.id).catch(() => {});
+      }).catch(() => {});
+    }
   }
   const updated = current.filter(s => s.id !== studentId);
   saveStoredStudents(updated);

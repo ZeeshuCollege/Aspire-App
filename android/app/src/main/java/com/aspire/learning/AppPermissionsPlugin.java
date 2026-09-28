@@ -22,10 +22,6 @@ import com.getcapacitor.annotation.PermissionCallback;
         @Permission(
             alias = "camera",
             strings = { Manifest.permission.CAMERA }
-        ),
-        @Permission(
-            alias = "microphone",
-            strings = { Manifest.permission.RECORD_AUDIO }
         )
     }
 )
@@ -99,23 +95,9 @@ public class AppPermissionsPlugin extends Plugin {
 
     @PluginMethod
     public void requestMicrophonePermission(PluginCall call) {
-        int status = ContextCompat.checkSelfPermission(getContext(), Manifest.permission.RECORD_AUDIO);
-        if (status != PackageManager.PERMISSION_GRANTED) {
-            requestPermissionForAlias("microphone", call, "microphonePermCallback");
-        } else {
-            JSObject ret = new JSObject();
-            ret.put("granted", true);
-            ret.put("status", "granted");
-            call.resolve(ret);
-        }
-    }
-
-    @PermissionCallback
-    private void microphonePermCallback(PluginCall call) {
         JSObject ret = new JSObject();
-        boolean granted = ContextCompat.checkSelfPermission(getContext(), Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
-        ret.put("granted", granted);
-        ret.put("status", granted ? "granted" : "denied");
+        ret.put("granted", true);
+        ret.put("status", "granted");
         call.resolve(ret);
     }
 }

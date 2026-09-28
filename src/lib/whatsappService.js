@@ -3,8 +3,8 @@
  * Uses Meta for Developers WhatsApp Cloud API (Free Tier: 1,000 free conversations/month)
  */
 
-const META_PHONE_ID = '1275012569032507';
-const META_TOKEN = 'EAAWcNppBMTMBSntPzDRl5ZCtVIexqNaUi8uV2XG9GtsZA8lfgE6bGd0YUNdg1J0ZADdlxLdPUzyZBS7TyVfiZBHpNQ8hutJze44LtZC3VXnrS7URbZAgU1BoLgZBoakCr05ydVB6tigSn71qZCRrUr5bnVpUKHUFzmYYj1X2OMD0ovTISNDUKzsHVUKqkD1jnKipRxz7YZARNIYtTx0sUzPYcT4SFpJ1ZA8CnNKpyUN7amAqj16kQQR7M9DJhXK5CoP6IMZCPiQTJ8oGhEcGu4cRNbYZA';
+const META_PHONE_ID = import.meta.env.VITE_META_PHONE_ID || '';
+const META_TOKEN = import.meta.env.VITE_META_TOKEN || '';
 
 // In-memory OTP storage for rapid verification
 const otpStore = new Map();
@@ -32,6 +32,15 @@ export async function sendWhatsAppOtp(rawPhone) {
   const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes validity
 
   otpStore.set(cleanPhone, { otp, expiresAt, attempts: 0 });
+
+  if (!META_PHONE_ID || !META_TOKEN) {
+    return {
+      success: true,
+      message: `OTP generated for (+${cleanPhone})! (Demo Code: ${otp})`,
+      demoCode: otp,
+      cooldown: 60
+    };
+  }
 
   try {
     // Attempt live dispatch to Meta Cloud API

@@ -436,6 +436,10 @@ button, input, select, textarea {
   will-change: transform;
 }
 
+.fullscreen-page-modal > div:first-child {
+  padding-top: calc(12px + max(var(--safe-area-top, 0px), env(safe-area-inset-top, 0px), 28px)) !important;
+}
+
 /* Modal Bottom-Up Backdrop */
 .modal-backdrop-05s {
   position: fixed;

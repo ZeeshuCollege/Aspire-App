@@ -12,11 +12,10 @@ import {
 export default function PermissionsModal({ isOpen, onClose }) {
   const [statuses, setStatuses] = useState({
     notifications: 'prompt', // 'prompt' | 'requesting' | 'granted' | 'denied'
-    camera: 'prompt',
-    microphone: 'prompt'
+    camera: 'prompt'
   });
   const [isProcessing, setIsProcessing] = useState(false);
-  const [activeStep, setActiveStep] = useState(null); // 'notifications' | 'camera' | 'microphone' | null
+  const [activeStep, setActiveStep] = useState(null); // 'notifications' | 'camera' | null
   const [isDone, setIsDone] = useState(false);
 
   useEffect(() => {
@@ -24,8 +23,7 @@ export default function PermissionsModal({ isOpen, onClose }) {
       checkCurrentPermissions().then(res => {
         setStatuses({
           notifications: res.notifications === 'granted' ? 'granted' : (res.notifications === 'denied' ? 'denied' : 'prompt'),
-          camera: res.camera === 'granted' ? 'granted' : (res.camera === 'denied' ? 'denied' : 'prompt'),
-          microphone: res.microphone === 'granted' ? 'granted' : (res.microphone === 'denied' ? 'denied' : 'prompt')
+          camera: res.camera === 'granted' ? 'granted' : (res.camera === 'denied' ? 'denied' : 'prompt')
         });
       });
     }
@@ -283,49 +281,6 @@ export default function PermissionsModal({ isOpen, onClose }) {
             </div>
             <div>
               {getStatusBadge('camera')}
-            </div>
-          </div>
-
-          {/* Microphone */}
-          <div
-            onClick={() => handleRequestSingle('microphone')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '12px 14px',
-              borderRadius: '14px',
-              background: activeStep === 'microphone' ? '#f0f9ff' : 'var(--surface-alt)',
-              border: activeStep === 'microphone' ? '1.5px solid #0ea5e9' : '1px solid var(--border)',
-              transition: 'all 0.2s ease',
-              cursor: isProcessing ? 'default' : 'pointer'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, paddingRight: '8px' }}>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '10px',
-                background: '#fdf2f8',
-                color: '#db2777',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                <Mic size={20} />
-              </div>
-              <div>
-                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--brand-900)', display: 'block' }}>
-                  Microphone
-                </span>
-                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.3, display: 'block', marginTop: '2px' }}>
-                  Live audio doubt sessions & interactive classrooms
-                </span>
-              </div>
-            </div>
-            <div>
-              {getStatusBadge('microphone')}
             </div>
           </div>
 

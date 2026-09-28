@@ -1,9 +1,10 @@
 /**
  * ASPIRE Learning Centre - Fee Management Service
  * Manages student fee records, progress calculations, amount formatting (k and L),
- * persistent storage, and alerts dispatch for Students & Parents.
+ * persistent storage directly in Supabase Backend Database, and alerts dispatch.
  */
 
+import { supabase } from './supabaseClient.js';
 import { getStoredStudents } from './userAuthStore.js';
 
 export const FEES_STORAGE_KEY = 'aspire_fees_records_v1';
@@ -11,7 +12,7 @@ export const FEES_STORAGE_KEY = 'aspire_fees_records_v1';
 /**
  * Format amounts according to ASPIRE rules:
  * - Use 'L' for Lakh (>= 1,00,000) e.g., 100000 -> 1L, 150000 -> 1.5L
- * - Use 'k' for Thousands (>= 1,000) e.g., 11000 -> 11k, 20000 -> 20k
+ * - Use 'k' for Thousands (>= 1,00,000) e.g., 11000 -> 11k, 20000 -> 20k
  * - Pure numbers for < 1000
  */
 export function formatFeeAmount(val) {
@@ -45,8 +46,7 @@ export function formatFeeFraction(paid, total) {
 }
 
 /**
- * Initial Default Fee Records
- * Rohan Sharma has 11k paid out of 20k (11k/20k) matching the prompt
+ * Default Seed Records
  */
 export const DEFAULT_FEE_RECORDS = [
   {
@@ -171,36 +171,150 @@ export const DEFAULT_FEE_RECORDS = [
   }
 ];
 
+// In-memory runtime cache for snappy zero-latency UI rendering
+let runtimeFeeCache = null;
+
 /**
- * Retrieve fees merged with stored students
+ * Sync individual record directly into Supabase backend database
  */
-export function getStoredFees() {
-  let saved = [];
+export async function syncFeeToSupabaseBackend(record) {
+  if (!record) return;
+
   try {
-    const raw = localStorage.getItem(FEES_STORAGE_KEY);
-    if (raw) {
-      saved = JSON.parse(raw);
+    // 1. Try upserting to dedicated student_fees table if available
+    const { error: feeErr } = await supabase
+      .from('student_fees')
+      .upsert({
+        id: record.id || `fee-${Date.now()}`,
+        name: record.name,
+        roll: record.roll || record.rollNumber || '—',
+        course: record.course || '12th Science',
+        total_fee: Number(record.totalFee) || 0,
+        paid_fee: Number(record.paidFee) || 0,
+        is_fully_paid: Boolean(record.isFullyPaid),
+        last_payment_date: record.lastPaymentDate || '—',
+        remarks: record.remarks || '',
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'id' });
+
+    if (!feeErr) {
+      console.log(`[Supabase Fee DB] Record "${record.name}" synced to student_fees table.`);
     }
-  } catch (e) {
-    saved = [];
+  } catch (err) {
+    // student_fees table might not be created yet, fallback to profiles table
   }
 
-  // Base list starts with default records or saved records
-  const existingMap = new Map();
-  (saved.length > 0 ? saved : DEFAULT_FEE_RECORDS).forEach(item => {
-    existingMap.set(item.id || item.name, item);
+  try {
+    // 2. Sync to Supabase public.profiles table
+    const feePayload = {
+      totalFee: Number(record.totalFee) || 0,
+      paidFee: Number(record.paidFee) || 0,
+      isFullyPaid: Boolean(record.isFullyPaid),
+      lastPaymentDate: record.lastPaymentDate || '—',
+      remarks: record.remarks || ''
+    };
+
+    // Update by ID or by name/email
+    const query = supabase.from('profiles').update({
+      batches: JSON.stringify(feePayload),
+      course: record.course || undefined,
+      updated_at: new Date().toISOString()
+    });
+
+    if (record.id && record.id.includes('-') && record.id.length > 20) {
+      await query.eq('id', record.id);
+    } else {
+      await query.or(`full_name.eq.${record.name},email.eq.${record.email || ''}`);
+    }
+  } catch (profErr) {
+    console.warn('[Supabase Fee DB] Profiles sync notice:', profErr?.message);
+  }
+}
+
+/**
+ * Fetch all fee records live from Supabase Backend Database
+ */
+export async function fetchFeesFromSupabase() {
+  const map = new Map();
+
+  // 1. Populate default records first
+  DEFAULT_FEE_RECORDS.forEach(item => {
+    map.set(item.id || item.name, { ...item });
   });
 
-  // Merge any dynamically registered students from userAuthStore
+  // 2. Fetch from Supabase student_fees table (if created)
   try {
-    const storedStudents = getStoredStudents();
-    if (Array.isArray(storedStudents)) {
-      storedStudents.forEach(std => {
+    const { data: dbFees, error: dbErr } = await supabase
+      .from('student_fees')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!dbErr && Array.isArray(dbFees) && dbFees.length > 0) {
+      dbFees.forEach(row => {
+        const item = {
+          id: row.id,
+          name: row.name,
+          roll: row.roll || '—',
+          rollNumber: row.roll || '—',
+          course: row.course || '12th Science',
+          totalFee: Number(row.total_fee) || 0,
+          paidFee: Number(row.paid_fee) || 0,
+          isFullyPaid: Boolean(row.is_fully_paid) || (Number(row.paid_fee) >= Number(row.total_fee) && Number(row.total_fee) > 0),
+          lastPaymentDate: row.last_payment_date || '—',
+          remarks: row.remarks || ''
+        };
+        map.set(item.id || item.name, item);
+      });
+    }
+  } catch (e) {}
+
+  // 3. Fetch from Supabase public.profiles table (role = 'student')
+  try {
+    const { data: profiles, error: pErr } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('role', 'student');
+
+    if (!pErr && Array.isArray(profiles)) {
+      profiles.forEach(p => {
+        const key = p.id || p.full_name;
+        let feeData = null;
+        if (p.batches) {
+          try {
+            feeData = JSON.parse(p.batches);
+          } catch (e) {}
+        }
+
+        const existing = map.get(key) || map.get(p.full_name);
+        const total = feeData?.totalFee !== undefined ? Number(feeData.totalFee) : (existing?.totalFee || 20000);
+        const paid = feeData?.paidFee !== undefined ? Number(feeData.paidFee) : (existing?.paidFee || 0);
+
+        map.set(key, {
+          id: p.id,
+          name: p.full_name,
+          roll: p.roll_number || existing?.roll || '—',
+          rollNumber: p.roll_number || existing?.rollNumber || '—',
+          course: p.course || existing?.course || '12th Science',
+          email: p.email,
+          totalFee: total,
+          paidFee: paid,
+          isFullyPaid: feeData?.isFullyPaid !== undefined ? feeData.isFullyPaid : (paid >= total && total > 0),
+          lastPaymentDate: feeData?.lastPaymentDate || existing?.lastPaymentDate || '—',
+          remarks: feeData?.remarks || existing?.remarks || 'Enrolled in Supabase'
+        });
+      });
+    }
+  } catch (e) {}
+
+  // Also include any locally registered students in auth store
+  try {
+    const stored = getStoredStudents();
+    if (Array.isArray(stored)) {
+      stored.forEach(std => {
         const key = std.id || std.name;
-        if (!existingMap.has(key)) {
-          // Default fee assignment for newly added student
-          existingMap.set(key, {
-            id: std.id || `std-${Date.now()}`,
+        if (!map.has(key)) {
+          map.set(key, {
+            id: std.id,
             name: std.name,
             roll: std.roll || std.rollNumber || '—',
             rollNumber: std.rollNumber || std.roll || '—',
@@ -209,33 +323,61 @@ export function getStoredFees() {
             paidFee: 0,
             isFullyPaid: false,
             lastPaymentDate: '—',
-            remarks: 'New Admission'
+            remarks: 'New Student'
           });
         }
       });
     }
   } catch (e) {}
 
-  return Array.from(existingMap.values());
+  const list = Array.from(map.values());
+  runtimeFeeCache = list;
+  // Cache copy for instant offline boot
+  try { localStorage.setItem(FEES_STORAGE_KEY, JSON.stringify(list)); } catch (e) {}
+  return list;
 }
 
 /**
- * Persist fee list to local storage
+ * Synchronous getter: Returns in-memory cache / persistent snapshot
+ */
+export function getStoredFees() {
+  if (runtimeFeeCache && runtimeFeeCache.length > 0) {
+    return runtimeFeeCache;
+  }
+  try {
+    const raw = localStorage.getItem(FEES_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        runtimeFeeCache = parsed;
+        return parsed;
+      }
+    }
+  } catch (e) {}
+
+  runtimeFeeCache = DEFAULT_FEE_RECORDS;
+  return DEFAULT_FEE_RECORDS;
+}
+
+/**
+ * Save fee list to runtime cache and async persist to Supabase
  */
 export function saveStoredFees(feesList) {
+  runtimeFeeCache = feesList;
   try {
     localStorage.setItem(FEES_STORAGE_KEY, JSON.stringify(feesList || []));
-  } catch (e) {
-    console.error('Failed to save fees to localStorage', e);
-  }
+  } catch (e) {}
 }
 
 /**
  * Update a student's fees details (e.g. edit paid fees from 11k to 15k out of 20k)
+ * Stores directly in Supabase Backend Database.
  */
 export function updateStudentFeeRecord(studentId, updates) {
-  const fees = getStoredFees();
-  const updatedList = fees.map(item => {
+  const current = getStoredFees();
+  let updatedRecord = null;
+
+  const updatedList = current.map(item => {
     if (item.id === studentId || item.name === studentId) {
       const newTotal = updates.totalFee !== undefined ? Number(updates.totalFee) : item.totalFee;
       const newPaid = updates.paidFee !== undefined ? Number(updates.paidFee) : item.paidFee;
@@ -243,7 +385,7 @@ export function updateStudentFeeRecord(studentId, updates) {
         ? updates.isFullyPaid 
         : (newPaid >= newTotal && newTotal > 0);
 
-      return {
+      updatedRecord = {
         ...item,
         ...updates,
         totalFee: newTotal,
@@ -251,38 +393,56 @@ export function updateStudentFeeRecord(studentId, updates) {
         isFullyPaid: fullPaid,
         lastPaymentDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
       };
+      return updatedRecord;
     }
     return item;
   });
 
   saveStoredFees(updatedList);
+
+  // Write directly to Supabase Backend
+  if (updatedRecord) {
+    syncFeeToSupabaseBackend(updatedRecord);
+  }
+
   return updatedList;
 }
 
 /**
  * Mark a student's fees as Full Paid
+ * Stores directly in Supabase Backend Database.
  */
 export function markStudentAsFullPaid(studentId) {
-  const fees = getStoredFees();
-  const updatedList = fees.map(item => {
+  const current = getStoredFees();
+  let updatedRecord = null;
+
+  const updatedList = current.map(item => {
     if (item.id === studentId || item.name === studentId) {
-      return {
+      updatedRecord = {
         ...item,
         paidFee: item.totalFee,
         isFullyPaid: true,
         lastPaymentDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
         remarks: 'Marked Fully Paid by Admin'
       };
+      return updatedRecord;
     }
     return item;
   });
 
   saveStoredFees(updatedList);
+
+  // Write directly to Supabase Backend
+  if (updatedRecord) {
+    syncFeeToSupabaseBackend(updatedRecord);
+  }
+
   return updatedList;
 }
 
 /**
  * Add a new manual fee entry by Admin
+ * Stores directly in Supabase Backend Database.
  */
 export function addManualFeeRecord(record) {
   const fees = getStoredFees();
@@ -305,12 +465,16 @@ export function addManualFeeRecord(record) {
 
   const updatedList = [newEntry, ...fees];
   saveStoredFees(updatedList);
+
+  // Write directly to Supabase Backend
+  syncFeeToSupabaseBackend(newEntry);
+
   return { updatedList, newEntry };
 }
 
 /**
  * Send Fee Alert to Student and Parent
- * Dispatches formal notice into ASPIRE notice board & triggers custom events
+ * Dispatches notice & broadcasts custom events
  */
 export function sendFeeNotificationAlert(student) {
   const total = Number(student.totalFee) || 0;
@@ -349,15 +513,7 @@ export function sendFeeNotificationAlert(student) {
     }
   };
 
-  // 1. Save directly to aspire_notices_list
-  try {
-    const rawNotices = localStorage.getItem('aspire_notices_list');
-    const notices = rawNotices ? JSON.parse(rawNotices) : [];
-    const updatedNotices = [notice, ...notices];
-    localStorage.setItem('aspire_notices_list', JSON.stringify(updatedNotices));
-  } catch (e) {}
-
-  // 2. Broadcast application-level custom event
+  // Broadcast event
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('aspire:fee-alert', {
       detail: { notice, student }

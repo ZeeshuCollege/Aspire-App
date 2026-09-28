@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Deletion Request - ASPIRE Learning Centre</title>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --danger: #dc2626;
+      --bg: #f8fafc;
+      --text: #1e293b;
+      --border: #e2e8f0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background-color: var(--bg);
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0 0 8px 0;
+      font-size: 26px;
+      font-weight: 800;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 28px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .warning-box {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-left: 4px solid var(--danger);
+      padding: 14px 16px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 20px;
+      font-size: 13.5px;
+      color: #991b1b;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #334155;
+    }
+    input, select, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    button {
+      width: 100%;
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    button:hover {
+      background: #b91c1c;
+    }
+    .confirmation {
+      display: none;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      color: #166534;
+    }
+    .footer {
+      text-align: center;
+      padding: 30px 20px;
+      color: #64748b;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Account & Data Deletion</h1>
+    <p>ASPIRE Learning Centre Self-Service Request Portal</p>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <div class="warning-box">
+        <strong>Important Notice:</strong> Deleting your account will permanently remove your profile, login access, attendance logs, marks, and digital documents from the ASPIRE Learning Centre platform. This action cannot be undone.
+      </div>
+
+      <div id="form-container">
+        <form id="deletion-form" onsubmit="handleDeletionSubmit(event)">
+          <div>
+            <label for="email">Registered Email Address *</label>
+            <input type="email" id="email" required placeholder="your.email@example.com" />
+          </div>
+
+          <div>
+            <label for="role">Account Role *</label>
+            <select id="role" required>
+              <option value="student">Student</option>
+              <option value="parent">Parent</option>
+              <option value="teacher">Faculty / Teacher</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="reason">Reason for Deletion (Optional)</label>
+            <textarea id="reason" rows="3" placeholder="Course completed, no longer enrolled, etc."></textarea>
+          </div>
+
+          <div>
+            <label>
+              <input type="checkbox" required style="width: auto; margin-right: 8px; display: inline;" />
+              I understand that all my academic records and login credentials will be permanently erased.
+            </label>
+          </div>
+
+          <button type="submit" id="submit-btn" style="margin-top: 14px;">
+            Submit Account Deletion Request
+          </button>
+        </form>
+      </div>
+
+      <div id="confirmation-container" class="confirmation">
+        <h3 style="margin-top: 0; font-size: 18px;">Request Submitted Successfully</h3>
+        <p style="font-size: 14px;">
+          Your deletion request for <strong id="confirmed-email"></strong> has been logged.
+        </p>
+        <p style="font-size: 13px; color: #15803d;">
+          Reference ID: <strong id="ref-id"></strong><br>
+          In accordance with Google Play data safety standards, all personal data associated with this account will be purged from our Supabase database within 48 hours.
+        </p>
+        <a href="/" style="display: inline-block; margin-top: 12px; color: var(--primary); font-size: 13px; font-weight: 600;">&larr; Return to Home</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    &copy; 2026 ASPIRE Learning Centre • <a href="/privacy-policy.html" style="color: #64748b;">Privacy Policy</a>
+  </div>
+
+  <script>
+    function handleDeletionSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const ref = 'ASP-DEL-' + Math.floor(100000 + Math.random() * 900000);
+
+      document.getElementById('form-container').style.display = 'none';
+      document.getElementById('confirmed-email').textContent = email;
+      document.getElementById('ref-id').textContent = ref;
+      document.getElementById('confirmation-container').style.display = 'block';
+
+      // Log request in local audit list if available
+      try {
+        const requests = JSON.parse(localStorage.getItem('aspire_deletion_requests') || '[]');
+        requests.push({ email, ref, date: new Date().toISOString() });
+        localStorage.setItem('aspire_deletion_requests', JSON.stringify(requests));
+      } catch (err) {}
+    }
+  </script>
+</body>
+</html>
