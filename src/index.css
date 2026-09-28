@@ -57,6 +57,29 @@
   /* Fonts */
   --font-display: 'Outfit', sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Dynamic System Navigation & Full Screen Gesture Tokens */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --keyboard-inset: 0px;
+  --bottom-nav-pad-bottom: calc(var(--safe-area-bottom) + 10px);
+  --bottom-nav-height: 72px;
+  --content-padding-bottom: 96px;
+}
+
+/* Three-Button Navigation Mode: Compact spacing above on-screen navigation buttons */
+[data-nav-mode="buttons"] {
+  --bottom-nav-pad-bottom: calc(var(--safe-area-bottom, 48px) + 6px);
+  --bottom-nav-height: calc(52px + var(--bottom-nav-pad-bottom));
+  --content-padding-bottom: calc(var(--bottom-nav-height) + 12px);
+}
+
+/* Full Screen Gesture Mode (iOS type gesture / Android gesture navigation):
+   Generous thumb clearance above bottom swipe gesture zone */
+[data-nav-mode="gesture"] {
+  --bottom-nav-pad-bottom: calc(max(var(--safe-area-bottom, 20px), 20px) + 8px);
+  --bottom-nav-height: calc(52px + var(--bottom-nav-pad-bottom));
+  --content-padding-bottom: calc(var(--bottom-nav-height) + 16px);
 }
 
 /* Base Styles */
@@ -313,6 +336,12 @@ button, input, select, textarea {
   box-sizing: border-box;
 }
 
+/* Ensure all tab view containers dynamically adapt their scroll padding to navigation mode */
+.screen-slide > div,
+.tab-screen-container {
+  padding-bottom: var(--content-padding-bottom, 96px) !important;
+}
+
 .desktop-app-wrapper {
   width: 100%;
   min-height: 100vh;
@@ -436,6 +465,7 @@ button, input, select, textarea {
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
+  padding-bottom: calc(16px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)));
   animation: slideUpFromBottom 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   will-change: transform;
 }

@@ -1,7 +1,10 @@
 import React from 'react';
 import { Home, Calendar, BookOpen, FileText, User, Users, BarChart2, DollarSign, UserCheck, UserPlus } from 'lucide-react';
+import { useSystemNavigation } from '../../lib/systemNavigation';
 
 export default function BottomNav({ role, activeTab, setActiveTab }) {
+  const { navMode, isKeyboardOpen } = useSystemNavigation();
+
   // Define nav configurations per role based on ASPIRE THEME.png
   const navConfigs = {
     student: [
@@ -37,25 +40,37 @@ export default function BottomNav({ role, activeTab, setActiveTab }) {
   const tabs = navConfigs[role] || navConfigs.student;
   const isSixTabs = tabs.length >= 6;
 
+  // Dynamic bottom padding based on 3-button navigation vs full-screen gesture pill
+  const dynamicPaddingBottom = navMode === 'buttons'
+    ? 'calc(var(--safe-area-bottom, 48px) + 6px)'
+    : 'calc(max(var(--safe-area-bottom, 20px), 20px) + 8px)';
+
   return (
-    <nav style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      maxWidth: '480px',
-      margin: '0 auto',
-      background: 'var(--surface)',
-      borderTop: '1px solid var(--border)',
-      display: 'flex',
-      justifyContent: 'space-around',
-      alignItems: 'center',
-      padding: isSixTabs
-        ? '6px 2px calc(14px + env(safe-area-inset-bottom, 0px)) 2px'
-        : '8px 4px calc(14px + env(safe-area-inset-bottom, 0px)) 4px',
-      zIndex: 40,
-      boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.05)'
-    }}>
+    <nav
+      style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        maxWidth: '480px',
+        margin: '0 auto',
+        background: 'var(--surface)',
+        borderTop: '1px solid var(--border)',
+        display: 'flex',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        paddingTop: isSixTabs ? '6px' : '8px',
+        paddingLeft: isSixTabs ? '2px' : '4px',
+        paddingRight: isSixTabs ? '2px' : '4px',
+        paddingBottom: dynamicPaddingBottom,
+        zIndex: 40,
+        boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.05)',
+        transform: isKeyboardOpen ? 'translateY(110%)' : 'translateY(0)',
+        opacity: isKeyboardOpen ? 0 : 1,
+        pointerEvents: isKeyboardOpen ? 'none' : 'auto',
+        transition: 'transform 0.26s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, padding-bottom 0.2s ease'
+      }}
+    >
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -77,7 +92,8 @@ export default function BottomNav({ role, activeTab, setActiveTab }) {
               color: isActive ? 'var(--brand-800)' : 'var(--text-muted)',
               transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
               position: 'relative',
-              minWidth: 0
+              minWidth: 0,
+              touchAction: 'manipulation'
             }}
           >
             <div style={{
@@ -105,7 +121,7 @@ export default function BottomNav({ role, activeTab, setActiveTab }) {
             {isActive && (
               <span style={{
                 position: 'absolute',
-                bottom: '0px',
+                bottom: '-2px',
                 width: '18px',
                 height: '3px',
                 background: 'var(--brand-800)',
@@ -114,7 +130,6 @@ export default function BottomNav({ role, activeTab, setActiveTab }) {
               }} />
             )}
           </button>
-
         );
       })}
     </nav>

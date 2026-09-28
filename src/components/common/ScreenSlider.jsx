@@ -3,8 +3,9 @@ import React, { useRef, useEffect, useState } from 'react';
 /**
  * ScreenSlider Component
  * Provides hardware-accelerated horizontal sliding animations between all tabs/screens.
- * Fast multi-screen velocity curve zips past intermediate screens with rapid reel dynamics
- * before softly landing on the destination screen.
+ * Responsive to full-screen gestures:
+ * - Respects native Android & iOS system back swipe gestures via screen edge exclusion zones
+ * - Respects bottom navigation bar & home swipe gestures via bottom exclusion zone
  */
 export default function ScreenSlider({ activeTab, tabs, onNavigate, roleKey }) {
   // Find current index of active tab
@@ -50,17 +51,43 @@ export default function ScreenSlider({ activeTab, tabs, onNavigate, roleKey }) {
   }, [activeIndex, roleKey]);
 
   const handleTouchStart = (e) => {
-    touchStartXRef.current = e.touches[0].clientX;
-    touchStartYRef.current = e.touches[0].clientY;
+    if (!e.touches || e.touches.length === 0) return;
+    const touch = e.touches[0];
+    const clientX = touch.clientX;
+    const clientY = touch.clientY;
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+
+    // Edge exclusion zones:
+    // 1. Left & Right 32px: Reserved for Android / iOS system back swipe gestures
+    const EDGE_EXCLUSION_PX = 32;
+    if (clientX < EDGE_EXCLUSION_PX || clientX > screenWidth - EDGE_EXCLUSION_PX) {
+      touchStartXRef.current = null;
+      touchStartYRef.current = null;
+      return;
+    }
+
+    // 2. Bottom 68px: Reserved for iOS home indicator pill / Android gesture bar
+    const BOTTOM_EXCLUSION_PX = 68;
+    if (clientY > screenHeight - BOTTOM_EXCLUSION_PX) {
+      touchStartXRef.current = null;
+      touchStartYRef.current = null;
+      return;
+    }
+
+    touchStartXRef.current = clientX;
+    touchStartYRef.current = clientY;
   };
 
   const handleTouchEnd = (e) => {
     if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+    if (!e.changedTouches || e.changedTouches.length === 0) return;
+
     const diffX = e.changedTouches[0].clientX - touchStartXRef.current;
     const diffY = e.changedTouches[0].clientY - touchStartYRef.current;
 
     // Minimum swipe threshold of 50px and must be predominantly horizontal
-    if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY) * 1.4) {
+    if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY) * 1.35) {
       if (diffX < 0 && activeIndex < tabs.length - 1) {
         // Swiped Left -> go to next screen
         if (onNavigate) onNavigate(tabs[activeIndex + 1].id);

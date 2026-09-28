@@ -8,7 +8,7 @@ export default function Header({ currentRole, user, onOpenLogin, onLogout, onOpe
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '12px 18px',
-      paddingTop: 'calc(12px + env(safe-area-inset-top, 0px))',
+      paddingTop: 'calc(12px + var(--safe-area-top, env(safe-area-inset-top, 0px)))',
       background: 'var(--surface)',
       borderBottom: '1px solid var(--border)',
       position: 'sticky',

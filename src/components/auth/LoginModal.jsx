@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { authenticateLocalUser } from '../../lib/userAuthStore';
 import { sendWhatsAppOtp, verifyWhatsAppOtp } from '../../lib/whatsappService';
 import { X, Mail, Lock, Eye, EyeOff, MessageSquare, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useSwipeDownDismiss } from '../../lib/systemNavigation';
 
 export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
   const [email, setEmail] = useState('');
@@ -36,8 +37,6 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
     return () => clearInterval(timer);
   }, [lockoutSeconds]);
 
-  if (!isOpen) return null;
-
   const handleClose = () => {
     setIsClosing(true);
     setTimeout(() => {
@@ -48,6 +47,10 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
       setAuthView('login');
     }, 380);
   };
+
+  const { dragOffset, touchHandlers } = useSwipeDownDismiss(handleClose);
+
+  if (!isOpen) return null;
 
   // Handle Manual Email / Password Login — Local auth first, then Supabase
   const handleLogin = async (e) => {
@@ -314,8 +317,19 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
       className={`modal-backdrop-05s ${isClosing ? 'closing' : ''}`}
       onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
-      <div className={`modal-sheet-05s ${isClosing ? 'closing' : ''}`}>
-        <div className="sheet-drag-handle" />
+      <div
+        className={`modal-sheet-05s ${isClosing ? 'closing' : ''}`}
+        style={{
+          transform: dragOffset > 0 ? `translate3d(0, ${dragOffset}px, 0)` : undefined,
+          transition: dragOffset > 0 ? 'none' : undefined
+        }}
+      >
+        <div
+          {...touchHandlers}
+          style={{ width: '100%', padding: '6px 0 2px 0', cursor: 'grab', touchAction: 'none' }}
+        >
+          <div className="sheet-drag-handle" />
+        </div>
         {/* Modal Close Button */}
         <button
           onClick={handleClose}

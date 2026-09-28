@@ -161,7 +161,7 @@ export default function OpeningScreen({ isLoggedIn, onOpenLogin, onProceed }) {
       {/* Bottom Area: Shows ONLY Login button if not logged in, NO buttons if already logged in */}
       <div style={{
         width: '100%',
-        padding: '0 32px 48px 32px',
+        padding: '0 32px calc(28px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px))) 32px',
         boxSizing: 'border-box',
         display: 'flex',
         flexDirection: 'column',

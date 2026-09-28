@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { X, Bell, CheckCheck, FileText, CheckCircle2, BookOpen, AlertTriangle, DollarSign, Clock } from 'lucide-react';
+import { useSwipeDownDismiss } from '../../lib/systemNavigation';
 
 export default function NotificationsModal({ isOpen, onClose, notices = [], onMarkAllRead, onNoticeClick }) {
   const [filter, setFilter] = useState('All');
   const [isClosing, setIsClosing] = useState(false);
-
-  if (!isOpen) return null;
 
   const handleClose = () => {
     setIsClosing(true);
@@ -14,6 +13,10 @@ export default function NotificationsModal({ isOpen, onClose, notices = [], onMa
       setIsClosing(false);
     }, 380);
   };
+
+  const { dragOffset, touchHandlers } = useSwipeDownDismiss(handleClose);
+
+  if (!isOpen) return null;
 
   const unreadCount = notices.filter(n => !n.read).length;
 
@@ -45,9 +48,21 @@ export default function NotificationsModal({ isOpen, onClose, notices = [], onMa
       className={`modal-backdrop-05s ${isClosing ? 'closing' : ''}`}
       onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
-      <div className={`modal-sheet-05s ${isClosing ? 'closing' : ''}`} style={{ maxHeight: '88vh' }}>
-        {/* Native Mobile Drag Handle */}
-        <div className="sheet-drag-handle" />
+      <div
+        className={`modal-sheet-05s ${isClosing ? 'closing' : ''}`}
+        style={{
+          maxHeight: '88vh',
+          transform: dragOffset > 0 ? `translate3d(0, ${dragOffset}px, 0)` : undefined,
+          transition: dragOffset > 0 ? 'none' : undefined
+        }}
+      >
+        {/* Native Mobile Drag Handle & Header Swipe-down trigger */}
+        <div
+          {...touchHandlers}
+          style={{ width: '100%', padding: '6px 0 2px 0', cursor: 'grab', touchAction: 'none' }}
+        >
+          <div className="sheet-drag-handle" />
+        </div>
 
         {/* Top Header */}
         <div style={{

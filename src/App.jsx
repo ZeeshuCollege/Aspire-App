@@ -34,8 +34,10 @@ import ParentFees from './components/parent/ParentFees';
 
 // Admin View (100% Mobile)
 import AdminMobileDashboard from './components/admin/AdminMobileDashboard';
+import { useSystemNavigation } from './lib/systemNavigation';
 
 export default function App() {
+  const systemNav = useSystemNavigation();
   const [currentRole, setCurrentRole] = useState(() => {
     try {
       return localStorage.getItem('aspire_user_role') || 'admin';

@@ -197,6 +197,7 @@ export default function ProtectedPdfViewer({
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '10px 14px',
+        paddingTop: 'calc(10px + var(--safe-area-top, env(safe-area-inset-top, 0px)))',
         background: '#0f172a',
         borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
         boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
@@ -368,7 +369,7 @@ export default function ProtectedPdfViewer({
             overflowX: 'auto',
             WebkitOverflowScrolling: 'touch',
             overscrollBehaviorY: 'contain',
-            padding: '16px 12px 100px 12px',
+            padding: '16px 12px calc(100px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px))) 12px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -783,7 +784,7 @@ export default function ProtectedPdfViewer({
          ========================================================================= */}
       <footer style={{
         position: 'absolute',
-        bottom: '18px',
+        bottom: 'calc(18px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)))',
         left: '50%',
         transform: 'translateX(-50%)',
         background: 'rgba(15, 23, 42, 0.92)',
