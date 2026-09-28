@@ -19,9 +19,11 @@ public class MainActivity extends BridgeActivity {
         try {
             Window window = getWindow();
             window.setStatusBarColor(Color.WHITE);
+            window.setNavigationBarColor(Color.WHITE);
             WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());
             if (controller != null) {
                 controller.setAppearanceLightStatusBars(true);
+                controller.setAppearanceLightNavigationBars(true);
             }
 
             View contentView = findViewById(android.R.id.content);
@@ -32,7 +34,13 @@ public class MainActivity extends BridgeActivity {
                         insets.getInsets(WindowInsetsCompat.Type.statusBars()).top,
                         insets.getInsets(WindowInsetsCompat.Type.displayCutout()).top
                     );
-                    v.setPadding(0, statusBarInset, 0, 0);
+                    int imeInset = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
+                    int navBarInset = Math.max(
+                        insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom,
+                        insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+                    );
+                    int bottomInset = Math.max(navBarInset, imeInset);
+                    v.setPadding(0, statusBarInset, 0, bottomInset);
                     return insets;
                 });
             }

@@ -50,7 +50,9 @@ export default function BottomNav({ role, activeTab, setActiveTab }) {
       display: 'flex',
       justifyContent: 'space-around',
       alignItems: 'center',
-      padding: isSixTabs ? '6px 2px 14px 2px' : '8px 4px 14px 4px',
+      padding: isSixTabs
+        ? '6px 2px calc(14px + env(safe-area-inset-bottom, 0px)) 2px'
+        : '8px 4px calc(14px + env(safe-area-inset-bottom, 0px)) 4px',
       zIndex: 40,
       boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.05)'
     }}>
