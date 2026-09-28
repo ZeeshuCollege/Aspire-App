@@ -229,6 +229,17 @@ export default function App() {
     return () => window.removeEventListener('aspire:attendance-updated', handleAttendanceChange);
   }, []);
 
+  // Listen for admin fee alerts and add notice to notifications board
+  useEffect(() => {
+    const handleFeeAlert = (e) => {
+      if (e.detail?.notice) {
+        setNotices(prev => [e.detail.notice, ...prev.filter(n => n.id !== e.detail.notice.id)]);
+      }
+    };
+    window.addEventListener('aspire:fee-alert', handleFeeAlert);
+    return () => window.removeEventListener('aspire:fee-alert', handleFeeAlert);
+  }, []);
+
   // State refs for the back button listener to prevent stale closures
   const activeTabRef = useRef(activeTab);
   const isLoginOpenRef = useRef(isLoginOpen);

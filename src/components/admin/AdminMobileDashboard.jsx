@@ -9,7 +9,7 @@ import {
 import {
   BookOpen, CheckSquare, Plus, Search,
   Download, ChevronRight, Calendar, FileCheck, Trash2, Award,
-  Eye, EyeOff
+  Eye, EyeOff, IndianRupee
 } from 'lucide-react';
 import ScreenSlider from '../common/ScreenSlider';
 import AdminStudyMaterialsModal, { SUBJECT_OPTIONS, COURSE_OPTIONS } from './AdminStudyMaterialsModal';
@@ -17,6 +17,7 @@ import AdminTestsModal from './AdminTestsModal';
 import AdminTimetableModal from './AdminTimetableModal';
 import AdminAttendanceModal from './AdminAttendanceModal';
 import AdminMarksModal from './AdminMarksModal';
+import AdminFeesModal from './AdminFeesModal';
 
 export default function AdminMobileDashboard({
   activeTab,
@@ -43,6 +44,7 @@ export default function AdminMobileDashboard({
   const [showTimetableModal, setShowTimetableModal] = useState(false);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showMarksModal, setShowMarksModal] = useState(false);
+  const [showFeesModal, setShowFeesModal] = useState(false);
   const [notices, setNotices] = useState(propNotices || initialNotices);
 
   useEffect(() => {
@@ -986,6 +988,47 @@ export default function AdminMobileDashboard({
                   </h4>
                   <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                     Upload & Grade Tests
+                  </span>
+                </div>
+              </div>
+
+              {/* Fees Button (Quick Action) */}
+              <div
+                className="card"
+                onClick={() => setShowFeesModal(true)}
+                style={{
+                  padding: '14px',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 100%)',
+                  border: '1.5px solid #bfdbfe',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  transition: 'transform 0.15s ease'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#dbeafe', color: '#1d4ed8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <IndianRupee size={19} />
+                  </div>
+                  <span style={{
+                    fontSize: '10px',
+                    padding: '2px 7px',
+                    borderRadius: '999px',
+                    fontWeight: 700,
+                    background: '#dbeafe',
+                    color: '#1e40af'
+                  }}>
+                    Finance
+                  </span>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: '4px 0 2px 0' }}>
+                    Fees
+                  </h4>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    Track, Edit & Alerts
                   </span>
                 </div>
               </div>
@@ -2202,6 +2245,12 @@ export default function AdminMobileDashboard({
       <AdminMarksModal
         isOpen={showMarksModal}
         onClose={() => setShowMarksModal(false)}
+      />
+
+      {/* ── Fees Management & Alerts Modal ── */}
+      <AdminFeesModal
+        isOpen={showFeesModal}
+        onClose={() => setShowFeesModal(false)}
       />
       {/* ── Add Universal User Modal (Student, Teacher, Parent, Admin) ── */}
       {showAddUserModal && (
