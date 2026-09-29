@@ -4,11 +4,11 @@ import { DEFAULT_GREY_AVATAR } from '../../lib/mockData';
 
 export default function ParentHome({ user, onNavigate, onOpenTestPaper }) {
   const child = user.linkedChild || {
-    name: 'Rohan Sharma',
-    class: '12th Science',
-    attendance: 92,
-    tests: 86,
-    performance: 78
+    name: user.linkedChildName || 'Student',
+    class: user.course || 'Enrolled Course',
+    attendance: 0,
+    tests: 0,
+    performance: 0
   };
 
   return (

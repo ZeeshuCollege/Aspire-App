@@ -7,8 +7,8 @@ import {
 export default function ProtectedPdfViewer({ 
   title, 
   subtitle, 
-  studentName = 'Rohan Sharma', 
-  rollNo = 'ASPIRE-104', 
+  studentName = 'Student', 
+  rollNo = 'ASPIRE', 
   onClose 
 }) {
   const [zoom, setZoom] = useState(1);

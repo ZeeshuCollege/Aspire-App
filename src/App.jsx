@@ -12,6 +12,7 @@ import OpeningScreen from './components/common/OpeningScreen';
 import { isFirstLaunch } from './lib/permissions';
 import { Browser } from '@capacitor/browser';
 import { supabase } from './lib/supabaseClient';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Student Views
 import StudentHome from './components/student/StudentHome';
@@ -648,52 +649,54 @@ export default function App() {
       />
 
       {/* Main Role-Specific Viewport with Hardware-Accelerated Sliding Track */}
-      <main
-        key={isLandingFade ? 'landing-main' : 'default-main'}
-        className={isLandingFade ? 'home-fade-landing' : ''}
-        style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}
-      >
-        {/* STUDENT SCREENS */}
-        {currentRole === 'student' && (
-          <ScreenSlider
-            activeTab={activeTab}
-            tabs={studentTabs}
-            onNavigate={setActiveTab}
-            roleKey="student"
-          />
-        )}
+      <ErrorBoundary>
+        <main
+          key={isLandingFade ? 'landing-main' : 'default-main'}
+          className={isLandingFade ? 'home-fade-landing' : ''}
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}
+        >
+          {/* STUDENT SCREENS */}
+          {currentRole === 'student' && (
+            <ScreenSlider
+              activeTab={activeTab}
+              tabs={studentTabs}
+              onNavigate={setActiveTab}
+              roleKey="student"
+            />
+          )}
 
-        {/* TEACHER SCREENS */}
-        {currentRole === 'teacher' && (
-          <ScreenSlider
-            activeTab={activeTab}
-            tabs={teacherTabs}
-            onNavigate={setActiveTab}
-            roleKey="teacher"
-          />
-        )}
+          {/* TEACHER SCREENS */}
+          {currentRole === 'teacher' && (
+            <ScreenSlider
+              activeTab={activeTab}
+              tabs={teacherTabs}
+              onNavigate={setActiveTab}
+              roleKey="teacher"
+            />
+          )}
 
-        {/* PARENT SCREENS */}
-        {currentRole === 'parent' && (
-          <ScreenSlider
-            activeTab={activeTab}
-            tabs={parentTabs}
-            onNavigate={setActiveTab}
-            roleKey="parent"
-          />
-        )}
+          {/* PARENT SCREENS */}
+          {currentRole === 'parent' && (
+            <ScreenSlider
+              activeTab={activeTab}
+              tabs={parentTabs}
+              onNavigate={setActiveTab}
+              roleKey="parent"
+            />
+          )}
 
-        {/* ADMIN MOBILE SCREENS */}
-        {currentRole === 'admin' && (
-          <AdminMobileDashboard
-            activeTab={activeTab}
-            onNavigate={(tab) => setActiveTab(tab)}
-            onLogout={handleLogout}
-            notices={notices}
-            setNotices={setNotices}
-          />
-        )}
-      </main>
+          {/* ADMIN MOBILE SCREENS */}
+          {currentRole === 'admin' && (
+            <AdminMobileDashboard
+              activeTab={activeTab}
+              onNavigate={(tab) => setActiveTab(tab)}
+              onLogout={handleLogout}
+              notices={notices}
+              setNotices={setNotices}
+            />
+          )}
+        </main>
+      </ErrorBoundary>
 
 
       {/* Role-Specific Floating Mobile Bottom Navigation */}
@@ -708,8 +711,8 @@ export default function App() {
         <ProtectedPdfViewer
           title={pdfViewerData.title}
           subtitle={pdfViewerData.subtitle}
-          studentName={currentUser ? currentUser.name : 'Rohan Sharma'}
-          rollNo={currentUser?.rollNumber || 'ASPIRE-104'}
+          studentName={currentUser ? currentUser.name : 'Student'}
+          rollNo={currentUser?.rollNumber || ''}
           onClose={() => setPdfViewerData(null)}
         />
       )}

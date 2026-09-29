@@ -427,13 +427,11 @@ button, input, select, textarea {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: slideUpFromBottom 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform;
+  animation: slideUpFromBottom 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .fullscreen-page-modal.closing {
-  animation: slideDownToBottom 0.32s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-  will-change: transform;
+  animation: slideDownToBottom 0.25s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 .fullscreen-page-modal > div:first-child {
@@ -445,17 +443,15 @@ button, input, select, textarea {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.72);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   z-index: 9999;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  animation: backdropFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: backdropFadeIn 0.35s ease forwards;
 }
 
 .modal-backdrop-05s.closing {
-  animation: backdropFadeOut 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation: backdropFadeOut 0.25s ease forwards;
 }
 
 /* Modal Bottom-Up Card Sheet */
@@ -470,13 +466,11 @@ button, input, select, textarea {
   overflow-y: auto;
   position: relative;
   padding-bottom: calc(16px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)));
-  animation: slideUpFromBottom 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform;
+  animation: slideUpFromBottom 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .modal-sheet-05s.closing {
-  animation: slideDownToBottom 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-  will-change: transform;
+  animation: slideDownToBottom 0.25s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 /* Drag Grab Handle indicator */

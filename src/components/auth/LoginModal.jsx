@@ -80,10 +80,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
 
       // 1. Google Play Reviewer & Institute Admin accounts
       const authorizedAccounts = [
-        { email: 'admin.demo@aspire.local', pass: 'AspireDemo@2026', name: 'Play Reviewer (Admin)', role: 'admin', id: 'adm-demo' },
-        { email: 'student.demo@aspire.local', pass: 'AspireDemo@2026', name: 'Rohan Sharma', role: 'student', course: '12th Science', rollNumber: 'ASPIRE-2025-101', id: 'std-demo' },
-        { email: 'parent.demo@aspire.local', pass: 'AspireDemo@2026', name: 'Mr. Sharma (Parent)', role: 'parent', linkedChildName: 'Rohan Sharma', id: 'par-demo' },
-        { email: 'teacher.demo@aspire.local', pass: 'AspireDemo@2026', name: 'Ms. Priya Shah', role: 'teacher', subject: 'Physics', id: 'tch-demo' },
+        { email: 'admin.demo@aspire.local', pass: 'AspireDemo@2026', name: 'Administrator', role: 'admin', id: 'adm-demo' },
         { email: 'aspirelearningcentre@outlook.com', pass: 'ZP&786', name: 'ASPIRE Admin', role: 'admin', id: 'admin-root' }
       ];
 
@@ -97,10 +94,10 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
           email: matchedAccount.email,
           role: matchedAccount.role,
           name: matchedAccount.name,
-          course: matchedAccount.course || '12th Science',
-          rollNumber: matchedAccount.rollNumber || 'ASPIRE-2025-101',
-          linkedChildName: matchedAccount.linkedChildName || 'Rohan Sharma',
-          subject: matchedAccount.subject || 'Physics'
+          course: matchedAccount.course || '',
+          rollNumber: matchedAccount.rollNumber || '',
+          linkedChildName: matchedAccount.linkedChildName || '',
+          subject: matchedAccount.subject || ''
         };
       } else {
         // 2. Check locally stored institute users (students/teachers/parents added by Admin)

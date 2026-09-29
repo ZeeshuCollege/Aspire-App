@@ -48,128 +48,7 @@ export function formatFeeFraction(paid, total) {
 /**
  * Default Seed Records
  */
-export const DEFAULT_FEE_RECORDS = [
-  {
-    id: 's-101',
-    name: 'Rohan Sharma',
-    roll: '101',
-    rollNumber: 'ASPIRE-2025-101',
-    course: '12th Science',
-    totalFee: 20000,
-    paidFee: 11000,
-    isFullyPaid: false,
-    lastPaymentDate: '15 Sep 2026',
-    remarks: '1st Installment Cleared'
-  },
-  {
-    id: 's-102',
-    name: 'Aarav Patel',
-    roll: '102',
-    rollNumber: 'ASPIRE-2025-102',
-    course: 'JEE (Mains + Adv)',
-    totalFee: 75000,
-    paidFee: 45000,
-    isFullyPaid: false,
-    lastPaymentDate: '10 Sep 2026',
-    remarks: 'Partially Paid'
-  },
-  {
-    id: 's-103',
-    name: 'Ananya Iyer',
-    roll: '103',
-    rollNumber: 'ASPIRE-2025-103',
-    course: 'NEET',
-    totalFee: 120000,
-    paidFee: 120000,
-    isFullyPaid: true,
-    lastPaymentDate: '01 Sep 2026',
-    remarks: 'One-time Full Advance'
-  },
-  {
-    id: 's-104',
-    name: 'Sneha Kulkarni',
-    roll: '104',
-    rollNumber: 'ASPIRE-2025-104',
-    course: '12th Science',
-    totalFee: 25000,
-    paidFee: 18000,
-    isFullyPaid: false,
-    lastPaymentDate: '22 Aug 2026',
-    remarks: 'Balance due next week'
-  },
-  {
-    id: 's-105',
-    name: 'Vikram Joshi',
-    roll: '105',
-    rollNumber: 'ASPIRE-2025-105',
-    course: '11th Science',
-    totalFee: 20000,
-    paidFee: 20000,
-    isFullyPaid: true,
-    lastPaymentDate: '28 Aug 2026',
-    remarks: 'Full Tuition Paid'
-  },
-  {
-    id: 's-106',
-    name: 'Ishita Deshmukh',
-    roll: '106',
-    rollNumber: 'ASPIRE-2025-106',
-    course: 'MHT-CET',
-    totalFee: 15000,
-    paidFee: 8000,
-    isFullyPaid: false,
-    lastPaymentDate: '05 Sep 2026',
-    remarks: '2nd installment pending'
-  },
-  {
-    id: 's-107',
-    name: 'Aditya Verma',
-    roll: '107',
-    rollNumber: 'ASPIRE-2025-107',
-    course: 'JEE (Mains + Adv)',
-    totalFee: 200000,
-    paidFee: 150000,
-    isFullyPaid: false,
-    lastPaymentDate: '12 Sep 2026',
-    remarks: 'Scholarship Adjusted'
-  },
-  {
-    id: 's-108',
-    name: 'Tanvi Nair',
-    roll: '108',
-    rollNumber: 'ASPIRE-2025-108',
-    course: 'NEET',
-    totalFee: 120000,
-    paidFee: 80000,
-    isFullyPaid: false,
-    lastPaymentDate: '18 Sep 2026',
-    remarks: '3rd Installment Pending'
-  },
-  {
-    id: 's-109',
-    name: 'Aryan Gupta',
-    roll: '109',
-    rollNumber: 'ASPIRE-2025-109',
-    course: '9th Standard',
-    totalFee: 15000,
-    paidFee: 15000,
-    isFullyPaid: true,
-    lastPaymentDate: '03 Sep 2026',
-    remarks: 'Full Fees Cleared'
-  },
-  {
-    id: 's-110',
-    name: 'Diya Sharma',
-    roll: '110',
-    rollNumber: 'ASPIRE-2025-110',
-    course: '10th Standard',
-    totalFee: 18000,
-    paidFee: 12000,
-    isFullyPaid: false,
-    lastPaymentDate: '14 Sep 2026',
-    remarks: 'Remaining 6k due'
-  }
-];
+export const DEFAULT_FEE_RECORDS = [];
 
 // In-memory runtime cache for snappy zero-latency UI rendering
 let runtimeFeeCache = null;
@@ -348,15 +227,15 @@ export function getStoredFees() {
     const raw = localStorage.getItem(FEES_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         runtimeFeeCache = parsed;
         return parsed;
       }
     }
   } catch (e) {}
 
-  runtimeFeeCache = DEFAULT_FEE_RECORDS;
-  return DEFAULT_FEE_RECORDS;
+  runtimeFeeCache = [];
+  return [];
 }
 
 /**

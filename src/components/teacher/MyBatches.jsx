@@ -642,7 +642,7 @@ export default function MyBatches({ onAttendanceSubmit }) {
               <div style={{ padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: '10px' }}>
                 <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, display: 'block' }}>Faculty</span>
                 <strong style={{ fontSize: '12px', color: 'var(--text-primary)', display: 'block', marginTop: '2px' }}>
-                  {selectedBatch.faculty || 'Ms. Priya Shah'}
+                  {selectedBatch.faculty || 'Faculty'}
                 </strong>
               </div>
             </div>

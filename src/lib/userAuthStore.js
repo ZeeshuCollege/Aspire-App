@@ -220,37 +220,9 @@ export const authenticateLocalUser = (email, password) => {
   if (cleanEmail === 'admin.demo@aspire.local' && cleanPass === 'AspireDemo@2026') {
     return {
       id: 'adm-demo',
-      name: 'Play Reviewer (Admin)',
+      name: 'Administrator',
       email: 'admin.demo@aspire.local',
       role: 'admin'
-    };
-  }
-  if (cleanEmail === 'student.demo@aspire.local' && cleanPass === 'AspireDemo@2026') {
-    return {
-      id: 'std-demo',
-      name: 'Rohan Sharma',
-      email: 'student.demo@aspire.local',
-      role: 'student',
-      course: '12th Science',
-      rollNumber: 'ASPIRE-2025-101'
-    };
-  }
-  if (cleanEmail === 'parent.demo@aspire.local' && cleanPass === 'AspireDemo@2026') {
-    return {
-      id: 'par-demo',
-      name: 'Mr. Sharma (Parent)',
-      email: 'parent.demo@aspire.local',
-      role: 'parent',
-      linkedChildName: 'Rohan Sharma'
-    };
-  }
-  if (cleanEmail === 'teacher.demo@aspire.local' && cleanPass === 'AspireDemo@2026') {
-    return {
-      id: 'tch-demo',
-      name: 'Ms. Priya Shah',
-      email: 'teacher.demo@aspire.local',
-      role: 'teacher',
-      subject: 'Physics'
     };
   }
   if (cleanEmail === 'aspirelearningcentre@outlook.com' && cleanPass === 'ZP&786') {

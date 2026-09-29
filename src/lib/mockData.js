@@ -60,12 +60,7 @@ export const mockUsers = {
   }
 };
 
-export const mockSchedule = [
-  { id: 1, day: 'Mon', subject: 'Physics', time: '10:00 AM - 11:00 AM', room: 'Room 204', faculty: 'Ms. Priya Shah', status: 'Ongoing' },
-  { id: 2, day: 'Mon', subject: 'Mathematics', time: '11:30 AM - 12:30 PM', room: 'Room 201', faculty: 'Mr. Neha Kapoor', status: 'Upcoming' },
-  { id: 3, day: 'Mon', subject: 'Chemistry', time: '1:00 PM - 2:00 PM', room: 'Room 203', faculty: 'Mr. Rahul Verma', status: 'Upcoming' },
-  { id: 4, day: 'Mon', subject: 'Biology', time: '4:00 PM - 5:00 PM', room: 'Room 202', faculty: 'Mr. Suresh Iyer', status: 'Upcoming' }
-];
+export const mockSchedule = [];
 
 export const mockTests = [
   {
@@ -239,7 +234,7 @@ export const mockBatches = [
     room: 'Room 204',
     courseName: 'JEE (Mains + Adv) • Physics Mastery',
     courseCode: 'PHY-JEE-12A',
-    faculty: 'Ms. Priya Shah (Physics)',
+    faculty: 'Physics Faculty',
     syllabusProgress: 72,
     currentChapter: 'Mechanics & Newton\'s Laws of Motion',
     academicYear: '2024–2025',
@@ -256,7 +251,7 @@ export const mockBatches = [
     room: 'Room 201',
     courseName: 'NEET • Physics Intensive',
     courseCode: 'PHY-NEET-12B',
-    faculty: 'Ms. Priya Shah',
+    faculty: 'Physics Faculty',
     syllabusProgress: 68,
     currentChapter: 'Optics & Wave Motion',
     academicYear: '2024–2025',
@@ -273,7 +268,7 @@ export const mockBatches = [
     room: 'Room 105',
     courseName: '11th Science • Physics Fundamentals',
     courseCode: 'PHY-FND-11A',
-    faculty: 'Ms. Priya Shah',
+    faculty: 'Physics Faculty',
     syllabusProgress: 60,
     currentChapter: 'Units, Dimensions & Vectors',
     academicYear: '2024–2025',
@@ -290,7 +285,7 @@ export const mockBatches = [
     room: 'Room 102',
     courseName: 'Std 10th • General Science',
     courseCode: 'SCI-BRD-10A',
-    faculty: 'Ms. Priya Shah',
+    faculty: 'Science Faculty',
     syllabusProgress: 80,
     currentChapter: 'Electricity & Magnetic Effects',
     academicYear: '2024–2025',
@@ -327,7 +322,7 @@ export const mockNotices = [
   {
     id: 'notif-2',
     title: 'Attendance Alert: Physics Lecture',
-    message: 'Attendance successfully marked: Present for today\'s 10:00 AM Physics Mechanics lecture with Ms. Priya Shah.',
+    message: 'Attendance successfully marked: Present for today\'s 10:00 AM Physics Mechanics lecture with Physics Faculty.',
     category: 'Attendance',
     courses: ['12th Science', 'JEE (Mains + Adv)'],
     priority: 'normal',
@@ -338,7 +333,7 @@ export const mockNotices = [
   {
     id: 'notif-3',
     title: 'New Study Material: Organic Chemistry Reactions',
-    message: 'Comprehensive handwritten chapter summary and reaction mechanism flowchart uploaded by Mr. Rahul Verma.',
+    message: 'Comprehensive handwritten chapter summary and reaction mechanism flowchart uploaded by Chemistry Faculty.',
     category: 'Material',
     courses: ['12th Science', 'JEE (Mains + Adv)', 'NEET'],
     priority: 'normal',
@@ -394,33 +389,33 @@ export const mockNotices = [
 
 // Last 30 Latest Lectures Attendance (strictly ordered from newest to oldest)
 export const mockLectureAttendance = [
-  { id: 'lec-30', lectureNumber: 83, date: '18 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Physics', topic: "Electromagnetic Induction & Faraday's Law", faculty: 'Ms. Priya Shah', status: 'Present', recordedAt: '09:56 AM' },
-  { id: 'lec-29', lectureNumber: 82, date: '17 Sep 2026', time: '02:00 PM - 03:00 PM', subject: 'Chemistry', topic: 'Thermodynamics & Carnot Cycle', faculty: 'Mr. Rahul Verma', status: 'Present', recordedAt: '01:58 PM' },
-  { id: 'lec-28', lectureNumber: 81, date: '17 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Mathematics', topic: 'Definite Integrals & Properties', faculty: 'Mr. Neha Kapoor', status: 'Present', recordedAt: '09:55 AM' },
-  { id: 'lec-27', lectureNumber: 80, date: '16 Sep 2026', time: '11:30 AM - 12:30 PM', subject: 'Physics', topic: 'Alternating Current & LC Oscillations', faculty: 'Ms. Priya Shah', status: 'Present', recordedAt: '11:28 AM' },
-  { id: 'lec-26', lectureNumber: 79, date: '16 Sep 2026', time: '09:00 AM - 10:00 AM', subject: 'Chemistry', topic: 'Coordination Compounds & Ligands', faculty: 'Mr. Rahul Verma', status: 'Present', recordedAt: '08:58 AM' },
-  { id: 'lec-25', lectureNumber: 78, date: '15 Sep 2026', time: '03:00 PM - 04:00 PM', subject: 'Biology', topic: 'Molecular Basis of Inheritance', faculty: 'Mr. Suresh Iyer', status: 'Absent', recordedAt: 'Missed' },
-  { id: 'lec-24', lectureNumber: 77, date: '15 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Mathematics', topic: 'Applications of Derivatives: Tangents', faculty: 'Mr. Neha Kapoor', status: 'Present', recordedAt: '09:57 AM' },
-  { id: 'lec-23', lectureNumber: 76, date: '14 Sep 2026', time: '01:00 PM - 02:00 PM', subject: 'Chemistry', topic: 'Electrochemistry & Nernst Equation', faculty: 'Mr. Rahul Verma', status: 'Present', recordedAt: '12:59 PM' },
-  { id: 'lec-22', lectureNumber: 75, date: '14 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Physics', topic: 'Magnetism & Matter: Dipole Moments', faculty: 'Ms. Priya Shah', status: 'Present', recordedAt: '09:54 AM' },
-  { id: 'lec-21', lectureNumber: 74, date: '13 Sep 2026', time: '11:00 AM - 12:00 PM', subject: 'Mathematics', topic: 'Indefinite Integration: Partial Fractions', faculty: 'Mr. Neha Kapoor', status: 'Present', recordedAt: '10:58 AM' },
-  { id: 'lec-20', lectureNumber: 73, date: '12 Sep 2026', time: '02:00 PM - 03:00 PM', subject: 'Biology', topic: 'Biotechnology Principles & Processes', faculty: 'Mr. Suresh Iyer', status: 'Present', recordedAt: '01:55 PM' },
-  { id: 'lec-19', lectureNumber: 72, date: '12 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Physics', topic: 'Moving Charges and Magnetic Field', faculty: 'Ms. Priya Shah', status: 'Present', recordedAt: '09:59 AM' },
-  { id: 'lec-18', lectureNumber: 71, date: '11 Sep 2026', time: '01:30 PM - 02:30 PM', subject: 'Chemistry', topic: 'Chemical Kinetics: Integrated Rate Laws', faculty: 'Mr. Rahul Verma', status: 'Present', recordedAt: '01:25 PM' },
-  { id: 'lec-17', lectureNumber: 70, date: '11 Sep 2026', time: '09:30 AM - 10:30 AM', subject: 'Mathematics', topic: 'Continuity & Differentiability Review', faculty: 'Mr. Neha Kapoor', status: 'Present', recordedAt: '09:28 AM' },
-  { id: 'lec-16', lectureNumber: 69, date: '10 Sep 2026', time: '03:00 PM - 04:00 PM', subject: 'Physics', topic: "Current Electricity & Kirchhoff's Laws", faculty: 'Ms. Priya Shah', status: 'Absent', recordedAt: 'Missed' },
-  { id: 'lec-15', lectureNumber: 68, date: '10 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Chemistry', topic: 'Solutions & Colligative Properties', faculty: 'Mr. Rahul Verma', status: 'Present', recordedAt: '09:56 AM' },
-  { id: 'lec-14', lectureNumber: 67, date: '09 Sep 2026', time: '11:30 AM - 12:30 PM', subject: 'Mathematics', topic: 'Matrices and System of Linear Equations', faculty: 'Mr. Neha Kapoor', status: 'Present', recordedAt: '11:27 AM' },
-  { id: 'lec-13', lectureNumber: 66, date: '09 Sep 2026', time: '09:00 AM - 10:00 AM', subject: 'Biology', topic: 'Genetics & Chromosomal Aberrations', faculty: 'Mr. Suresh Iyer', status: 'Present', recordedAt: '08:59 AM' },
-  { id: 'lec-12', lectureNumber: 65, date: '08 Sep 2026', time: '02:00 PM - 03:00 PM', subject: 'Physics', topic: 'Electrostatic Potential & Capacitance', faculty: 'Ms. Priya Shah', status: 'Present', recordedAt: '01:57 PM' },
-  { id: 'lec-11', lectureNumber: 64, date: '08 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Chemistry', topic: 'Solid State: Crystal Lattices & Voids', faculty: 'Mr. Rahul Verma', status: 'Present', recordedAt: '09:55 AM' },
-  { id: 'lec-10', lectureNumber: 63, date: '07 Sep 2026', time: '01:00 PM - 02:00 PM', subject: 'Mathematics', topic: 'Inverse Trigonometric Functions', faculty: 'Mr. Neha Kapoor', status: 'Present', recordedAt: '12:58 PM' },
-  { id: 'lec-09', lectureNumber: 62, date: '07 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Physics', topic: 'Electric Charges and Fields: Gauss Law', faculty: 'Ms. Priya Shah', status: 'Present', recordedAt: '09:54 AM' },
-  { id: 'lec-08', lectureNumber: 61, date: '05 Sep 2026', time: '11:00 AM - 12:00 PM', subject: 'Biology', topic: 'Ecology and Biogeochemical Cycles', faculty: 'Mr. Suresh Iyer', status: 'Present', recordedAt: '10:55 AM' },
-  { id: 'lec-07', lectureNumber: 60, date: '05 Sep 2026', time: '09:00 AM - 10:00 AM', subject: 'Chemistry', topic: 'Periodic Trends & Chemical Bonding', faculty: 'Mr. Rahul Verma', status: 'Present', recordedAt: '08:58 AM' },
-  { id: 'lec-06', lectureNumber: 59, date: '04 Sep 2026', time: '02:00 PM - 03:00 PM', subject: 'Mathematics', topic: 'Relations and Functions: Bijective Maps', faculty: 'Mr. Neha Kapoor', status: 'Present', recordedAt: '01:58 PM' },
-  { id: 'lec-05', lectureNumber: 58, date: '04 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Physics', topic: "Wave Optics: Young's Double Slit Experiment", faculty: 'Ms. Priya Shah', status: 'Present', recordedAt: '09:57 AM' },
-  { id: 'lec-04', lectureNumber: 57, date: '03 Sep 2026', time: '03:00 PM - 04:00 PM', subject: 'Chemistry', topic: 'Organic Reaction Mechanisms: SN1 vs SN2', faculty: 'Mr. Rahul Verma', status: 'Absent', recordedAt: 'Missed' },
-  { id: 'lec-03', lectureNumber: 56, date: '03 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Mathematics', topic: 'Complex Numbers & De Moivre Theorem', faculty: 'Mr. Neha Kapoor', status: 'Present', recordedAt: '09:56 AM' },
-  { id: 'lec-01', lectureNumber: 54, date: '02 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Physics', topic: 'Ray Optics and Optical Instruments', faculty: 'Ms. Priya Shah', status: 'Present', recordedAt: '09:55 AM' }
+  { id: 'lec-30', lectureNumber: 83, date: '18 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Physics', topic: "Electromagnetic Induction & Faraday's Law", faculty: 'Physics Faculty', status: 'Present', recordedAt: '09:56 AM' },
+  { id: 'lec-29', lectureNumber: 82, date: '17 Sep 2026', time: '02:00 PM - 03:00 PM', subject: 'Chemistry', topic: 'Thermodynamics & Carnot Cycle', faculty: 'Chemistry Faculty', status: 'Present', recordedAt: '01:58 PM' },
+  { id: 'lec-28', lectureNumber: 81, date: '17 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Mathematics', topic: 'Definite Integrals & Properties', faculty: 'Mathematics Faculty', status: 'Present', recordedAt: '09:55 AM' },
+  { id: 'lec-27', lectureNumber: 80, date: '16 Sep 2026', time: '11:30 AM - 12:30 PM', subject: 'Physics', topic: 'Alternating Current & LC Oscillations', faculty: 'Physics Faculty', status: 'Present', recordedAt: '11:28 AM' },
+  { id: 'lec-26', lectureNumber: 79, date: '16 Sep 2026', time: '09:00 AM - 10:00 AM', subject: 'Chemistry', topic: 'Coordination Compounds & Ligands', faculty: 'Chemistry Faculty', status: 'Present', recordedAt: '08:58 AM' },
+  { id: 'lec-25', lectureNumber: 78, date: '15 Sep 2026', time: '03:00 PM - 04:00 PM', subject: 'Biology', topic: 'Molecular Basis of Inheritance', faculty: 'Biology Faculty', status: 'Absent', recordedAt: 'Missed' },
+  { id: 'lec-24', lectureNumber: 77, date: '15 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Mathematics', topic: 'Applications of Derivatives: Tangents', faculty: 'Mathematics Faculty', status: 'Present', recordedAt: '09:57 AM' },
+  { id: 'lec-23', lectureNumber: 76, date: '14 Sep 2026', time: '01:00 PM - 02:00 PM', subject: 'Chemistry', topic: 'Electrochemistry & Nernst Equation', faculty: 'Chemistry Faculty', status: 'Present', recordedAt: '12:59 PM' },
+  { id: 'lec-22', lectureNumber: 75, date: '14 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Physics', topic: 'Magnetism & Matter: Dipole Moments', faculty: 'Physics Faculty', status: 'Present', recordedAt: '09:54 AM' },
+  { id: 'lec-21', lectureNumber: 74, date: '13 Sep 2026', time: '11:00 AM - 12:00 PM', subject: 'Mathematics', topic: 'Indefinite Integration: Partial Fractions', faculty: 'Mathematics Faculty', status: 'Present', recordedAt: '10:58 AM' },
+  { id: 'lec-20', lectureNumber: 73, date: '12 Sep 2026', time: '02:00 PM - 03:00 PM', subject: 'Biology', topic: 'Biotechnology Principles & Processes', faculty: 'Biology Faculty', status: 'Present', recordedAt: '01:55 PM' },
+  { id: 'lec-19', lectureNumber: 72, date: '12 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Physics', topic: 'Moving Charges and Magnetic Field', faculty: 'Physics Faculty', status: 'Present', recordedAt: '09:59 AM' },
+  { id: 'lec-18', lectureNumber: 71, date: '11 Sep 2026', time: '01:30 PM - 02:30 PM', subject: 'Chemistry', topic: 'Chemical Kinetics: Integrated Rate Laws', faculty: 'Chemistry Faculty', status: 'Present', recordedAt: '01:25 PM' },
+  { id: 'lec-17', lectureNumber: 70, date: '11 Sep 2026', time: '09:30 AM - 10:30 AM', subject: 'Mathematics', topic: 'Continuity & Differentiability Review', faculty: 'Mathematics Faculty', status: 'Present', recordedAt: '09:28 AM' },
+  { id: 'lec-16', lectureNumber: 69, date: '10 Sep 2026', time: '03:00 PM - 04:00 PM', subject: 'Physics', topic: "Current Electricity & Kirchhoff's Laws", faculty: 'Physics Faculty', status: 'Absent', recordedAt: 'Missed' },
+  { id: 'lec-15', lectureNumber: 68, date: '10 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Chemistry', topic: 'Solutions & Colligative Properties', faculty: 'Chemistry Faculty', status: 'Present', recordedAt: '09:56 AM' },
+  { id: 'lec-14', lectureNumber: 67, date: '09 Sep 2026', time: '11:30 AM - 12:30 PM', subject: 'Mathematics', topic: 'Matrices and System of Linear Equations', faculty: 'Mathematics Faculty', status: 'Present', recordedAt: '11:27 AM' },
+  { id: 'lec-13', lectureNumber: 66, date: '09 Sep 2026', time: '09:00 AM - 10:00 AM', subject: 'Biology', topic: 'Genetics & Chromosomal Aberrations', faculty: 'Biology Faculty', status: 'Present', recordedAt: '08:59 AM' },
+  { id: 'lec-12', lectureNumber: 65, date: '08 Sep 2026', time: '02:00 PM - 03:00 PM', subject: 'Physics', topic: 'Electrostatic Potential & Capacitance', faculty: 'Physics Faculty', status: 'Present', recordedAt: '01:57 PM' },
+  { id: 'lec-11', lectureNumber: 64, date: '08 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Chemistry', topic: 'Solid State: Crystal Lattices & Voids', faculty: 'Chemistry Faculty', status: 'Present', recordedAt: '09:55 AM' },
+  { id: 'lec-10', lectureNumber: 63, date: '07 Sep 2026', time: '01:00 PM - 02:00 PM', subject: 'Mathematics', topic: 'Inverse Trigonometric Functions', faculty: 'Mathematics Faculty', status: 'Present', recordedAt: '12:58 PM' },
+  { id: 'lec-09', lectureNumber: 62, date: '07 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Physics', topic: 'Electric Charges and Fields: Gauss Law', faculty: 'Physics Faculty', status: 'Present', recordedAt: '09:54 AM' },
+  { id: 'lec-08', lectureNumber: 61, date: '05 Sep 2026', time: '11:00 AM - 12:00 PM', subject: 'Biology', topic: 'Ecology and Biogeochemical Cycles', faculty: 'Biology Faculty', status: 'Present', recordedAt: '10:55 AM' },
+  { id: 'lec-07', lectureNumber: 60, date: '05 Sep 2026', time: '09:00 AM - 10:00 AM', subject: 'Chemistry', topic: 'Periodic Trends & Chemical Bonding', faculty: 'Chemistry Faculty', status: 'Present', recordedAt: '08:58 AM' },
+  { id: 'lec-06', lectureNumber: 59, date: '04 Sep 2026', time: '02:00 PM - 03:00 PM', subject: 'Mathematics', topic: 'Relations and Functions: Bijective Maps', faculty: 'Mathematics Faculty', status: 'Present', recordedAt: '01:58 PM' },
+  { id: 'lec-05', lectureNumber: 58, date: '04 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Physics', topic: "Wave Optics: Young's Double Slit Experiment", faculty: 'Physics Faculty', status: 'Present', recordedAt: '09:57 AM' },
+  { id: 'lec-04', lectureNumber: 57, date: '03 Sep 2026', time: '03:00 PM - 04:00 PM', subject: 'Chemistry', topic: 'Organic Reaction Mechanisms: SN1 vs SN2', faculty: 'Chemistry Faculty', status: 'Absent', recordedAt: 'Missed' },
+  { id: 'lec-03', lectureNumber: 56, date: '03 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Mathematics', topic: 'Complex Numbers & De Moivre Theorem', faculty: 'Mathematics Faculty', status: 'Present', recordedAt: '09:56 AM' },
+  { id: 'lec-01', lectureNumber: 54, date: '02 Sep 2026', time: '10:00 AM - 11:00 AM', subject: 'Physics', topic: 'Ray Optics and Optical Instruments', faculty: 'Physics Faculty', status: 'Present', recordedAt: '09:55 AM' }
 ];

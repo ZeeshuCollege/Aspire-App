@@ -18,12 +18,12 @@ const COURSE_ATTENDANCE_DATA = [
 ];
 
 const SUBJECT_ATTENDANCE_DATA = [
-  { subject: 'Physics', code: 'PHY', faculty: 'Ms. Priya Shah', rate: 92, lecturesDone: 36, activeBatches: 'JEE 12-A, NEET 12-B, Class 11-A', health: 'Excellent' },
-  { subject: 'Mathematics', code: 'MATH', faculty: 'Ms. Neha Kapoor', rate: 89, lecturesDone: 34, activeBatches: 'JEE 12-A, Class 11-A, Class 10-A', health: 'Good' },
-  { subject: 'Chemistry', code: 'CHEM', faculty: 'Mr. Rahul Verma', rate: 88, lecturesDone: 32, activeBatches: 'NEET 12-B, Class 10-A', health: 'Good' },
-  { subject: 'Biology', code: 'BIO', faculty: 'Mr. Suresh Iyer', rate: 93, lecturesDone: 30, activeBatches: 'NEET 12-B', health: 'Excellent' },
-  { subject: 'English', code: 'ENG', faculty: 'Ms. Priya Shah', rate: 85, lecturesDone: 24, activeBatches: 'Std 9th, 10th, 11th, 12th', health: 'Average' },
-  { subject: 'Science (Foundation)', code: 'SCI', faculty: 'Mr. Rahul Verma', rate: 90, lecturesDone: 28, activeBatches: 'Class 10-A, Class 9-A', health: 'Good' }
+  { subject: 'Physics', code: 'PHY', faculty: 'Physics Faculty', rate: 92, lecturesDone: 36, activeBatches: 'JEE 12-A, NEET 12-B, Class 11-A', health: 'Excellent' },
+  { subject: 'Mathematics', code: 'MATH', faculty: 'Mathematics Faculty', rate: 89, lecturesDone: 34, activeBatches: 'JEE 12-A, Class 11-A, Class 10-A', health: 'Good' },
+  { subject: 'Chemistry', code: 'CHEM', faculty: 'Chemistry Faculty', rate: 88, lecturesDone: 32, activeBatches: 'NEET 12-B, Class 10-A', health: 'Good' },
+  { subject: 'Biology', code: 'BIO', faculty: 'Biology Faculty', rate: 93, lecturesDone: 30, activeBatches: 'NEET 12-B', health: 'Excellent' },
+  { subject: 'English', code: 'ENG', faculty: 'English Faculty', rate: 85, lecturesDone: 24, activeBatches: 'Std 9th, 10th, 11th, 12th', health: 'Average' },
+  { subject: 'Science (Foundation)', code: 'SCI', faculty: 'Science Faculty', rate: 90, lecturesDone: 28, activeBatches: 'Class 10-A, Class 9-A', health: 'Good' }
 ];
 
 export default function AdminAttendanceModal({ isOpen, onClose }) {

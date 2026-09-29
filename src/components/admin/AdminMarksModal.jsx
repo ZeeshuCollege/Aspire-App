@@ -6,17 +6,8 @@ import { mockTests } from '../../lib/mockData';
 import { getStoredStudents, saveStoredStudents } from '../../lib/userAuthStore';
 import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
 
-// Sample fallback students if no students are enrolled in store yet
-const DEFAULT_SAMPLE_STUDENTS = [
-  { id: 's-101', name: 'Rohan Sharma', roll: '101', rollNumber: 'ASPIRE-2025-101', course: '12th Science' },
-  { id: 's-102', name: 'Aarav Patel', roll: '102', rollNumber: 'ASPIRE-2025-102', course: 'JEE (Mains + Adv)' },
-  { id: 's-103', name: 'Ananya Iyer', roll: '103', rollNumber: 'ASPIRE-2025-103', course: 'NEET' },
-  { id: 's-104', name: 'Sneha Kulkarni', roll: '104', rollNumber: 'ASPIRE-2025-104', course: '12th Science' },
-  { id: 's-105', name: 'Vikram Joshi', roll: '105', rollNumber: 'ASPIRE-2025-105', course: '11th Science' },
-  { id: 's-106', name: 'Ishita Deshmukh', roll: '106', rollNumber: 'ASPIRE-2025-106', course: 'MHT-CET' },
-  { id: 's-107', name: 'Aditya Verma', roll: '107', rollNumber: 'ASPIRE-2025-107', course: 'JEE (Mains + Adv)' },
-  { id: 's-108', name: 'Tanvi Nair', roll: '108', rollNumber: 'ASPIRE-2025-108', course: 'NEET' }
-];
+// Empty fallback students if no students are enrolled in store yet
+const DEFAULT_SAMPLE_STUDENTS = [];
 
 export default function AdminMarksModal({ isOpen, onClose }) {
   const [tests] = useState(mockTests);
@@ -96,21 +87,19 @@ export default function AdminMarksModal({ isOpen, onClose }) {
     if (!isOpen) return;
 
     const stored = getStoredStudents();
-    const baseList = stored && stored.length > 0 ? stored : DEFAULT_SAMPLE_STUDENTS;
+    const baseList = Array.isArray(stored) ? stored : [];
     setStudentsList(baseList);
 
     // Load saved marks for this test from localStorage
     try {
       const savedStorage = JSON.parse(localStorage.getItem(`aspire_marks_${selectedTestId}`) || '{}');
       const initialMap = {};
-      baseList.forEach((std, idx) => {
+      baseList.forEach(std => {
         if (savedStorage[std.id]) {
           initialMap[std.id] = savedStorage[std.id];
         } else {
-          // Pre-populate with realistic mock score or empty
-          const fallbackScore = Math.min(maxMarks, Math.max(30, 85 - (idx * 5)));
           initialMap[std.id] = {
-            score: fallbackScore.toString(),
+            score: '',
             isAbsent: false,
             remarks: ''
           };

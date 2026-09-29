@@ -111,13 +111,13 @@ export default function AdminMobileDashboard({
   const [showAddCourseModal, setShowAddCourseModal] = useState(false);
   const [isCourseModalClosing, setIsCourseModalClosing] = useState(false);
   const [courses, setCourses] = useState([
-    { id: 'c-1', name: 'Std 9th', code: 'STD-9', subjects: ['English (9th)', 'Maths (9th)', 'Science (9th)'], faculty: ['Ms. Priya Shah'] },
-    { id: 'c-2', name: 'Std 10th', code: 'STD-10', subjects: ['English (10th)', 'Maths (10th)', 'Science (10th)'], faculty: ['Ms. Priya Shah'] },
-    { id: 'c-3', name: '11th Science', code: 'SCI-11', subjects: ['English (11th)', 'Geography (11th)', 'History (11th)'], faculty: ['Mr. Rahul Verma'] },
-    { id: 'c-4', name: '12th Science', code: 'SCI-12', subjects: ['English (12th)', 'Geography (12th)', 'History (12th)'], faculty: ['Mr. Rahul Verma'] },
-    { id: 'c-5', name: 'NEET', code: 'NEET', subjects: ['Physics (NEET)', 'Chemistry (NEET)', 'Biology (NEET)'], faculty: ['Mr. Rahul Verma', 'Mr. Suresh Iyer'] },
-    { id: 'c-6', name: 'JEE (Mains + Adv)', code: 'JEE', subjects: ['Physics (JEE)', 'Chemistry (JEE)', 'Maths (JEE)'], faculty: ['Ms. Priya Shah', 'Ms. Neha Kapoor'] },
-    { id: 'c-7', name: 'MHT-CET', code: 'MHT-CET', subjects: ['Physics (JEE)', 'Chemistry (JEE)', 'Maths (JEE)'], faculty: ['Ms. Priya Shah'] }
+    { id: 'c-1', name: 'Std 9th', code: 'STD-9', subjects: ['English (9th)', 'Maths (9th)', 'Science (9th)'], faculty: ['Science Faculty'] },
+    { id: 'c-2', name: 'Std 10th', code: 'STD-10', subjects: ['English (10th)', 'Maths (10th)', 'Science (10th)'], faculty: ['Science Faculty'] },
+    { id: 'c-3', name: '11th Science', code: 'SCI-11', subjects: ['English (11th)', 'Geography (11th)', 'History (11th)'], faculty: ['Faculty'] },
+    { id: 'c-4', name: '12th Science', code: 'SCI-12', subjects: ['English (12th)', 'Geography (12th)', 'History (12th)'], faculty: ['Faculty'] },
+    { id: 'c-5', name: 'NEET', code: 'NEET', subjects: ['Physics (NEET)', 'Chemistry (NEET)', 'Biology (NEET)'], faculty: ['Physics Faculty', 'Biology Faculty'] },
+    { id: 'c-6', name: 'JEE (Mains + Adv)', code: 'JEE', subjects: ['Physics (JEE)', 'Chemistry (JEE)', 'Maths (JEE)'], faculty: ['Physics Faculty', 'Mathematics Faculty'] },
+    { id: 'c-7', name: 'MHT-CET', code: 'MHT-CET', subjects: ['Physics (JEE)', 'Chemistry (JEE)', 'Maths (JEE)'], faculty: ['Physics Faculty'] }
   ]);
   const [newCourseName, setNewCourseName] = useState('');
   const [newCourseSubjects, setNewCourseSubjects] = useState([]);
@@ -128,13 +128,9 @@ export default function AdminMobileDashboard({
 
   const NOTICE_CATEGORIES = ['General', 'Test', 'Attendance', 'Fee', 'Holiday', 'Exam'];
   const BATCH_OPTIONS = ['JEE 12-A', 'JEE 12-B', 'NEET 12-A', 'NEET 12-B', 'Class 11-A', 'Class 11-B', 'Class 10-A', 'Class 10-B', 'Foundation 9-A'];
-  const FACULTY_OPTIONS = ['Ms. Priya Shah', 'Mr. Rahul Verma', 'Ms. Neha Kapoor', 'Mr. Suresh Iyer'];
+  const FACULTY_OPTIONS = ['Physics Faculty', 'Chemistry Faculty', 'Mathematics Faculty', 'Biology Faculty'];
 
-  const absentStudents = [
-    { id: 'abs-1', name: 'Arjun Mehta', course: 'JEE 12-A', phone: '98765 43210', parentPhone: '91122 33445', bloodGroup: 'B+', email: 'arjun@email.com' },
-    { id: 'abs-2', name: 'Sneha Patel', course: 'NEET 12-B', phone: '91234 56789', parentPhone: '90099 88776', bloodGroup: 'O+', email: 'sneha@email.com' },
-    { id: 'abs-3', name: 'Rohan Das', course: 'Class 11-A', phone: '99887 76655', parentPhone: '98001 23456', bloodGroup: 'A+', email: 'rohan@email.com' },
-  ];
+  const absentStudents = [];
 
   const toggleFacultyBatch = (b) => setNewFacultyBatches(prev => prev.includes(b) ? prev.filter(x => x !== b) : [...prev, b]);
   const toggleFacultySubject = (s) => setNewFacultySubjects(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
@@ -1042,7 +1038,7 @@ export default function AdminMobileDashboard({
               <div className="card" style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <h5 style={{ fontSize: '13px', fontWeight: 700 }}>Physics (JEE 12 - A)</h5>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Room 204 • Ms. Priya Shah</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Room 204 • Physics Faculty</span>
                 </div>
                 <span className="badge badge-success">Ongoing</span>
               </div>
@@ -1050,7 +1046,7 @@ export default function AdminMobileDashboard({
               <div className="card" style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <h5 style={{ fontSize: '13px', fontWeight: 700 }}>Chemistry (NEET 12 - B)</h5>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Room 201 • Mr. Rahul Verma</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Room 201 • Chemistry Faculty</span>
                 </div>
                 <span className="badge badge-accent">Ongoing</span>
               </div>

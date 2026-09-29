@@ -2,19 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle, Download, CheckCircle2 } from 'lucide-react';
 import { getStoredFees, formatFeeAmount, formatFeeFraction } from '../../lib/feeService';
 
-export default function ParentFees({ childName = 'Rohan Sharma' }) {
+export default function ParentFees({ childName = 'Student' }) {
   const [feeRecord, setFeeRecord] = useState(null);
 
   useEffect(() => {
     const loadFees = () => {
       const fees = getStoredFees();
-      const match = fees.find(f => f.name.toLowerCase() === childName.toLowerCase()) || fees[0];
+      const match = fees.find(f => (f.name || '').toLowerCase() === (childName || '').toLowerCase()) || fees[0];
       setFeeRecord(match || {
         name: childName,
-        totalFee: 20000,
-        paidFee: 11000,
-        isFullyPaid: false,
-        course: '12th Science'
+        totalFee: 0,
+        paidFee: 0,
+        isFullyPaid: true,
+        course: ''
       });
     };
 

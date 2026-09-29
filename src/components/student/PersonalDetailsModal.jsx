@@ -36,18 +36,18 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
   useEffect(() => {
     if (user) {
       setFormData({
-        name: user.name || (isTeacher ? 'Ms. Priya Shah' : isParent ? 'Amit Sharma' : 'Student'),
+        name: user.name || (isTeacher ? 'Teacher' : isParent ? 'Parent' : 'Student'),
         email: user.email || '',
         phone: user.phone || '',
         bloodGroup: user.bloodGroup || '',
-        course: user.course || '12th Science',
-        rollNumber: user.rollNumber || (isTeacher ? 'FAC-104' : isParent ? '' : 'ASPIRE-2025-104'),
+        course: user.course || '',
+        rollNumber: user.rollNumber || (isTeacher ? '' : isParent ? '' : ''),
         parentName: user.parentName || '',
         parentPhone: user.parentPhone || '',
-        subject: user.subjects || user.subject || 'Physics',
-        employeeId: user.employeeId || 'FAC-104',
-        linkedChildName: user.linkedChild?.name || 'Rohan Sharma',
-        linkedChildClass: user.linkedChild?.class || '12th Science'
+        subject: user.subjects || user.subject || '',
+        employeeId: user.employeeId || '',
+        linkedChildName: user.linkedChild?.name || user.linkedChildName || '',
+        linkedChildClass: user.linkedChild?.class || user.course || ''
       });
       setIsEditing(false);
       setSaveSuccess(false);

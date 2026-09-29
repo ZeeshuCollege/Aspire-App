@@ -17,12 +17,12 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
 
   // Dynamic Subtitle
   const subtitle = isTeacher
-    ? (user.subject || user.subjects || 'Physics Faculty')
+    ? (user.subject || user.subjects || 'Faculty')
     : isParent
-    ? `Parent of ${user.linkedChild?.name || 'Rohan Sharma'}`
+    ? (user.linkedChild?.name ? `Parent of ${user.linkedChild.name}` : user.linkedChildName ? `Parent of ${user.linkedChildName}` : 'Parent')
     : isAdmin
     ? 'System Administrator'
-    : (user.course || '12th Science');
+    : (user.course || 'Student');
 
   // Dynamic Verification Badge
   const roleBadgeLabel = isTeacher

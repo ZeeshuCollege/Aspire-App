@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Award, AlertTriangle } from 'lucide-react';
+import { getStoredStudents } from '../../lib/userAuthStore';
 
 export default function TeacherPerformance() {
   const [tab, setTab] = useState('overview');
@@ -65,7 +66,9 @@ export default function TeacherPerformance() {
             </div>
             <div>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Top Performer</span>
-              <h5 style={{ fontSize: '14px', fontWeight: 700 }}>Aarav Mehta</h5>
+              <h5 style={{ fontSize: '14px', fontWeight: 700 }}>
+                {getStoredStudents()[0]?.name || 'Top Scoring Student'}
+              </h5>
             </div>
           </div>
           <span style={{ fontSize: '16px', fontWeight: 800, color: 'var(--success)' }}>92%</span>
@@ -78,7 +81,9 @@ export default function TeacherPerformance() {
             </div>
             <div>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Needs Attention</span>
-              <h5 style={{ fontSize: '14px', fontWeight: 700 }}>Riya Sharma</h5>
+              <h5 style={{ fontSize: '14px', fontWeight: 700 }}>
+                {getStoredStudents().length > 1 ? getStoredStudents()[getStoredStudents().length - 1]?.name : 'Student Needing Guidance'}
+              </h5>
             </div>
           </div>
           <span style={{ fontSize: '16px', fontWeight: 800, color: 'var(--danger)' }}>45%</span>

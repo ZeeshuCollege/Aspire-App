@@ -923,7 +923,7 @@ export default function AdminFeesModal({ isOpen, onClose }) {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Rohan Sharma"
+                  placeholder="e.g. Student Full Name"
                   value={addStudentName}
                   onChange={(e) => setAddStudentName(e.target.value)}
                   style={{

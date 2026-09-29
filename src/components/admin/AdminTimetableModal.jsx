@@ -6,18 +6,35 @@ import {
 } from 'lucide-react';
 import { COURSE_OPTIONS, SUBJECT_OPTIONS } from './AdminStudyMaterialsModal';
 import { mockBatches } from '../../lib/mockData';
-import { getStoredStudents } from '../../lib/userAuthStore';
+import { getStoredStudents, getStoredTeachers } from '../../lib/userAuthStore';
 import { saveBatchAttendance, getTodayDateKey } from '../../lib/attendanceService';
 
 export const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+export function getFacultyOptions() {
+  try {
+    const stored = getStoredTeachers();
+    if (Array.isArray(stored) && stored.length > 0) {
+      return stored.map(t => `${t.name}${t.subject ? ` (${t.subject})` : ''}`);
+    }
+  } catch (e) {}
+  return [
+    'Physics Faculty',
+    'Chemistry Faculty',
+    'Mathematics Faculty',
+    'Biology Faculty',
+    'English Faculty',
+    'Science Faculty'
+  ];
+}
+
 export const FACULTY_OPTIONS = [
-  'Ms. Priya Shah (Physics)',
-  'Mr. Rahul Verma (Chemistry)',
-  'Ms. Neha Kapoor (Mathematics)',
-  'Mr. Suresh Iyer (Biology)',
-  'Mrs. Anita Desai (English)',
-  'Mr. Amit Kulkarni (Science)'
+  'Physics Faculty',
+  'Chemistry Faculty',
+  'Mathematics Faculty',
+  'Biology Faculty',
+  'English Faculty',
+  'Science Faculty'
 ];
 
 const HOURS = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
@@ -65,20 +82,21 @@ export function getSubjectsForCourse(course) {
   return SUBJECT_OPTIONS;
 }
 
-function createLectureSlot(course, slotIndex) {
-  const subjects = getSubjectsForCourse(course);
-  const subject = subjects[slotIndex % subjects.length] || SUBJECT_OPTIONS[0];
-  const faculty = FACULTY_OPTIONS[slotIndex % FACULTY_OPTIONS.length];
-  const slotTime = DEFAULT_SLOTS[slotIndex % DEFAULT_SLOTS.length];
+function createLectureSlot(course, slotIndex = 0) {
+  const subjects = getSubjectsForCourse(course) || SUBJECT_OPTIONS;
+  const facultyOptions = getFacultyOptions();
+  const subject = subjects[slotIndex % subjects.length] || SUBJECT_OPTIONS[0] || 'Physics';
+  const faculty = facultyOptions[slotIndex % facultyOptions.length] || 'Faculty';
+  const slotTime = DEFAULT_SLOTS[slotIndex % DEFAULT_SLOTS.length] || DEFAULT_SLOTS[0];
   return {
     subject,
     faculty,
-    fromHour: slotTime.fromHour,
-    fromMinute: slotTime.fromMinute,
-    fromPeriod: slotTime.fromPeriod,
-    tillHour: slotTime.tillHour,
-    tillMinute: slotTime.tillMinute,
-    tillPeriod: slotTime.tillPeriod
+    fromHour: slotTime.fromHour || '09',
+    fromMinute: slotTime.fromMinute || '00',
+    fromPeriod: slotTime.fromPeriod || 'AM',
+    tillHour: slotTime.tillHour || '10',
+    tillMinute: slotTime.tillMinute || '30',
+    tillPeriod: slotTime.tillPeriod || 'AM'
   };
 }
 
@@ -98,221 +116,54 @@ function createInitialWeekData(course) {
   return data;
 }
 
-// Fallback student rosters for various courses if none enrolled in store
-const BATCH_SAMPLE_STUDENTS = {
-  'JEE (Mains + Adv)': [
-    { id: 's-jee-1', name: 'Aarav Patel', roll: 'JEE-01', rollNumber: 'ASPIRE-2025-01' },
-    { id: 's-jee-2', name: 'Aditya Verma', roll: 'JEE-02', rollNumber: 'ASPIRE-2025-02' },
-    { id: 's-jee-3', name: 'Rohan Sharma', roll: 'JEE-03', rollNumber: 'ASPIRE-2025-03' },
-    { id: 's-jee-4', name: 'Karan Malhotra', roll: 'JEE-04', rollNumber: 'ASPIRE-2025-04' },
-    { id: 's-jee-5', name: 'Aryan Kulkarni', roll: 'JEE-05', rollNumber: 'ASPIRE-2025-05' },
-    { id: 's-jee-6', name: 'Nikhil Mehta', roll: 'JEE-06', rollNumber: 'ASPIRE-2025-06' },
-    { id: 's-jee-7', name: 'Varun Deshmukh', roll: 'JEE-07', rollNumber: 'ASPIRE-2025-07' },
-    { id: 's-jee-8', name: 'Siddharth Rao', roll: 'JEE-08', rollNumber: 'ASPIRE-2025-08' }
-  ],
-  'NEET': [
-    { id: 's-neet-1', name: 'Ananya Iyer', roll: 'NEET-01', rollNumber: 'ASPIRE-2025-11' },
-    { id: 's-neet-2', name: 'Tanvi Nair', roll: 'NEET-02', rollNumber: 'ASPIRE-2025-12' },
-    { id: 's-neet-3', name: 'Diya Sen', roll: 'NEET-03', rollNumber: 'ASPIRE-2025-13' },
-    { id: 's-neet-4', name: 'Pooja Joshi', roll: 'NEET-04', rollNumber: 'ASPIRE-2025-14' },
-    { id: 's-neet-5', name: 'Riya Choudhary', roll: 'NEET-05', rollNumber: 'ASPIRE-2025-15' },
-    { id: 's-neet-6', name: 'Kavya Pillai', roll: 'NEET-06', rollNumber: 'ASPIRE-2025-16' },
-    { id: 's-neet-7', name: 'Isha Saxena', roll: 'NEET-07', rollNumber: 'ASPIRE-2025-17' },
-    { id: 's-neet-8', name: 'Meera Nambiar', roll: 'NEET-08', rollNumber: 'ASPIRE-2025-18' }
-  ],
-  '12th Science': [
-    { id: 's-12-1', name: 'Rohan Sharma', roll: '12S-01', rollNumber: 'ASPIRE-2025-21' },
-    { id: 's-12-2', name: 'Sneha Kulkarni', roll: '12S-02', rollNumber: 'ASPIRE-2025-22' },
-    { id: 's-12-3', name: 'Manish Pandey', roll: '12S-03', rollNumber: 'ASPIRE-2025-23' },
-    { id: 's-12-4', name: 'Shreya Ghoshal', roll: '12S-04', rollNumber: 'ASPIRE-2025-24' },
-    { id: 's-12-5', name: 'Gaurav Bhatia', roll: '12S-05', rollNumber: 'ASPIRE-2025-25' },
-    { id: 's-12-6', name: 'Ankita Dave', roll: '12S-06', rollNumber: 'ASPIRE-2025-26' }
-  ],
-  '11th Science': [
-    { id: 's-11-1', name: 'Vikram Joshi', roll: '11S-01', rollNumber: 'ASPIRE-2025-31' },
-    { id: 's-11-2', name: 'Arjun Kapoor', roll: '11S-02', rollNumber: 'ASPIRE-2025-32' },
-    { id: 's-11-3', name: 'Megha Roy', roll: '11S-03', rollNumber: 'ASPIRE-2025-33' },
-    { id: 's-11-4', name: 'Devendra Patil', roll: '11S-04', rollNumber: 'ASPIRE-2025-34' },
-    { id: 's-11-5', name: 'Pooja Hegde', roll: '11S-05', rollNumber: 'ASPIRE-2025-35' }
-  ],
-  'Std 10th': [
-    { id: 's-10-1', name: 'Yashwardhan Shukla', roll: '10-01', rollNumber: 'ASPIRE-2025-41' },
-    { id: 's-10-2', name: 'Tara Sutaria', roll: '10-02', rollNumber: 'ASPIRE-2025-42' },
-    { id: 's-10-3', name: 'Sameer Khan', roll: '10-03', rollNumber: 'ASPIRE-2025-43' },
-    { id: 's-10-4', name: 'Kritika Kamra', roll: '10-04', rollNumber: 'ASPIRE-2025-44' },
-    { id: 's-10-5', name: 'Harsh Vardhan', roll: '10-05', rollNumber: 'ASPIRE-2025-45' }
-  ],
-  'Std 9th': [
-    { id: 's-9-1', name: 'Kunal Khemu', roll: '9-01', rollNumber: 'ASPIRE-2025-51' },
-    { id: 's-9-2', name: 'Sanya Malhotra', roll: '9-02', rollNumber: 'ASPIRE-2025-52' },
-    { id: 's-9-3', name: 'Aakash Chopra', roll: '9-03', rollNumber: 'ASPIRE-2025-53' },
-    { id: 's-9-4', name: 'Radhika Madan', roll: '9-04', rollNumber: 'ASPIRE-2025-54' }
-  ],
-  'MHT-CET': [
-    { id: 's-cet-1', name: 'Ishita Deshmukh', roll: 'CET-01', rollNumber: 'ASPIRE-2025-61' },
-    { id: 's-cet-2', name: 'Prathamesh Gaikwad', roll: 'CET-02', rollNumber: 'ASPIRE-2025-62' },
-    { id: 's-cet-3', name: 'Tanmay Bhat', roll: 'CET-03', rollNumber: 'ASPIRE-2025-63' },
-    { id: 's-cet-4', name: 'Sayali Bhagat', roll: 'CET-04', rollNumber: 'ASPIRE-2025-64' }
-  ]
-};
-
 function getStudentsForBatch(batchOrLecture) {
-  const courseKey = batchOrLecture?.course || batchOrLecture?.courseName || 'JEE (Mains + Adv)';
+  const courseKey = (batchOrLecture?.course || batchOrLecture?.courseName || '').trim();
   
-  // 1. Try fetching stored students from userAuthStore
+  // Fetch real stored students from userAuthStore
   try {
     const stored = getStoredStudents();
-    if (stored && stored.length > 0) {
-      const matched = stored.filter(s => 
-        (s.course && s.course.toLowerCase() === courseKey.toLowerCase()) ||
-        (s.batches && batchOrLecture.name && s.batches.toLowerCase().includes(batchOrLecture.name.toLowerCase()))
-      );
-      if (matched.length > 0) {
-        return matched.map(s => ({
-          id: s.id,
-          name: s.name,
-          roll: s.rollNumber || s.roll || 'ASPIRE-01',
-          rollNumber: s.rollNumber || s.roll || 'ASPIRE-01',
-          todayAttendance: 'Present'
-        }));
-      }
+    if (Array.isArray(stored) && stored.length > 0) {
+      const matched = stored.filter(s => {
+        if (!courseKey) return true;
+        const sCourse = (s.course || '').toLowerCase();
+        const sBatch = (s.batches || '').toLowerCase();
+        const targetCourse = courseKey.toLowerCase();
+        const targetBatch = (batchOrLecture?.name || '').toLowerCase();
+        return sCourse.includes(targetCourse) || (targetBatch && sBatch.includes(targetBatch));
+      });
+      const pool = matched.length > 0 ? matched : stored;
+      return pool.map(s => ({
+        id: s.id,
+        name: s.name,
+        roll: s.rollNumber || s.roll || 'ASPIRE-01',
+        rollNumber: s.rollNumber || s.roll || 'ASPIRE-01',
+        todayAttendance: 'Present'
+      }));
     }
   } catch (e) {}
 
-  // 2. Fallback to sample students
-  const sample = BATCH_SAMPLE_STUDENTS[courseKey] || BATCH_SAMPLE_STUDENTS['JEE (Mains + Adv)'];
-  return sample.map(s => ({
-    ...s,
-    todayAttendance: 'Present'
-  }));
+  return [];
 }
 
-const INITIAL_TIMETABLE = [
-  {
-    id: 'lec-1',
-    course: 'JEE (Mains + Adv)',
-    subject: 'Physics (JEE)',
-    day: 'Mon',
-    time: '10:00 AM - 11:30 AM',
-    faculty: 'Ms. Priya Shah (Physics)',
-    status: 'Ongoing'
-  },
-  {
-    id: 'lec-2',
-    course: 'JEE (Mains + Adv)',
-    subject: 'Maths (JEE)',
-    day: 'Mon',
-    time: '11:45 AM - 01:15 PM',
-    faculty: 'Ms. Neha Kapoor (Mathematics)',
-    status: 'Upcoming'
-  },
-  {
-    id: 'lec-3',
-    course: 'NEET',
-    subject: 'Chemistry (NEET)',
-    day: 'Mon',
-    time: '02:00 PM - 03:30 PM',
-    faculty: 'Mr. Rahul Verma (Chemistry)',
-    status: 'Upcoming'
-  },
-  {
-    id: 'lec-4',
-    course: 'NEET',
-    subject: 'Biology (NEET)',
-    day: 'Mon',
-    time: '03:45 PM - 05:15 PM',
-    faculty: 'Mr. Suresh Iyer (Biology)',
-    status: 'Upcoming'
-  },
-  {
-    id: 'lec-5',
-    course: '12th Science',
-    subject: 'English (12th)',
-    day: 'Tue',
-    time: '09:00 AM - 10:30 AM',
-    faculty: 'Mrs. Anita Desai (English)',
-    status: 'Upcoming'
-  },
-  {
-    id: 'lec-6',
-    course: '11th Science',
-    subject: 'Physics (JEE)',
-    day: 'Tue',
-    time: '11:00 AM - 12:30 PM',
-    faculty: 'Ms. Priya Shah (Physics)',
-    status: 'Upcoming'
-  },
-  {
-    id: 'lec-7',
-    course: 'MHT-CET',
-    subject: 'Chemistry (JEE)',
-    day: 'Wed',
-    time: '10:00 AM - 11:30 AM',
-    faculty: 'Mr. Rahul Verma (Chemistry)',
-    status: 'Upcoming'
-  },
-  {
-    id: 'lec-8',
-    course: 'Std 10th',
-    subject: 'Science (10th)',
-    day: 'Wed',
-    time: '02:00 PM - 03:30 PM',
-    faculty: 'Mr. Amit Kulkarni (Science)',
-    status: 'Upcoming'
-  },
-  {
-    id: 'lec-9',
-    course: 'Std 10th',
-    subject: 'Maths (10th)',
-    day: 'Thu',
-    time: '03:45 PM - 05:15 PM',
-    faculty: 'Ms. Neha Kapoor (Mathematics)',
-    status: 'Upcoming'
-  },
-  {
-    id: 'lec-10',
-    course: 'Std 9th',
-    subject: 'Science (9th)',
-    day: 'Fri',
-    time: '09:00 AM - 10:30 AM',
-    faculty: 'Mr. Amit Kulkarni (Science)',
-    status: 'Upcoming'
-  },
-  {
-    id: 'lec-11',
-    course: 'Std 9th',
-    subject: 'Maths (9th)',
-    day: 'Fri',
-    time: '10:45 AM - 12:15 PM',
-    faculty: 'Ms. Neha Kapoor (Mathematics)',
-    status: 'Upcoming'
-  },
-  {
-    id: 'lec-12',
-    course: 'JEE (Mains + Adv)',
-    subject: 'Physics (JEE)',
-    day: 'Sat',
-    time: '09:00 AM - 12:00 PM',
-    faculty: 'Ms. Priya Shah (Physics)',
-    status: 'Upcoming'
-  }
-];
+const INITIAL_TIMETABLE = [];
 
 export default function AdminTimetableModal({ isOpen, onClose }) {
-  // Load from localStorage or default
+  // Load from localStorage or empty
   const [timetable, setTimetable] = useState(() => {
     try {
       const saved = localStorage.getItem('aspire_admin_timetable');
       if (saved) {
         const parsed = JSON.parse(saved);
-        return parsed.map(lec => ({
-          ...lec,
-          faculty: (lec.faculty || 'Ms. Priya Shah (Physics)')
-            .replace(' (Physics Specialist)', ' (Physics)')
-            .replace(' (Chemistry Specialist)', ' (Chemistry)')
-            .replace(' (Mathematics Specialist)', ' (Mathematics)')
-            .replace(' (Biology Specialist)', ' (Biology)')
-        }));
+        if (Array.isArray(parsed)) {
+          return parsed.map(lec => ({
+            ...lec,
+            subject: lec.subject || 'Subject',
+            course: lec.course || 'General',
+            day: lec.day || 'Mon',
+            time: lec.time || '10:00 AM - 11:30 AM',
+            faculty: lec.faculty || 'Faculty'
+          }));
+        }
       }
     } catch (e) {}
     return INITIAL_TIMETABLE;
@@ -564,17 +415,24 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
 
   const handleLectureFieldChange = (index, field, value) => {
     setWeekData(prev => {
-      const currentDayData = prev[activeAddDay];
-      const updatedLectures = [...currentDayData.lectures];
-      updatedLectures[index] = {
-        ...updatedLectures[index],
+      const currentDay = activeAddDay || 'Mon';
+      const dayData = (prev && prev[currentDay]) ? { ...prev[currentDay] } : { lectureCount: 2, lectures: [] };
+      const currentLecs = Array.isArray(dayData.lectures) ? [...dayData.lectures] : [];
+      
+      while (currentLecs.length <= index) {
+        currentLecs.push(createLectureSlot(selectedAddCourse, currentLecs.length));
+      }
+      
+      currentLecs[index] = {
+        ...(currentLecs[index] || createLectureSlot(selectedAddCourse, index)),
         [field]: value
       };
+
       return {
         ...prev,
-        [activeAddDay]: {
-          ...currentDayData,
-          lectures: updatedLectures
+        [currentDay]: {
+          ...dayData,
+          lectures: currentLecs
         }
       };
     });
@@ -679,22 +537,25 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
   };
 
   // Filter lectures
-  const filteredLectures = timetable.filter(l => {
+  const filteredLectures = (timetable || []).filter(l => {
+    if (!l) return false;
     const matchesCourse = selectedCourse === 'All' || l.course === selectedCourse;
     const matchesDay = selectedDay === 'All' || l.day === selectedDay;
     const matchesSearch = !searchTerm || 
-      l.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      l.course.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      l.faculty.toLowerCase().includes(searchTerm.toLowerCase());
+      (l.subject || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (l.course || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (l.faculty || '').toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCourse && matchesDay && matchesSearch;
   });
 
   // Search in mockBatches as well so admin can mark attendance of any batch anytime by searching it
-  const matchedBatches = searchTerm ? mockBatches.filter(b => 
-    b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.faculty.toLowerCase().includes(searchTerm.toLowerCase())
+  const matchedBatches = searchTerm ? (mockBatches || []).filter(b => 
+    b && (
+      (b.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (b.subject || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (b.courseName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (b.faculty || '').toLowerCase().includes(searchTerm.toLowerCase())
+    )
   ) : [];
 
   // Ongoing classes to show on front
@@ -702,6 +563,7 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
   const todayKey = getTodayDateKey();
 
   const availableSubjectsForAdd = getSubjectsForCourse(selectedAddCourse);
+  const facultyOptionsList = getFacultyOptions();
   const currentDayState = weekData[activeAddDay] || { lectureCount: 2, lectures: [] };
   const currentLectures = currentDayState.lectures || [];
 
@@ -1890,7 +1752,7 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                         Subject *
                       </label>
                       <select
-                        value={lec.subject}
+                        value={lec.subject || availableSubjectsForAdd[0] || ''}
                         onChange={e => handleLectureFieldChange(idx, 'subject', e.target.value)}
                         style={{
                           width: '100%',
@@ -1898,7 +1760,8 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                           borderRadius: '8px',
                           border: '1px solid var(--border)',
                           fontSize: '13px',
-                          background: 'var(--surface)'
+                          background: 'var(--surface)',
+                          color: 'var(--text-primary)'
                         }}
                       >
                         {availableSubjectsForAdd.map(sub => (
@@ -1913,7 +1776,7 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                         Teacher / Faculty *
                       </label>
                       <select
-                        value={lec.faculty}
+                        value={lec.faculty || facultyOptionsList[0] || ''}
                         onChange={e => handleLectureFieldChange(idx, 'faculty', e.target.value)}
                         style={{
                           width: '100%',
@@ -1921,10 +1784,11 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                           borderRadius: '8px',
                           border: '1px solid var(--border)',
                           fontSize: '13px',
-                          background: 'var(--surface)'
+                          background: 'var(--surface)',
+                          color: 'var(--text-primary)'
                         }}
                       >
-                        {FACULTY_OPTIONS.map(fac => (
+                        {facultyOptionsList.map(fac => (
                           <option key={fac} value={fac}>{fac}</option>
                         ))}
                       </select>
