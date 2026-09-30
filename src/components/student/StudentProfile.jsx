@@ -52,17 +52,29 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
   ];
 
   return (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '90px' }}>
-      <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--brand-900)' }}>Profile</h3>
+    <div className="view-transition-enter" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '90px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--brand-900)', margin: 0, letterSpacing: '-0.02em' }}>
+            System Profile
+          </h3>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+            USER_IDENTITY // ACCESS_TIER
+          </span>
+        </div>
+        <span className="badge badge-success" style={{ borderRadius: '9999px' }}>
+          ACTIVE AUTH
+        </span>
+      </div>
 
-      {/* User Card */}
-      <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px' }}>
+      {/* User Card - Smooth Curved Architecture */}
+      <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '18px', borderRadius: '16px' }}>
         <div style={{ position: 'relative', flexShrink: 0 }}>
           <img
             src={user.avatar}
             alt={user.name}
             onClick={() => setIsChangeAvatarOpen(true)}
-            style={{ width: '64px', height: '64px', borderRadius: '16px', objectFit: 'cover', border: '2px solid var(--border)', cursor: 'pointer' }}
+            style={{ width: '64px', height: '64px', borderRadius: '16px', objectFit: 'cover', border: '2px solid var(--accent-500)', cursor: 'pointer', boxShadow: '0 4px 10px rgba(234, 88, 12, 0.15)' }}
             title="Click to change profile picture"
           />
           <button
@@ -71,20 +83,20 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
             aria-label="Change profile picture"
             style={{
               position: 'absolute',
-              bottom: '-4px',
-              right: '-4px',
+              bottom: '-3px',
+              right: '-3px',
               width: '24px',
               height: '24px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, var(--brand-800) 0%, var(--brand-600) 100%)',
+              borderRadius: '9999px',
+              background: 'var(--accent-500)',
               border: '2px solid #ffffff',
               color: '#ffffff',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              boxShadow: '0 2px 6px rgba(30, 58, 138, 0.3)',
-              transition: 'transform 0.15s ease'
+              boxShadow: 'var(--shadow-sm)',
+              transition: 'var(--transition-smooth)'
             }}
             title="Change Profile Picture"
           >
@@ -92,17 +104,21 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
           </button>
         </div>
         <div>
-          <h4 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--brand-900)' }}>{user.name}</h4>
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>{subtitle}</p>
-          <span className="badge badge-success" style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-            <ShieldCheck size={12} />
+          <h4 style={{ fontSize: '17px', fontWeight: 900, color: 'var(--brand-900)', margin: 0, letterSpacing: '-0.02em' }}>
+            {user.name}
+          </h4>
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0', fontFamily: 'var(--font-mono)' }}>
+            {subtitle}
+          </p>
+          <span className="badge badge-info" style={{ marginTop: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '9999px' }}>
+            <ShieldCheck size={11} />
             {roleBadgeLabel}
           </span>
         </div>
       </div>
 
-      {/* Navigation List */}
-      <div className="card" style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column' }}>
+      {/* Navigation List - Sharp Frame */}
+      <div className="card" style={{ padding: '4px 16px', display: 'flex', flexDirection: 'column' }}>
         {menuItems.map((item, index) => {
           const Icon = item.icon;
           return (
@@ -183,19 +199,29 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
       <button
         onClick={onLogout}
         style={{
-          background: '#fef2f2',
-          border: '1px solid #fecaca',
-          color: 'var(--danger)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '12px',
+          background: '#fff1f2',
+          border: '1px solid #fecdd3',
+          color: '#e11d48',
+          borderRadius: '12px',
+          padding: '13px',
           fontSize: '14px',
           fontWeight: 700,
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '8px'
+          gap: '8px',
+          transition: 'var(--transition-smooth)'
         }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = '#ffe4e6';
+          e.currentTarget.style.transform = 'translateY(-1px)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = '#fff1f2';
+          e.currentTarget.style.transform = 'translateY(0)';
+        }}
+        onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
       >
         <LogOut size={16} />
         Log Out

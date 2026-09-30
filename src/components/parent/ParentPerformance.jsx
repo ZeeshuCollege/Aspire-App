@@ -225,13 +225,13 @@ export default function ParentPerformance({ onOpenTestPaper }) {
       </div>
 
       {/* KPI Overview Summary Card */}
-      <div className="card" style={{ padding: '16px', background: 'var(--surface)' }}>
+      <div className="card" style={{ padding: '16px', background: 'var(--surface)', borderRadius: '16px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', textAlign: 'center' }}>
-          <div style={{ padding: '10px 6px', background: 'var(--surface-alt)', borderRadius: '10px' }}>
+          <div style={{ padding: '12px 6px', background: 'var(--surface-alt)', borderRadius: '12px', border: '1px solid var(--border)' }}>
             <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, display: 'block' }}>
               Average Score
             </span>
-            <strong style={{ fontSize: '20px', color: 'var(--brand-900)', display: 'block', marginTop: '2px' }}>
+            <strong style={{ fontSize: '20px', color: 'var(--brand-900)', display: 'block', marginTop: '2px', fontFamily: 'JetBrains Mono, monospace' }}>
               {avgScore}%
             </strong>
             <span style={{ fontSize: '10px', color: '#15803d', fontWeight: 700 }}>
@@ -239,11 +239,11 @@ export default function ParentPerformance({ onOpenTestPaper }) {
             </span>
           </div>
 
-          <div style={{ padding: '10px 6px', background: 'var(--surface-alt)', borderRadius: '10px' }}>
+          <div style={{ padding: '12px 6px', background: 'var(--surface-alt)', borderRadius: '12px', border: '1px solid var(--border)' }}>
             <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, display: 'block' }}>
               Best Rank
             </span>
-            <strong style={{ fontSize: '20px', color: 'var(--accent-500)', display: 'block', marginTop: '2px' }}>
+            <strong style={{ fontSize: '20px', color: 'var(--accent-500)', display: 'block', marginTop: '2px', fontFamily: 'JetBrains Mono, monospace' }}>
               #{bestRank}
             </strong>
             <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>
@@ -251,11 +251,11 @@ export default function ParentPerformance({ onOpenTestPaper }) {
             </span>
           </div>
 
-          <div style={{ padding: '10px 6px', background: 'var(--surface-alt)', borderRadius: '10px' }}>
+          <div style={{ padding: '12px 6px', background: 'var(--surface-alt)', borderRadius: '12px', border: '1px solid var(--border)' }}>
             <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, display: 'block' }}>
               Tests Cleared
             </span>
-            <strong style={{ fontSize: '20px', color: '#10b981', display: 'block', marginTop: '2px' }}>
+            <strong style={{ fontSize: '20px', color: '#10b981', display: 'block', marginTop: '2px', fontFamily: 'JetBrains Mono, monospace' }}>
               10/10
             </strong>
             <span style={{ fontSize: '10px', color: '#15803d', fontWeight: 700 }}>
@@ -265,7 +265,7 @@ export default function ParentPerformance({ onOpenTestPaper }) {
         </div>
       </div>
 
-      {/* Subject Filter Pills */}
+      {/* Subject Filter Tabs */}
       <div style={{ display: 'flex', gap: '8px' }}>
         {['All', 'Physics', 'Chemistry', 'Mathematics'].map(subj => {
           const count = subj === 'All' 
@@ -280,15 +280,17 @@ export default function ParentPerformance({ onOpenTestPaper }) {
               type="button"
               onClick={() => setSubjectFilter(subj)}
               style={{
-                padding: '6px 14px',
-                borderRadius: 'var(--radius-full)',
-                fontSize: '11px',
+                padding: '6px 16px',
+                borderRadius: '9999px',
+                fontSize: '11.5px',
                 fontWeight: 700,
                 cursor: 'pointer',
-                border: isActive ? '1px solid var(--brand-800)' : '1px solid var(--border)',
-                background: isActive ? 'var(--brand-800)' : 'var(--surface)',
+                border: isActive ? '1px solid var(--brand-900)' : '1px solid var(--border)',
+                background: isActive ? 'var(--brand-900)' : 'var(--surface)',
                 color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                transition: 'all 0.15s ease'
+                boxShadow: isActive ? '0 2px 8px rgba(10, 31, 61, 0.18)' : 'none',
+                transition: 'var(--transition-smooth)',
+                transform: isActive ? 'translateY(-1px)' : 'none'
               }}
             >
               {subj} ({count})
@@ -310,24 +312,26 @@ export default function ParentPerformance({ onOpenTestPaper }) {
               style={{
                 padding: '16px',
                 background: 'var(--surface)',
+                borderRadius: '16px',
                 borderLeft: `4px solid ${test.score >= 90 ? '#10b981' : test.score >= 80 ? 'var(--brand-800)' : '#f59e0b'}`
               }}
             >
               {/* Top Row: Subject Badge & Test Date */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <span style={{
-                  padding: '2px 8px',
-                  borderRadius: '6px',
+                  padding: '3px 10px',
+                  borderRadius: '9999px',
                   fontSize: '10px',
                   fontWeight: 800,
                   background: sc.bg,
                   color: sc.color,
-                  border: `1px solid ${sc.border}`
+                  border: `1px solid ${sc.border}`,
+                  fontFamily: 'JetBrains Mono, monospace'
                 }}>
                   {test.subject}
                 </span>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>
                   <Calendar size={12} />
                   <span>{test.date}</span>
                 </div>
@@ -348,23 +352,25 @@ export default function ParentPerformance({ onOpenTestPaper }) {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                padding: '10px 12px',
+                padding: '10px 14px',
                 background: 'var(--surface-alt)',
-                borderRadius: '10px',
+                borderRadius: '12px',
+                border: '1px solid var(--border)',
                 marginBottom: '12px'
               }}>
                 <div>
                   <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, display: 'block' }}>Score</span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                    <strong style={{ fontSize: '18px', color: 'var(--brand-900)' }}>
+                    <strong style={{ fontSize: '18px', color: 'var(--brand-900)', fontFamily: 'JetBrains Mono, monospace' }}>
                       {test.score}
                     </strong>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>/{test.maxMarks}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>/{test.maxMarks}</span>
                     <span style={{
                       marginLeft: '6px',
                       fontSize: '11px',
                       fontWeight: 700,
-                      color: test.score >= 90 ? '#15803d' : '#1e40af'
+                      color: test.score >= 90 ? '#15803d' : '#1e40af',
+                      fontFamily: 'JetBrains Mono, monospace'
                     }}>
                       ({test.score}%)
                     </span>
@@ -373,7 +379,7 @@ export default function ParentPerformance({ onOpenTestPaper }) {
 
                 <div style={{ textAlign: 'right' }}>
                   <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, display: 'block' }}>Batch Rank</span>
-                  <strong style={{ fontSize: '15px', color: 'var(--brand-800)' }}>
+                  <strong style={{ fontSize: '15px', color: 'var(--brand-800)', fontFamily: 'JetBrains Mono, monospace' }}>
                     Rank #{test.rank}
                   </strong>
                   <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>
@@ -395,17 +401,17 @@ export default function ParentPerformance({ onOpenTestPaper }) {
                   marginBottom: '10px'
                 }}>
                   <div style={{
-                    padding: '6px 8px',
+                    padding: '8px 10px',
                     borderRadius: '8px',
                     background: '#ecfdf5',
-                    border: '1px solid #bbf7d0',
+                    border: '1px solid #86efac',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px'
                   }}>
-                    <CheckCircle2 size={13} color="#15803d" />
+                    <CheckCircle2 size={14} color="#15803d" />
                     <div>
-                      <strong style={{ fontSize: '12px', color: '#15803d', display: 'block', lineHeight: 1 }}>
+                      <strong style={{ fontSize: '12px', color: '#15803d', display: 'block', lineHeight: 1, fontFamily: 'JetBrains Mono, monospace' }}>
                         {test.correct}
                       </strong>
                       <span style={{ fontSize: '9px', color: '#166534', fontWeight: 600 }}>Correct</span>
@@ -413,17 +419,17 @@ export default function ParentPerformance({ onOpenTestPaper }) {
                   </div>
 
                   <div style={{
-                    padding: '6px 8px',
+                    padding: '8px 10px',
                     borderRadius: '8px',
                     background: '#fef2f2',
-                    border: '1px solid #fecaca',
+                    border: '1px solid #fca5a5',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px'
                   }}>
-                    <XCircle size={13} color="#b91c1c" />
+                    <XCircle size={14} color="#b91c1c" />
                     <div>
-                      <strong style={{ fontSize: '12px', color: '#b91c1c', display: 'block', lineHeight: 1 }}>
+                      <strong style={{ fontSize: '12px', color: '#b91c1c', display: 'block', lineHeight: 1, fontFamily: 'JetBrains Mono, monospace' }}>
                         {test.incorrect}
                       </strong>
                       <span style={{ fontSize: '9px', color: '#991b1b', fontWeight: 600 }}>Incorrect</span>
@@ -431,7 +437,7 @@ export default function ParentPerformance({ onOpenTestPaper }) {
                   </div>
 
                   <div style={{
-                    padding: '6px 8px',
+                    padding: '8px 10px',
                     borderRadius: '8px',
                     background: 'var(--surface-alt)',
                     border: '1px solid var(--border)',
@@ -439,9 +445,9 @@ export default function ParentPerformance({ onOpenTestPaper }) {
                     alignItems: 'center',
                     gap: '6px'
                   }}>
-                    <MinusCircle size={13} color="var(--text-muted)" />
+                    <MinusCircle size={14} color="var(--text-muted)" />
                     <div>
-                      <strong style={{ fontSize: '12px', color: 'var(--text-primary)', display: 'block', lineHeight: 1 }}>
+                      <strong style={{ fontSize: '12px', color: 'var(--text-primary)', display: 'block', lineHeight: 1, fontFamily: 'JetBrains Mono, monospace' }}>
                         {test.unattempted}
                       </strong>
                       <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 600 }}>Skipped</span>
@@ -459,8 +465,8 @@ export default function ParentPerformance({ onOpenTestPaper }) {
                   paddingTop: '6px',
                   borderTop: '1px solid var(--border)'
                 }}>
-                  <span>Class Average: <strong>{test.classAverage}/100</strong></span>
-                  <span style={{ color: diffFromAvg >= 0 ? '#15803d' : '#b91c1c', fontWeight: 700 }}>
+                  <span>Class Average: <strong style={{ fontFamily: 'JetBrains Mono, monospace' }}>{test.classAverage}/100</strong></span>
+                  <span style={{ color: diffFromAvg >= 0 ? '#15803d' : '#b91c1c', fontWeight: 700, fontFamily: 'JetBrains Mono, monospace' }}>
                     {diffFromAvg >= 0 ? `+${diffFromAvg} above avg` : `${diffFromAvg} below avg`}
                   </span>
                 </div>
@@ -474,11 +480,11 @@ export default function ParentPerformance({ onOpenTestPaper }) {
                   style={{
                     marginTop: '12px',
                     width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: 'var(--radius-md)',
+                    padding: '9px 14px',
+                    borderRadius: '10px',
                     border: '1px solid var(--border)',
                     background: 'var(--surface-alt)',
-                    fontSize: '11px',
+                    fontSize: '11.5px',
                     fontWeight: 700,
                     color: 'var(--brand-800)',
                     cursor: 'pointer',
@@ -486,7 +492,15 @@ export default function ParentPerformance({ onOpenTestPaper }) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '6px',
-                    transition: 'all 0.15s ease'
+                    transition: 'var(--transition-smooth)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--accent-400)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--border)';
+                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
                   <FileText size={13} />

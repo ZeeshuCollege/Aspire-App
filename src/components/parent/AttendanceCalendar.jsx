@@ -95,12 +95,12 @@ export default function AttendanceCalendar() {
       </div>
 
       {/* KPI Overview Card */}
-      <div className="card" style={{ padding: '16px', background: 'var(--surface)' }}>
+      <div className="card" style={{ padding: '16px', background: 'var(--surface)', borderRadius: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <div>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Past 30 Lectures</span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '2px' }}>
-              <span style={{ fontSize: '24px', fontWeight: 900, color: 'var(--brand-900)' }}>
+              <span style={{ fontSize: '24px', fontWeight: 900, color: 'var(--brand-900)', fontFamily: 'JetBrains Mono, monospace' }}>
                 {attendanceRate}%
               </span>
               <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 600 }}>
@@ -114,13 +114,14 @@ export default function AttendanceCalendar() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '4px',
-              padding: '4px 10px',
+              padding: '4px 12px',
               background: '#ecfdf5',
               color: '#15803d',
-              borderRadius: 'var(--radius-full)',
+              borderRadius: '9999px',
               fontSize: '11px',
               fontWeight: 700,
-              border: '1px solid #bbf7d0'
+              border: '1px solid #bbf7d0',
+              fontFamily: 'JetBrains Mono, monospace'
             }}>
               <Check size={12} strokeWidth={2.5} />
               {presentCount} Present
@@ -129,13 +130,14 @@ export default function AttendanceCalendar() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '4px',
-              padding: '4px 10px',
+              padding: '4px 12px',
               background: '#fef2f2',
               color: '#b91c1c',
-              borderRadius: 'var(--radius-full)',
+              borderRadius: '9999px',
               fontSize: '11px',
               fontWeight: 700,
-              border: '1px solid #fecaca'
+              border: '1px solid #fecaca',
+              fontFamily: 'JetBrains Mono, monospace'
             }}>
               <X size={12} strokeWidth={2.5} />
               {absentCount} Absent
@@ -144,13 +146,13 @@ export default function AttendanceCalendar() {
         </div>
 
         {/* Progress Bar */}
-        <div style={{ width: '100%', height: '8px', background: 'var(--surface-alt)', borderRadius: '4px', overflow: 'hidden' }}>
+        <div style={{ width: '100%', height: '8px', background: 'var(--surface-alt)', borderRadius: '9999px', overflow: 'hidden' }}>
           <div style={{
             width: `${attendanceRate}%`,
             height: '100%',
             background: 'linear-gradient(90deg, #10b981, #059669)',
-            borderRadius: '4px',
-            transition: 'width 0.4s ease'
+            borderRadius: '9999px',
+            transition: 'width 0.6s cubic-bezier(0.25, 1, 0.5, 1)'
           }} />
         </div>
       </div>
@@ -167,15 +169,17 @@ export default function AttendanceCalendar() {
             type="button"
             onClick={() => setFilter(t.id)}
             style={{
-              padding: '6px 14px',
-              borderRadius: 'var(--radius-full)',
-              fontSize: '11px',
+              padding: '6px 16px',
+              borderRadius: '9999px',
+              fontSize: '11.5px',
               fontWeight: 700,
               cursor: 'pointer',
-              border: filter === t.id ? '1px solid var(--brand-800)' : '1px solid var(--border)',
-              background: filter === t.id ? 'var(--brand-800)' : 'var(--surface)',
+              border: filter === t.id ? '1px solid var(--brand-900)' : '1px solid var(--border)',
+              background: filter === t.id ? 'var(--brand-900)' : 'var(--surface)',
               color: filter === t.id ? '#ffffff' : 'var(--text-secondary)',
-              transition: 'all 0.15s ease'
+              boxShadow: filter === t.id ? '0 2px 8px rgba(10, 31, 61, 0.18)' : 'none',
+              transition: 'var(--transition-smooth)',
+              transform: filter === t.id ? 'translateY(-1px)' : 'none'
             }}
           >
             {t.label}
@@ -184,7 +188,7 @@ export default function AttendanceCalendar() {
       </div>
 
       {/* 30 Lecture Blocks Card */}
-      <div className="card" style={{ padding: '16px', background: 'var(--surface)' }}>
+      <div className="card" style={{ padding: '16px', background: 'var(--surface)', borderRadius: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
           <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>
             Lecture Matrix (30 Lectures)
@@ -214,27 +218,28 @@ export default function AttendanceCalendar() {
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '8px 2px',
+                  padding: '9px 2px',
                   borderRadius: '10px',
                   cursor: 'pointer',
                   border: isSelected 
-                    ? '2px solid var(--brand-800)' 
+                    ? '2px solid var(--brand-900)' 
                     : isPresent 
-                    ? '1.5px solid #a7f3d0' 
-                    : '1.5px solid #fecaca',
+                    ? '1px solid #86efac' 
+                    : '1px solid #fca5a5',
                   background: isPresent ? '#ecfdf5' : '#fef2f2',
-                  boxShadow: isSelected ? '0 0 0 2px rgba(30, 58, 138, 0.2), 0 2px 8px rgba(0,0,0,0.06)' : 'none',
-                  transform: isSelected ? 'scale(1.05)' : 'scale(1)',
-                  transition: 'all 0.15s ease',
+                  boxShadow: isSelected ? '0 0 0 2px rgba(15, 45, 89, 0.25)' : 'none',
+                  transition: 'var(--transition-smooth)',
+                  transform: isSelected ? 'scale(1.05)' : 'none',
                   position: 'relative'
                 }}
                 title={`Lecture #${lec.number} (${lec.subject}) - ${lec.status}`}
               >
                 <span style={{
-                  fontSize: '10px',
+                  fontSize: '9.5px',
                   fontWeight: 700,
                   color: 'var(--text-muted)',
-                  lineHeight: 1
+                  lineHeight: 1,
+                  fontFamily: 'JetBrains Mono, monospace'
                 }}>
                   L{lec.number < 10 ? `0${lec.number}` : lec.number}
                 </span>
@@ -246,14 +251,14 @@ export default function AttendanceCalendar() {
                   justifyContent: 'center',
                   width: '20px',
                   height: '20px',
-                  borderRadius: '50%',
+                  borderRadius: '9999px',
                   background: isPresent ? '#10b981' : '#ef4444',
                   color: '#ffffff'
                 }}>
                   {isPresent ? (
-                    <Check size={12} strokeWidth={3} />
+                    <Check size={11} strokeWidth={3} />
                   ) : (
-                    <X size={12} strokeWidth={3} />
+                    <X size={11} strokeWidth={3} />
                   )}
                 </div>
 
@@ -261,7 +266,8 @@ export default function AttendanceCalendar() {
                   fontSize: '9px',
                   fontWeight: 800,
                   marginTop: '3px',
-                  color: isPresent ? '#15803d' : '#b91c1c'
+                  color: isPresent ? '#15803d' : '#b91c1c',
+                  fontFamily: 'JetBrains Mono, monospace'
                 }}>
                   {isPresent ? 'P' : 'A'}
                 </span>
@@ -284,17 +290,18 @@ export default function AttendanceCalendar() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{
-              width: '18px',
-              height: '18px',
-              borderRadius: '4px',
+              width: '20px',
+              height: '20px',
+              borderRadius: '6px',
               background: '#ecfdf5',
-              border: '1.5px solid #a7f3d0',
+              border: '1px solid #86efac',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#15803d',
               fontSize: '10px',
-              fontWeight: 800
+              fontWeight: 800,
+              fontFamily: 'JetBrains Mono, monospace'
             }}>
               P
             </span>
@@ -303,17 +310,18 @@ export default function AttendanceCalendar() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{
-              width: '18px',
-              height: '18px',
-              borderRadius: '4px',
+              width: '20px',
+              height: '20px',
+              borderRadius: '6px',
               background: '#fef2f2',
-              border: '1.5px solid #fecaca',
+              border: '1px solid #fca5a5',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#b91c1c',
               fontSize: '10px',
-              fontWeight: 800
+              fontWeight: 800,
+              fontFamily: 'JetBrains Mono, monospace'
             }}>
               A
             </span>
@@ -327,12 +335,12 @@ export default function AttendanceCalendar() {
         <div className="card" style={{
           padding: '16px',
           background: 'var(--surface)',
-          borderLeft: `4px solid ${selectedLecture.status === 'Present' ? '#10b981' : '#ef4444'}`,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.04)'
+          borderRadius: '16px',
+          borderLeft: `4px solid ${selectedLecture.status === 'Present' ? '#10b981' : '#ef4444'}`
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
             <div>
-              <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--accent-500)', fontWeight: 800 }}>
+              <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--accent-500)', fontWeight: 800, fontFamily: 'JetBrains Mono, monospace' }}>
                 Lecture #{selectedLecture.number} • {selectedLecture.subject}
               </span>
               <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--brand-900)', margin: '2px 0 0 0' }}>
@@ -344,13 +352,13 @@ export default function AttendanceCalendar() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '4px',
-              padding: '3px 10px',
-              borderRadius: 'var(--radius-full)',
+              padding: '3px 12px',
+              borderRadius: '9999px',
               fontSize: '11px',
               fontWeight: 800,
               background: selectedLecture.status === 'Present' ? '#ecfdf5' : '#fef2f2',
               color: selectedLecture.status === 'Present' ? '#15803d' : '#b91c1c',
-              border: `1px solid ${selectedLecture.status === 'Present' ? '#bbf7d0' : '#fecaca'}`
+              border: `1px solid ${selectedLecture.status === 'Present' ? '#86efac' : '#fca5a5'}`
             }}>
               {selectedLecture.status === 'Present' ? (
                 <>

@@ -342,8 +342,8 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
             top: '16px',
             right: '16px',
             background: 'var(--surface-alt)',
-            border: 'none',
-            borderRadius: '50%',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
             width: '32px',
             height: '32px',
             display: 'flex',
@@ -351,6 +351,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
             justifyContent: 'center',
             color: 'var(--text-secondary)',
             cursor: 'pointer',
+            transition: 'var(--transition-smooth)',
             zIndex: 10
           }}
         >
@@ -361,25 +362,34 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
         <div style={{ padding: '28px 24px' }}>
           {/* Header Branding */}
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-            <img
-              src="/logo.png"
-              alt="ASPIRE Logo"
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '50%',
-                objectFit: 'contain',
-                margin: '0 auto 12px auto',
-                display: 'block',
-                boxShadow: '0 4px 12px rgba(30, 58, 138, 0.2)'
-              }}
-            />
-            <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--brand-900)' }}>
-              {authView === 'login' ? 'Welcome Back' : 'Account Recovery'}
+            <div style={{
+              width: '58px',
+              height: '58px',
+              borderRadius: '16px',
+              background: '#ffffff',
+              border: '2px solid var(--accent-500)',
+              margin: '0 auto 12px auto',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 14px rgba(234, 88, 12, 0.15)'
+            }}>
+              <img
+                src="/logo.png"
+                alt="ASPIRE Logo"
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  objectFit: 'contain'
+                }}
+              />
+            </div>
+            <h3 style={{ fontSize: '19px', fontWeight: 800, color: 'var(--brand-900)', letterSpacing: '-0.01em' }}>
+              {authView === 'login' ? 'Authentication Gate' : 'Account Recovery'}
             </h3>
             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
               {authView === 'login'
-                ? 'Sign in to continue to your ASPIRE account'
+                ? 'Sign in to access your ASPIRE academic portal'
                 : 'Select your preferred verification method'}
             </p>
           </div>
@@ -389,8 +399,9 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
             <div style={{
               background: 'var(--danger-tint)',
               border: '1px solid #fecaca',
+              borderLeft: '4px solid var(--danger)',
               color: 'var(--danger)',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: '10px',
               padding: '10px 14px',
               fontSize: '12px',
               display: 'flex',
@@ -407,8 +418,9 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
             <div style={{
               background: 'var(--success-tint)',
               border: '1px solid #a7f3d0',
+              borderLeft: '4px solid var(--success)',
               color: 'var(--success)',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: '10px',
               padding: '10px 14px',
               fontSize: '12px',
               display: 'flex',
@@ -429,7 +441,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
               {/* Login Form */}
               <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                     Email Address
                   </label>
                   <div style={{ position: 'relative' }}>
@@ -443,10 +455,11 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                         width: '100%',
                         padding: '12px 14px 12px 38px',
                         border: '1px solid var(--border)',
-                        borderRadius: 'var(--radius-md)',
+                        borderRadius: '10px',
                         fontSize: '13px',
                         outline: 'none',
-                        background: 'var(--surface-alt)'
+                        background: 'var(--surface-alt)',
+                        transition: 'var(--transition-smooth)'
                       }}
                     />
                     <Mail size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
@@ -454,7 +467,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                     Password
                   </label>
                   <div style={{ position: 'relative' }}>
@@ -468,10 +481,11 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                         width: '100%',
                         padding: '12px 38px 12px 38px',
                         border: '1px solid var(--border)',
-                        borderRadius: 'var(--radius-md)',
+                        borderRadius: '10px',
                         fontSize: '13px',
                         outline: 'none',
-                        background: 'var(--surface-alt)'
+                        background: 'var(--surface-alt)',
+                        transition: 'var(--transition-smooth)'
                       }}
                     />
                     <Lock size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
@@ -556,8 +570,8 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
           {authView === 'select_method' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ position: 'relative' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-                  Enter Registered Email or WhatsApp Number
+                <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                  Registered Email or WhatsApp
                 </label>
                 <input
                   type="text"
@@ -568,15 +582,16 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                     width: '100%',
                     padding: '12px 14px',
                     border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-md)',
+                    borderRadius: '10px',
                     fontSize: '13px',
                     outline: 'none',
-                    background: 'var(--surface-alt)'
+                    background: 'var(--surface-alt)',
+                    transition: 'var(--transition-smooth)'
                   }}
                 />
               </div>
 
-              <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', marginTop: '4px' }}>
+              <p style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Select verification channel:
               </p>
 
@@ -590,18 +605,23 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                   alignItems: 'center',
                   gap: '14px',
                   padding: '14px',
-                  borderRadius: 'var(--radius-lg)',
-                  border: '1px solid #22c55e',
+                  borderRadius: '14px',
+                  border: '1px solid #86efac',
+                  borderLeft: '4px solid #16a34a',
                   background: '#f0fdf4',
                   cursor: 'pointer',
-                  textAlign: 'left'
+                  textAlign: 'left',
+                  boxShadow: 'var(--shadow-sm)',
+                  transition: 'var(--transition-smooth)'
                 }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
               >
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                  <MessageSquare size={20} />
+                <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                  <MessageSquare size={18} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#15803d' }}>WhatsApp OTP (Meta Dev App)</div>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: '#15803d' }}>WhatsApp OTP (Meta Dev App)</div>
                   <div style={{ fontSize: '11px', color: '#166534' }}>Receive 6-digit code via official WhatsApp</div>
                 </div>
               </button>
@@ -616,18 +636,23 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                   alignItems: 'center',
                   gap: '14px',
                   padding: '14px',
-                  borderRadius: 'var(--radius-lg)',
-                  border: '1px solid var(--brand-600)',
+                  borderRadius: '14px',
+                  border: '1px solid #93c5fd',
+                  borderLeft: '4px solid var(--brand-800)',
                   background: 'var(--brand-50)',
                   cursor: 'pointer',
-                  textAlign: 'left'
+                  textAlign: 'left',
+                  boxShadow: 'var(--shadow-sm)',
+                  transition: 'var(--transition-smooth)'
                 }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
               >
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--brand-800)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                  <Mail size={20} />
+                <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--brand-800)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                  <Mail size={18} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--brand-800)' }}>Email Reset Link (Supabase)</div>
+                  <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--brand-800)' }}>Email Reset Link (Supabase)</div>
                   <div style={{ fontSize: '11px', color: 'var(--brand-600)' }}>Receive instant password reset link in inbox</div>
                 </div>
               </button>
@@ -635,7 +660,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
               <button
                 type="button"
                 onClick={() => setAuthView('login')}
-                style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '12px', cursor: 'pointer', marginTop: '10px' }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '12px', cursor: 'pointer', marginTop: '10px', fontWeight: 600 }}
               >
                 <ArrowLeft size={14} /> Back to Sign In
               </button>
@@ -647,17 +672,17 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
              ==================================================================== */}
           {authView === 'whatsapp_otp' && (
             <div style={{ textAlign: 'center' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#f0fdf4', border: '2px solid #22c55e', margin: '0 auto 12px auto', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#22c55e' }}>
-                <MessageSquare size={24} />
+              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: '#f0fdf4', border: '1px solid #22c55e', margin: '0 auto 12px auto', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a' }}>
+                <MessageSquare size={22} />
               </div>
 
-              <h4 style={{ fontSize: '16px', fontWeight: 700 }}>Enter Verification Code</h4>
+              <h4 style={{ fontSize: '16px', fontWeight: 800 }}>Enter Verification Code</h4>
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '6px 0 16px 0' }}>
                 We sent a 6-digit WhatsApp code to <br /><strong>{resetIdentifier}</strong>
               </p>
 
               {demoOtpHint && (
-                <div style={{ background: '#fef3c7', color: '#92400e', fontSize: '11px', padding: '6px 10px', borderRadius: '6px', marginBottom: '14px' }}>
+                <div style={{ background: '#fef3c7', border: '1px solid #fde68a', color: '#92400e', fontSize: '11px', padding: '8px 12px', borderRadius: '8px', marginBottom: '14px', fontFamily: 'JetBrains Mono, monospace' }}>
                   Verification Code: <strong>{demoOtpHint}</strong>
                 </div>
               )}
@@ -673,15 +698,25 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                     value={digit}
                     onChange={(e) => handleOtpInput(idx, e.target.value)}
                     style={{
-                      width: '42px',
-                      height: '48px',
+                      width: '44px',
+                      height: '50px',
                       textAlign: 'center',
                       fontSize: '18px',
-                      fontWeight: 700,
-                      border: '2px solid var(--border)',
-                      borderRadius: '8px',
+                      fontWeight: 800,
+                      fontFamily: 'JetBrains Mono, monospace',
+                      border: '1.5px solid var(--border)',
+                      borderRadius: '10px',
                       outline: 'none',
-                      background: 'var(--surface-alt)'
+                      background: 'var(--surface-alt)',
+                      transition: 'var(--transition-smooth)'
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--accent-500)';
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(249, 115, 22, 0.15)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--border)';
+                      e.currentTarget.style.boxShadow = 'none';
                     }}
                   />
                 ))}
@@ -691,7 +726,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                 type="button"
                 onClick={handleVerifyOtp}
                 className="btn-primary"
-                style={{ width: '100%', marginBottom: '12px' }}
+                style={{ width: '100%', marginBottom: '12px', borderRadius: '10px' }}
               >
                 Verify Code
               </button>
@@ -726,7 +761,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
           {authView === 'reset_password' && (
             <form onSubmit={handleUpdatePassword} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+                <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                   Create New Password
                 </label>
                 <input
@@ -739,10 +774,11 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                     width: '100%',
                     padding: '12px 14px',
                     border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-md)',
+                    borderRadius: '10px',
                     fontSize: '13px',
                     outline: 'none',
-                    background: 'var(--surface-alt)'
+                    background: 'var(--surface-alt)',
+                    transition: 'var(--transition-smooth)'
                   }}
                 />
               </div>
@@ -751,7 +787,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                 type="submit"
                 disabled={loading}
                 className="btn-primary"
-                style={{ width: '100%' }}
+                style={{ width: '100%', borderRadius: '10px' }}
               >
                 {loading ? 'Saving...' : 'Update Password & Login'}
               </button>
@@ -763,10 +799,10 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
              ==================================================================== */}
           {authView === 'email_sent' && (
             <div style={{ textAlign: 'center', padding: '10px 0' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--success-tint)', color: 'var(--success)', margin: '0 auto 12px auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CheckCircle2 size={24} />
+              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'var(--success-tint)', border: '1px solid #a7f3d0', color: 'var(--success)', margin: '0 auto 12px auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CheckCircle2 size={22} />
               </div>
-              <h4 style={{ fontSize: '16px', fontWeight: 700 }}>Check Your Inbox</h4>
+              <h4 style={{ fontSize: '16px', fontWeight: 800 }}>Check Your Inbox</h4>
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '8px 0 20px 0' }}>
                 We've sent a secure password reset link to <strong>{resetIdentifier}</strong>.
               </p>
@@ -774,7 +810,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                 type="button"
                 onClick={() => setAuthView('login')}
                 className="btn-primary"
-                style={{ width: '100%' }}
+                style={{ width: '100%', borderRadius: '10px' }}
               >
                 Back to Sign In
               </button>

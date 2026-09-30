@@ -180,27 +180,35 @@ export default function OpeningScreen({ isLoggedIn, onOpenLogin, onProceed }) {
             style={{
               width: '100%',
               maxWidth: '300px',
-              padding: '16px 28px',
-              borderRadius: '999px',
-              background: 'linear-gradient(135deg, #0b2545 0%, #133a68 100%)',
+              padding: '15px 28px',
+              borderRadius: '14px',
+              background: 'linear-gradient(135deg, var(--brand-950) 0%, var(--brand-900) 100%)',
+              border: '1px solid var(--accent-500)',
               color: '#ffffff',
-              fontSize: '16px',
-              fontWeight: 700,
-              letterSpacing: '0.02em',
-              border: 'none',
+              fontSize: '15px',
+              fontWeight: 800,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
               cursor: 'pointer',
-              boxShadow: '0 8px 24px rgba(11, 37, 69, 0.28)',
-              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+              boxShadow: '0 8px 24px rgba(10, 31, 61, 0.25)',
+              transition: 'var(--transition-smooth)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
             }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 12px 28px rgba(10, 31, 61, 0.35)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(10, 31, 61, 0.25)';
+            }}
             onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
-            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
             onTouchStart={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
-            onTouchEnd={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            onTouchEnd={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
-            Login
+            Access Portal // Sign In
           </button>
         ) : (
           /* When already logged in, no button is shown - subtle splash hint */
@@ -209,15 +217,18 @@ export default function OpeningScreen({ isLoggedIn, onOpenLogin, onProceed }) {
             flexDirection: 'column',
             alignItems: 'center',
             gap: '8px',
-            opacity: 0.7
+            opacity: 0.8
           }}>
             <div style={{
-              width: '24px',
+              width: '36px',
               height: '4px',
-              borderRadius: '999px',
-              background: '#94a3b8',
-              animation: 'pulse 1.5s infinite'
+              borderRadius: '9999px',
+              background: 'linear-gradient(90deg, var(--brand-700), var(--accent-500))',
+              animation: 'topLoaderSlide 1.2s infinite ease-in-out'
             }} />
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>
+              INITIALIZING SESSION...
+            </span>
           </div>
         )}
       </div>

@@ -13,6 +13,7 @@ import { isFirstLaunch } from './lib/permissions';
 import { Browser } from '@capacitor/browser';
 import { supabase } from './lib/supabaseClient';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import { TopLoadingBar } from './components/common/LoadingSkeleton';
 
 // Student Views
 import StudentHome from './components/student/StudentHome';
@@ -47,6 +48,18 @@ export default function App() {
     }
   });
   const [activeTab, setActiveTab] = useState('home');
+  const [isTabLoading, setIsTabLoading] = useState(false);
+
+  const handleTabChange = (newTab) => {
+    if (newTab !== activeTab) {
+      setIsTabLoading(true);
+      setActiveTab(newTab);
+      setTimeout(() => {
+        setIsTabLoading(false);
+      }, 280);
+    }
+  };
+
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isCreateTestOpen, setIsCreateTestOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -362,12 +375,12 @@ export default function App() {
   const handleStudentNavigate = (tab) => {
     if (tab === 'attendance') {
       setClassesSubTab('attendance');
-      setActiveTab('classes');
+      handleTabChange('classes');
     } else if (tab === 'classes') {
       setClassesSubTab('schedule');
-      setActiveTab('classes');
+      handleTabChange('classes');
     } else {
-      setActiveTab(tab);
+      handleTabChange(tab);
     }
   };
 
@@ -638,6 +651,9 @@ export default function App() {
   // Mobile Application Layout for all 4 roles (Student, Teacher, Parent, Admin)
   return (
     <div className="mobile-app-wrapper">
+      {/* Sleek Top Loading Bar for smooth function transitions */}
+      {isTabLoading && <TopLoadingBar />}
+
       {/* Universal Header */}
       <Header
         currentRole={currentRole}
@@ -660,7 +676,7 @@ export default function App() {
             <ScreenSlider
               activeTab={activeTab}
               tabs={studentTabs}
-              onNavigate={setActiveTab}
+              onNavigate={handleTabChange}
               roleKey="student"
             />
           )}
@@ -670,7 +686,7 @@ export default function App() {
             <ScreenSlider
               activeTab={activeTab}
               tabs={teacherTabs}
-              onNavigate={setActiveTab}
+              onNavigate={handleTabChange}
               roleKey="teacher"
             />
           )}
@@ -680,7 +696,7 @@ export default function App() {
             <ScreenSlider
               activeTab={activeTab}
               tabs={parentTabs}
-              onNavigate={setActiveTab}
+              onNavigate={handleTabChange}
               roleKey="parent"
             />
           )}
@@ -689,7 +705,7 @@ export default function App() {
           {currentRole === 'admin' && (
             <AdminMobileDashboard
               activeTab={activeTab}
-              onNavigate={(tab) => setActiveTab(tab)}
+              onNavigate={handleTabChange}
               onLogout={handleLogout}
               notices={notices}
               setNotices={setNotices}
@@ -703,7 +719,7 @@ export default function App() {
       <BottomNav
         role={currentRole}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
       />
 
       {/* In-App Protected PDF Viewer Modal */}

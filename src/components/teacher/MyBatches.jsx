@@ -321,18 +321,18 @@ export default function MyBatches({ onAttendanceSubmit }) {
           {isLocked ? (
             <div style={{
               padding: '14px 16px',
-              background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-              border: '1.5px solid #cbd5e1',
-              borderRadius: 'var(--radius-lg)',
+              background: '#f8fafc',
+              border: '1px solid #cbd5e1',
+              borderLeft: '4px solid #0f172a',
+              borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
-              boxShadow: '0 2px 8px rgba(15, 23, 42, 0.05)'
+              gap: '12px'
             }}>
               <div style={{
                 width: '38px',
                 height: '38px',
-                borderRadius: '50%',
+                borderRadius: '10px',
                 background: '#0f172a',
                 color: '#ffffff',
                 display: 'flex',
@@ -347,7 +347,7 @@ export default function MyBatches({ onAttendanceSubmit }) {
                   <strong style={{ fontSize: '13px', color: 'var(--brand-900)' }}>
                     Attendance Taken & Locked
                   </strong>
-                  <span style={{ fontSize: '10px', background: '#e2e8f0', color: '#334155', padding: '2px 8px', borderRadius: '6px', fontWeight: 800 }}>
+                  <span style={{ fontSize: '10px', background: '#0f172a', color: '#ffffff', padding: '2px 8px', borderRadius: '9999px', fontWeight: 800 }}>
                     LOCKED
                   </span>
                 </div>
@@ -355,7 +355,7 @@ export default function MyBatches({ onAttendanceSubmit }) {
                   Recorded at {submittedTime || 'Today'} • {presentCount} Present, {absentCount} Absent
                 </span>
                 <span style={{ fontSize: '10.5px', color: '#b91c1c', fontWeight: 700, display: 'block', marginTop: '3px' }}>
-                  🔒 Locked from teacher side. Only Admin can edit this register.
+                  🔒 Locked for teacher editing • Only Admin can override records.
                 </span>
               </div>
             </div>
@@ -364,17 +364,17 @@ export default function MyBatches({ onAttendanceSubmit }) {
               padding: '12px 16px',
               background: '#ecfdf5',
               border: '1px solid #bbf7d0',
-              borderRadius: 'var(--radius-lg)',
+              borderLeft: '4px solid #16a34a',
+              borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
-              boxShadow: '0 2px 8px rgba(16, 185, 129, 0.12)'
+              gap: '12px'
             }}>
               <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                background: '#10b981',
+                width: '34px',
+                height: '34px',
+                borderRadius: '10px',
+                background: '#16a34a',
                 color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
@@ -395,7 +395,7 @@ export default function MyBatches({ onAttendanceSubmit }) {
           ) : null}
 
           {/* Date & Quick Action Controls */}
-          <div className="card" style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="card" style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '14px' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
                 <Calendar size={13} color="var(--brand-800)" />
@@ -415,7 +415,7 @@ export default function MyBatches({ onAttendanceSubmit }) {
                 color: '#64748b',
                 border: '1px solid #cbd5e1',
                 padding: '7px 12px',
-                borderRadius: 'var(--radius-md)',
+                borderRadius: '9999px',
                 fontSize: '11px',
                 fontWeight: 700
               }}>
@@ -433,11 +433,12 @@ export default function MyBatches({ onAttendanceSubmit }) {
                   background: 'var(--brand-50)',
                   color: 'var(--brand-800)',
                   border: '1px solid var(--border)',
-                  padding: '8px 12px',
-                  borderRadius: 'var(--radius-md)',
-                  fontSize: '11px',
+                  padding: '8px 14px',
+                  borderRadius: '10px',
+                  fontSize: '11.5px',
                   fontWeight: 700,
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  transition: 'var(--transition-smooth)'
                 }}
               >
                 <CheckCheck size={14} />
@@ -446,7 +447,7 @@ export default function MyBatches({ onAttendanceSubmit }) {
             )}
           </div>
 
-          {/* Filter Pills (All, Present, Absent) */}
+          {/* Filter Tabs (All, Present, Absent) */}
           <div style={{ display: 'flex', gap: '8px' }}>
             {[
               { id: 'All', label: `All (${studentsAttendance.length})` },
@@ -458,15 +459,17 @@ export default function MyBatches({ onAttendanceSubmit }) {
                 type="button"
                 onClick={() => setAttendanceFilter(f.id)}
                 style={{
-                  padding: '6px 14px',
-                  borderRadius: 'var(--radius-full)',
-                  fontSize: '11px',
+                  padding: '6px 16px',
+                  borderRadius: '9999px',
+                  fontSize: '11.5px',
                   fontWeight: 700,
                   cursor: 'pointer',
-                  border: attendanceFilter === f.id ? '1px solid var(--brand-800)' : '1px solid var(--border)',
-                  background: attendanceFilter === f.id ? 'var(--brand-800)' : 'var(--surface)',
+                  border: attendanceFilter === f.id ? '1px solid var(--brand-900)' : '1px solid var(--border)',
+                  background: attendanceFilter === f.id ? 'var(--brand-900)' : 'var(--surface)',
                   color: attendanceFilter === f.id ? '#ffffff' : 'var(--text-secondary)',
-                  transition: 'all 0.15s ease'
+                  boxShadow: attendanceFilter === f.id ? '0 2px 8px rgba(10, 31, 61, 0.18)' : 'none',
+                  transition: 'var(--transition-smooth)',
+                  transform: attendanceFilter === f.id ? 'translateY(-1px)' : 'none'
                 }}
               >
                 {f.label}
@@ -487,7 +490,9 @@ export default function MyBatches({ onAttendanceSubmit }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    borderLeft: `3px solid ${isPresent ? '#10b981' : '#ef4444'}`
+                    borderLeft: `3.5px solid ${isPresent ? '#10b981' : '#ef4444'}`,
+                    borderRadius: '12px',
+                    transition: 'var(--transition-smooth)'
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -495,11 +500,11 @@ export default function MyBatches({ onAttendanceSubmit }) {
                       src={std.avatar}
                       alt={std.name}
                       style={{
-                        width: '38px',
-                        height: '38px',
+                        width: '40px',
+                        height: '40px',
                         borderRadius: '10px',
                         objectFit: 'cover',
-                        border: '1.5px solid var(--border)'
+                        border: '1px solid var(--border)'
                       }}
                     />
                     <div>
@@ -518,9 +523,9 @@ export default function MyBatches({ onAttendanceSubmit }) {
                     disabled={isLocked}
                     onClick={() => handleToggleAttendance(std.id)}
                     style={{
-                      padding: '6px 14px',
-                      borderRadius: 'var(--radius-full)',
-                      border: isPresent ? '1px solid #bbf7d0' : '1px solid #fecaca',
+                      padding: '6px 16px',
+                      borderRadius: '9999px',
+                      border: isPresent ? '1px solid #86efac' : '1px solid #fca5a5',
                       background: isPresent ? '#ecfdf5' : '#fef2f2',
                       color: isPresent ? '#15803d' : '#b91c1c',
                       fontWeight: 800,
@@ -530,8 +535,8 @@ export default function MyBatches({ onAttendanceSubmit }) {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '5px',
-                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-                      transition: 'all 0.15s ease'
+                      transition: 'var(--transition-smooth)',
+                      boxShadow: 'var(--shadow-sm)'
                     }}
                     title={isLocked ? "Attendance locked. Only Admin can edit." : "Click to toggle Present/Absent"}
                   >
@@ -602,9 +607,9 @@ export default function MyBatches({ onAttendanceSubmit }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
           {/* 1. Course Details Card */}
-          <div className="card" style={{ padding: '18px', background: 'var(--surface)' }}>
+          <div className="card" style={{ padding: '18px', background: 'var(--surface)', borderRadius: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'var(--brand-50)', color: 'var(--brand-800)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--brand-50)', color: 'var(--brand-800)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <BookOpen size={18} />
               </div>
               <div>
@@ -618,28 +623,28 @@ export default function MyBatches({ onAttendanceSubmit }) {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '14px' }}>
-              <div style={{ padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: '10px' }}>
+              <div style={{ padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: '10px', border: '1px solid var(--border)' }}>
                 <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, display: 'block' }}>Course</span>
                 <strong style={{ fontSize: '12px', color: 'var(--text-primary)', display: 'block', marginTop: '2px' }}>
                   {selectedBatch.courseName || 'JEE (Mains + Adv) • Physics'}
                 </strong>
               </div>
 
-              <div style={{ padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: '10px' }}>
+              <div style={{ padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: '10px', border: '1px solid var(--border)' }}>
                 <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, display: 'block' }}>Course Code</span>
                 <strong style={{ fontSize: '12px', color: 'var(--accent-500)', display: 'block', marginTop: '2px' }}>
                   {selectedBatch.courseCode || 'PHY-JEE-12A'}
                 </strong>
               </div>
 
-              <div style={{ padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: '10px' }}>
+              <div style={{ padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: '10px', border: '1px solid var(--border)' }}>
                 <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, display: 'block' }}>Classroom</span>
                 <strong style={{ fontSize: '12px', color: 'var(--text-primary)', display: 'block', marginTop: '2px' }}>
                   {selectedBatch.room || 'Room 204'}
                 </strong>
               </div>
 
-              <div style={{ padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: '10px' }}>
+              <div style={{ padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: '10px', border: '1px solid var(--border)' }}>
                 <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, display: 'block' }}>Faculty</span>
                 <strong style={{ fontSize: '12px', color: 'var(--text-primary)', display: 'block', marginTop: '2px' }}>
                   {selectedBatch.faculty || 'Faculty'}
@@ -648,21 +653,21 @@ export default function MyBatches({ onAttendanceSubmit }) {
             </div>
 
             {/* Syllabus Progress Tracker */}
-            <div style={{ padding: '12px', background: 'var(--surface-alt)', borderRadius: '10px', marginBottom: '10px' }}>
+            <div style={{ padding: '12px', background: 'var(--surface-alt)', borderRadius: '10px', border: '1px solid var(--border)', marginBottom: '10px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)' }}>
                   Syllabus Progress
                 </span>
-                <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--brand-800)' }}>
+                <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--brand-800)', fontFamily: 'JetBrains Mono, monospace' }}>
                   {selectedBatch.syllabusProgress || 72}% Completed
                 </span>
               </div>
-              <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+              <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '9999px', overflow: 'hidden' }}>
                 <div style={{
                   width: `${selectedBatch.syllabusProgress || 72}%`,
                   height: '100%',
                   background: 'linear-gradient(90deg, #1e3a8a, #0284c7)',
-                  borderRadius: '4px'
+                  borderRadius: '9999px'
                 }} />
               </div>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '6px' }}>
@@ -694,13 +699,15 @@ export default function MyBatches({ onAttendanceSubmit }) {
                 placeholder="Search student by name or roll..."
                 style={{
                   width: '100%',
-                  padding: '10px 12px 10px 36px',
-                  borderRadius: 'var(--radius-md)',
+                  padding: '11px 12px 11px 36px',
+                  borderRadius: '12px',
                   border: '1px solid var(--border)',
                   background: 'var(--surface)',
                   fontSize: '12px',
                   color: 'var(--text-primary)',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  transition: 'var(--transition-smooth)'
                 }}
               />
             </div>
@@ -718,7 +725,9 @@ export default function MyBatches({ onAttendanceSubmit }) {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     cursor: 'pointer',
-                    transition: 'all 0.15s ease'
+                    transition: 'var(--transition-smooth)',
+                    borderRadius: '12px',
+                    borderLeft: '3.5px solid var(--brand-800)'
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -726,11 +735,11 @@ export default function MyBatches({ onAttendanceSubmit }) {
                       src={std.avatar}
                       alt={std.name}
                       style={{
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '12px',
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '10px',
                         objectFit: 'cover',
-                        border: '2px solid var(--border)'
+                        border: '1px solid var(--border)'
                       }}
                     />
                     <div>
@@ -738,7 +747,7 @@ export default function MyBatches({ onAttendanceSubmit }) {
                         <h5 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
                           {std.name}
                         </h5>
-                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, fontFamily: 'JetBrains Mono, monospace' }}>
                           #{std.roll}
                         </span>
                       </div>
@@ -748,8 +757,10 @@ export default function MyBatches({ onAttendanceSubmit }) {
                           fontWeight: 700,
                           color: '#15803d',
                           background: '#ecfdf5',
-                          padding: '2px 6px',
-                          borderRadius: '4px'
+                          padding: '2px 8px',
+                          borderRadius: '9999px',
+                          border: '1px solid #bbf7d0',
+                          fontFamily: 'JetBrains Mono, monospace'
                         }}>
                           {std.attendanceRate}% Attd
                         </span>
@@ -758,8 +769,10 @@ export default function MyBatches({ onAttendanceSubmit }) {
                           fontWeight: 700,
                           color: '#1e40af',
                           background: '#eff6ff',
-                          padding: '2px 6px',
-                          borderRadius: '4px'
+                          padding: '2px 8px',
+                          borderRadius: '9999px',
+                          border: '1px solid #bfdbfe',
+                          fontFamily: 'JetBrains Mono, monospace'
                         }}>
                           {std.latestTest?.score || 88}/100 • Rank #{std.latestTest?.rank || 4}
                         </span>

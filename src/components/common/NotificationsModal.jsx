@@ -69,15 +69,16 @@ export default function NotificationsModal({ isOpen, onClose, notices = [], onMa
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '12px 20px 14px 20px',
+          padding: '14px 20px',
           borderBottom: '1px solid var(--border)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
-              width: '36px',
-              height: '36px',
+              width: '38px',
+              height: '38px',
               borderRadius: '10px',
-              background: 'linear-gradient(135deg, var(--brand-800) 0%, var(--accent-500) 100%)',
+              background: 'var(--brand-950)',
+              border: '1px solid var(--brand-700)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -87,9 +88,9 @@ export default function NotificationsModal({ isOpen, onClose, notices = [], onMa
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h3 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--brand-900)' }}>Notice Board</h3>
+                <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--brand-900)', letterSpacing: '-0.01em' }}>Notice Board</h3>
                 {unreadCount > 0 && (
-                  <span className="badge badge-danger" style={{ fontSize: '10px', padding: '2px 8px' }}>
+                  <span className="badge badge-danger" style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '9999px' }}>
                     {unreadCount} New
                   </span>
                 )}
@@ -103,36 +104,38 @@ export default function NotificationsModal({ isOpen, onClose, notices = [], onMa
               <button
                 onClick={onMarkAllRead}
                 style={{
-                  background: 'none',
-                  border: 'none',
+                  background: 'var(--surface-alt)',
+                  border: '1px solid var(--border)',
                   color: 'var(--brand-800)',
-                  fontSize: '12px',
+                  fontSize: '11px',
                   fontWeight: 700,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
-                  padding: '4px 8px',
-                  borderRadius: '6px'
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  transition: 'var(--transition-smooth)'
                 }}
                 title="Mark all as read"
               >
-                <CheckCheck size={15} /> Mark Read
+                <CheckCheck size={14} /> Mark Read
               </button>
             )}
             <button
               onClick={handleClose}
               style={{
                 background: 'var(--surface-alt)',
-                border: 'none',
-                borderRadius: '50%',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
                 width: '32px',
                 height: '32px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                color: 'var(--text-secondary)'
+                color: 'var(--text-secondary)',
+                transition: 'var(--transition-smooth)'
               }}
             >
               <X size={16} />
@@ -140,23 +143,24 @@ export default function NotificationsModal({ isOpen, onClose, notices = [], onMa
           </div>
         </div>
 
-        {/* Filter Pills */}
-        <div style={{ display: 'flex', gap: '8px', padding: '12px 20px', overflowX: 'auto', borderBottom: '1px solid var(--border)' }}>
+        {/* Filter Switcher Tabs */}
+        <div style={{ display: 'flex', gap: '8px', padding: '10px 20px', overflowX: 'auto', borderBottom: '1px solid var(--border)', background: 'var(--surface-alt)' }}>
           {['All', 'Unread', 'Tests', 'Academic', 'Notices'].map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               style={{
                 padding: '6px 14px',
-                borderRadius: 'var(--radius-full)',
-                border: 'none',
-                background: filter === f ? 'var(--brand-800)' : 'var(--surface-alt)',
+                borderRadius: '9999px',
+                border: filter === f ? '1px solid var(--brand-900)' : '1px solid var(--border)',
+                background: filter === f ? 'var(--brand-900)' : 'var(--surface)',
                 color: filter === f ? '#ffffff' : 'var(--text-secondary)',
-                fontSize: '12px',
-                fontWeight: 600,
+                fontSize: '11px',
+                fontWeight: 700,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
-                transition: 'all 0.15s ease'
+                boxShadow: filter === f ? '0 2px 6px rgba(10, 31, 61, 0.18)' : 'none',
+                transition: 'var(--transition-smooth)'
               }}
             >
               {f} {f === 'Unread' && unreadCount > 0 ? `(${unreadCount})` : ''}
@@ -183,16 +187,17 @@ export default function NotificationsModal({ isOpen, onClose, notices = [], onMa
                   onClick={() => onNoticeClick && onNoticeClick(notice.id)}
                   style={{
                     flexShrink: 0,
-                    background: notice.read ? 'var(--surface)' : 'var(--brand-50)',
-                    border: `1px solid ${notice.read ? 'var(--border)' : '#bfdbfe'}`,
-                    borderRadius: 'var(--radius-lg)',
+                    background: notice.read ? 'var(--surface)' : 'var(--accent-50)',
+                    border: `1px solid ${notice.read ? 'var(--border)' : 'var(--accent-200)'}`,
+                    borderLeft: `4px solid ${meta.color}`,
+                    borderRadius: '14px',
                     padding: '14px',
                     display: 'flex',
                     gap: '12px',
                     cursor: 'pointer',
                     position: 'relative',
-                    transition: 'all 0.15s ease',
-                    boxShadow: notice.read ? 'var(--shadow-sm)' : '0 2px 8px rgba(30, 58, 138, 0.08)'
+                    transition: 'var(--transition-smooth)',
+                    boxShadow: notice.read ? 'var(--shadow-card)' : '0 4px 12px rgba(234, 88, 12, 0.08)'
                   }}
                 >
                   {/* Category Icon Badge */}
@@ -214,20 +219,20 @@ export default function NotificationsModal({ isOpen, onClose, notices = [], onMa
                   {/* Content */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '10px', fontWeight: 700, color: meta.color, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      <span style={{ fontSize: '10px', fontWeight: 800, color: meta.color, textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: 'JetBrains Mono, monospace' }}>
                         {meta.label}
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px', fontFamily: 'JetBrains Mono, monospace' }}>
                           <Clock size={11} /> {notice.timestamp}
                         </span>
                         {!notice.read && (
-                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--brand-600)', display: 'inline-block' }} />
+                          <span style={{ width: '8px', height: '8px', borderRadius: '9999px', background: 'var(--accent-500)', display: 'inline-block' }} />
                         )}
                       </div>
                     </div>
 
-                    <h4 style={{ fontSize: '14px', fontWeight: notice.read ? 600 : 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
+                    <h4 style={{ fontSize: '13.5px', fontWeight: notice.read ? 600 : 800, color: 'var(--text-primary)', lineHeight: 1.35 }}>
                       {notice.title}
                     </h4>
 
@@ -241,7 +246,8 @@ export default function NotificationsModal({ isOpen, onClose, notices = [], onMa
                         {notice.courses.map((c, i) => (
                           <span key={i} className="badge" style={{
                             fontSize: '9.5px',
-                            padding: '1px 7px',
+                            padding: '2px 8px',
+                            borderRadius: '9999px',
                             background: c === 'All Courses' || c === 'All' ? 'var(--surface-alt)' : '#eff6ff',
                             color: c === 'All Courses' || c === 'All' ? 'var(--text-secondary)' : '#1d4ed8',
                             border: c === 'All Courses' || c === 'All' ? '1px solid var(--border)' : '1px solid #bfdbfe'

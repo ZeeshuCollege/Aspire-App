@@ -12,27 +12,31 @@ export default function ParentHome({ user, onNavigate, onOpenTestPaper }) {
   };
 
   return (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '90px' }}>
-      {/* Parent Greeting - Compact Upward Placement with Square Avatar */}
+    <div className="view-transition-enter" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '90px' }}>
+      {/* Parent Greeting - Sharp Architectural Alignment */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '0 0 6px 0'
+        padding: '2px 0 6px 0',
+        borderBottom: '1px solid var(--border-subtle)',
+        paddingBottom: '12px'
       }}>
         <div style={{ flex: 1, paddingRight: '14px' }}>
           <span style={{
-            fontSize: 'clamp(15px, 3.8vw, 18px)',
+            fontSize: '12px',
             color: 'var(--text-muted)',
-            fontWeight: 600,
+            fontFamily: 'var(--font-mono)',
+            fontWeight: 700,
             display: 'block',
-            marginBottom: '4px',
-            letterSpacing: '-0.01em'
+            marginBottom: '2px',
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase'
           }}>
-            Hello,
+            ACADEMIC_SYS // PARENT PORTAL
           </span>
           <h1 style={{
-            fontSize: 'clamp(28px, 7vw, 34px)',
+            fontSize: 'clamp(24px, 6.5vw, 30px)',
             fontWeight: 900,
             color: 'var(--brand-900)',
             letterSpacing: '-0.03em',
@@ -41,8 +45,8 @@ export default function ParentHome({ user, onNavigate, onOpenTestPaper }) {
           }}>
             {user.name}
           </h1>
-          <span className="badge badge-info" style={{ marginTop: '6px', display: 'inline-block' }}>
-            Verified Parent
+          <span className="badge badge-info" style={{ marginTop: '4px', display: 'inline-block' }}>
+            VERIFIED GUARDIAN
           </span>
         </div>
         <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -50,66 +54,72 @@ export default function ParentHome({ user, onNavigate, onOpenTestPaper }) {
             src={user.avatar}
             alt={user.name}
             style={{
-              width: 'clamp(76px, 19vw, 90px)',
-              height: 'clamp(76px, 19vw, 90px)',
+              width: 'clamp(68px, 18vw, 80px)',
+              height: 'clamp(68px, 18vw, 80px)',
               borderRadius: '16px',
               objectFit: 'cover',
-              border: '2px solid var(--border)',
-              boxShadow: '0 4px 16px rgba(15, 23, 42, 0.08)'
+              border: '2.5px solid var(--accent-500)',
+              boxShadow: '0 4px 12px rgba(234, 88, 12, 0.15)'
             }}
           />
         </div>
       </div>
 
-      {/* Linked Child Card (From ASPIRE THEME.png Row 3 Screen 17) */}
-      <div className="card" style={{ padding: '18px', background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
+      {/* Linked Child Card - Smooth Curved Block */}
+      <div className="card" style={{ padding: '16px', borderLeft: '4px solid var(--accent-500)', borderRadius: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
           <img
             src={child.avatar || DEFAULT_GREY_AVATAR}
             alt={child.name}
-            style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--brand-800)' }}
+            style={{ width: '48px', height: '48px', borderRadius: '12px', objectFit: 'cover', border: '1.5px solid var(--border)' }}
           />
           <div>
-            <h4 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--brand-900)' }}>{child.name}</h4>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{child.class}</span>
+            <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}>LINKED WARD</span>
+            <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--brand-900)', margin: '1px 0 0 0' }}>{child.name}</h4>
+            <span style={{ fontSize: '11px', color: 'var(--accent-600)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{child.class}</span>
           </div>
         </div>
 
-        {/* 3 Metric Pills: Attendance, Tests, Performance */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+        {/* 3 Metric Boxes: Attendance, Tests, Performance */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
           <div
             onClick={() => onNavigate('child')}
-            style={{ background: '#ecfdf5', padding: '10px', borderRadius: '12px', textAlign: 'center', cursor: 'pointer' }}
+            style={{ background: 'var(--surface-alt)', border: '1px solid #bbf7d0', padding: '10px 6px', borderRadius: '12px', textAlign: 'center', cursor: 'pointer', transition: 'var(--transition-smooth)' }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
-            <span style={{ fontSize: '11px', color: '#166534', fontWeight: 600, display: 'block' }}>Attendance</span>
-            <strong style={{ fontSize: '18px', color: '#15803d' }}>{child.attendance}%</strong>
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', display: 'block' }}>Attendance</span>
+            <strong style={{ fontSize: '17px', color: 'var(--success)', fontFamily: 'var(--font-mono)' }}>{child.attendance}%</strong>
           </div>
 
           <div
             onClick={() => onNavigate('performance')}
-            style={{ background: '#eff6ff', padding: '10px', borderRadius: '12px', textAlign: 'center', cursor: 'pointer' }}
+            style={{ background: 'var(--surface-alt)', border: '1px solid #bfdbfe', padding: '10px 6px', borderRadius: '12px', textAlign: 'center', cursor: 'pointer', transition: 'var(--transition-smooth)' }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
-            <span style={{ fontSize: '11px', color: '#1e40af', fontWeight: 600, display: 'block' }}>Tests</span>
-            <strong style={{ fontSize: '18px', color: '#1e3a8a' }}>{child.tests}%</strong>
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', display: 'block' }}>Tests</span>
+            <strong style={{ fontSize: '17px', color: 'var(--brand-800)', fontFamily: 'var(--font-mono)' }}>{child.tests}%</strong>
           </div>
 
           <div
             onClick={() => onNavigate('performance')}
-            style={{ background: '#fef3c7', padding: '10px', borderRadius: '12px', textAlign: 'center', cursor: 'pointer' }}
+            style={{ background: 'var(--surface-alt)', border: '1px solid #fed7aa', padding: '10px 6px', borderRadius: '12px', textAlign: 'center', cursor: 'pointer', transition: 'var(--transition-smooth)' }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
-            <span style={{ fontSize: '11px', color: '#92400e', fontWeight: 600, display: 'block' }}>Progress</span>
-            <strong style={{ fontSize: '18px', color: '#b45309' }}>{child.performance}%</strong>
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', display: 'block' }}>Progress</span>
+            <strong style={{ fontSize: '17px', color: 'var(--accent-600)', fontFamily: 'var(--font-mono)' }}>{child.performance}%</strong>
           </div>
         </div>
       </div>
 
-
-      {/* Quick Navigation Rows (From Child Profile Screen 18) */}
-      <div className="card" style={{ padding: '6px 16px' }}>
+      {/* Quick Navigation Rows */}
+      <div className="card" style={{ padding: '4px 16px' }}>
         {[
-          { id: 'child', label: 'Lecture Attendance', icon: Calendar, color: '#10b981' },
-          { id: 'performance', label: 'Academic Performance', icon: BarChart2, color: '#0ea5e9' },
-          { id: 'fees', label: 'Fee Details & Receipts', icon: DollarSign, color: '#f59e0b' }
+          { id: 'child', label: 'Lecture Attendance Ledger', icon: Calendar, color: 'var(--success)' },
+          { id: 'performance', label: 'Academic Performance Analytics', icon: BarChart2, color: 'var(--brand-700)' },
+          { id: 'fees', label: 'Fee Account & Receipts', icon: DollarSign, color: 'var(--warning)' }
         ].map((item, index) => {
           const Icon = item.icon;
           return (
@@ -120,16 +130,17 @@ export default function ParentHome({ user, onNavigate, onOpenTestPaper }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '12px 0',
-                borderBottom: index < 2 ? '1px solid var(--border)' : 'none',
-                cursor: 'pointer'
+                padding: '13px 0',
+                borderBottom: index < 2 ? '1px solid var(--border-subtle)' : 'none',
+                cursor: 'pointer',
+                transition: 'background 0.15s ease'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <Icon size={18} color={item.color} />
-                <span style={{ fontSize: '13px', fontWeight: 600 }}>{item.label}</span>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--brand-900)' }}>{item.label}</span>
               </div>
-              <ChevronRight size={16} color="var(--text-muted)" />
+              <ChevronRight size={16} color="var(--brand-700)" />
             </div>
           );
         })}

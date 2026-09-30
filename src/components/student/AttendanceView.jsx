@@ -16,64 +16,80 @@ export default function AttendanceView() {
   const strokeDashoffset = circumference - (89 / 100) * circumference;
 
   return (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '90px' }}>
-      <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--brand-900)' }}>Attendance</h3>
+    <div className="view-transition-enter" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '90px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--brand-900)', margin: 0, letterSpacing: '-0.02em' }}>
+            Attendance Telemetry
+          </h3>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+            METRIC_ID // ATT-TERM-02
+          </span>
+        </div>
+        <span className="badge badge-success" style={{ borderRadius: '9999px' }}>
+          VERIFIED RECORD
+        </span>
+      </div>
 
-      {/* Circular Progress Gauge Card */}
-      <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '28px 20px', textAlign: 'center' }}>
-        <div style={{ position: 'relative', width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="150" height="150" style={{ transform: 'rotate(-90deg)' }}>
+      {/* Sharp Metric Display Gauge Card */}
+      <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 20px', textAlign: 'center' }}>
+        <div style={{ position: 'relative', width: '140px', height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="140" height="140" style={{ transform: 'rotate(-90deg)' }}>
             {/* Background Track */}
             <circle
-              cx="75"
-              cy="75"
+              cx="70"
+              cy="70"
               r={radius}
               stroke="var(--surface-alt)"
-              strokeWidth="12"
+              strokeWidth="10"
               fill="transparent"
             />
             {/* Animated Progress Arc */}
             <circle
-              cx="75"
-              cy="75"
+              cx="70"
+              cy="70"
               r={radius}
               stroke="var(--success)"
-              strokeWidth="12"
+              strokeWidth="10"
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
               fill="transparent"
-              style={{ transition: 'stroke-dashoffset 1s ease-out' }}
+              style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.25, 1, 0.5, 1)' }}
             />
           </svg>
 
           {/* Center Metric */}
           <div style={{ position: 'absolute', textAlign: 'center' }}>
-            <span style={{ fontSize: '32px', fontWeight: 800, color: 'var(--brand-900)', lineHeight: 1 }}>89%</span>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '2px', fontWeight: 600 }}>Overall Attendance</span>
+            <span style={{ fontSize: '32px', fontWeight: 900, color: 'var(--brand-900)', lineHeight: 1, fontFamily: 'var(--font-mono)' }}>
+              89%
+            </span>
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginTop: '2px', fontWeight: 700, fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}>
+              Cumulative
+            </span>
           </div>
         </div>
 
-        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '16px', maxWidth: '280px' }}>
-          You have attended <strong>74 out of 83</strong> offline lectures this term.
+        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '14px', maxWidth: '300px' }}>
+          You have attended <strong>74 of 83</strong> offline lectures this term. Minimum required: 75%.
         </p>
       </div>
 
       {/* Subject-Wise Breakdown List */}
       <div>
-        <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--brand-900)', marginBottom: '12px' }}>
-          Subject Breakdown
+        <h4 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--brand-900)', marginBottom: '10px', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          Course Breakdown // 4 Subjects
         </h4>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {subjects.map(sub => (
-            <div key={sub.name} className="card" style={{ padding: '14px' }}>
+            <div key={sub.name} className="card" style={{ padding: '12px 14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)' }}>{sub.name}</span>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: sub.color }}>{sub.percent}%</span>
+                <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>{sub.name}</span>
+                <span style={{ fontSize: '12.5px', fontWeight: 800, color: sub.color, fontFamily: 'var(--font-mono)' }}>{sub.percent}%</span>
               </div>
-              <div style={{ width: '100%', height: '8px', background: 'var(--surface-alt)', borderRadius: '9999px', overflow: 'hidden' }}>
-                <div style={{ width: `${sub.percent}%`, height: '100%', background: sub.color, borderRadius: '9999px', transition: 'width 0.8s ease' }} />
+              <div style={{ width: '100%', height: '8px', background: 'var(--surface-alt)', borderRadius: '9999px', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+                <div style={{ width: `${sub.percent}%`, height: '100%', background: sub.color, borderRadius: '9999px', transition: 'width 0.8s cubic-bezier(0.25, 1, 0.5, 1)' }} />
               </div>
             </div>
           ))}
@@ -85,10 +101,10 @@ export default function AttendanceView() {
         className="btn-primary"
         style={{ width: '100%', marginTop: '4px' }}
       >
-        View Full Report
+        View Full Attendance Ledger
       </button>
 
-      {/* Full 30-Lecture Attendance Report Modal (0.5s Bottom-to-Top Pop-up) */}
+      {/* Full 30-Lecture Attendance Report Modal */}
       <FullAttendanceReportModal
         isOpen={isReportOpen}
         onClose={() => setIsReportOpen(false)}

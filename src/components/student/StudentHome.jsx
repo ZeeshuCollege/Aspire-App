@@ -1,9 +1,9 @@
 import React from 'react';
-import { Calendar, FileText, BookOpen, CheckCircle2 } from 'lucide-react';
+import { Calendar, FileText, BookOpen, CheckCircle2, ChevronRight, Clock } from 'lucide-react';
 
 export default function StudentHome({ user, onNavigate, onOpenTestPaper }) {
   return (
-    <div style={{
+    <div className="view-transition-enter" style={{
       padding: '16px',
       minHeight: '100%',
       boxSizing: 'border-box',
@@ -12,26 +12,30 @@ export default function StudentHome({ user, onNavigate, onOpenTestPaper }) {
       gap: '16px',
       paddingBottom: '90px'
     }}>
-      {/* Greeting Header - Compact Upward Placement with Square Avatar */}
+      {/* Greeting Header - Sharp Architectural Alignment */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '0 0 6px 0'
+        padding: '2px 0 6px 0',
+        borderBottom: '1px solid var(--border-subtle)',
+        paddingBottom: '12px'
       }}>
         <div style={{ flex: 1, paddingRight: '14px' }}>
           <span style={{
-            fontSize: 'clamp(15px, 3.8vw, 18px)',
+            fontSize: '12px',
             color: 'var(--text-muted)',
-            fontWeight: 600,
+            fontFamily: 'var(--font-mono)',
+            fontWeight: 700,
             display: 'block',
-            marginBottom: '4px',
-            letterSpacing: '-0.01em'
+            marginBottom: '2px',
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase'
           }}>
-            Good Morning,
+            ACADEMIC_SYS // STUDENT PORTAL
           </span>
           <h1 style={{
-            fontSize: 'clamp(28px, 7vw, 34px)',
+            fontSize: 'clamp(24px, 6.5vw, 30px)',
             fontWeight: 900,
             color: 'var(--brand-900)',
             letterSpacing: '-0.03em',
@@ -40,43 +44,60 @@ export default function StudentHome({ user, onNavigate, onOpenTestPaper }) {
           }}>
             {user.name}
           </h1>
+          <span style={{
+            fontSize: '11px',
+            color: 'var(--brand-700)',
+            fontWeight: 700,
+            fontFamily: 'var(--font-mono)'
+          }}>
+            {user.course || '12th Science'} • {user.rollNumber || 'STU-104'}
+          </span>
         </div>
         <div style={{ position: 'relative', flexShrink: 0 }}>
           <img
             src={user.avatar}
             alt={user.name}
             style={{
-              width: 'clamp(76px, 19vw, 90px)',
-              height: 'clamp(76px, 19vw, 90px)',
+              width: 'clamp(68px, 18vw, 80px)',
+              height: 'clamp(68px, 18vw, 80px)',
               borderRadius: '16px',
               objectFit: 'cover',
-              border: '2px solid var(--border)',
-              boxShadow: '0 4px 16px rgba(15, 23, 42, 0.08)'
+              border: '2.5px solid var(--accent-500)',
+              boxShadow: '0 4px 12px rgba(234, 88, 12, 0.15)'
             }}
           />
         </div>
       </div>
 
-      {/* Today's Class Card (From ASPIRE THEME.png Row 1 Screen 3) */}
+      {/* Today's Class Card - Smooth Curved Block with Logo Accent Strip */}
       <div style={{
-        background: 'linear-gradient(135deg, #1e3a8a 0%, #0284c7 100%)',
-        borderRadius: 'var(--radius-xl)',
-        padding: '20px',
+        background: 'linear-gradient(135deg, var(--brand-950) 0%, var(--brand-900) 100%)',
+        border: '1px solid var(--brand-800)',
+        borderLeft: '5px solid var(--accent-500)',
+        borderRadius: '16px',
+        padding: '18px',
         color: '#ffffff',
-        boxShadow: '0 10px 25px rgba(2, 132, 199, 0.25)',
+        boxShadow: '0 8px 24px rgba(10, 31, 61, 0.18)',
         position: 'relative',
         overflow: 'hidden'
       }}>
-        {/* Subtle decorative circle */}
-        <div style={{ position: 'absolute', right: '-20px', top: '-20px', width: '120px', height: '120px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.08)' }} />
-
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.8, fontWeight: 700 }}>
-              Today's Class
-            </span>
-            <h3 style={{ fontSize: '22px', fontWeight: 800, marginTop: '2px' }}>Physics</h3>
-            <p style={{ fontSize: '12px', opacity: 0.9, marginTop: '2px' }}>10:00 AM - 11:00 AM</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <span className="badge" style={{ background: 'rgba(249, 115, 22, 0.2)', color: '#fb923c', border: '1px solid rgba(249, 115, 22, 0.4)', borderRadius: '9999px', fontSize: '10px', fontWeight: 800, padding: '3px 9px' }}>
+                TODAY'S LECTURE
+              </span>
+              <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.75)' }}>
+                [ROOM 105]
+              </span>
+            </div>
+            <h3 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 4px 0', letterSpacing: '-0.01em' }}>
+              Physics // Mechanics & Waves
+            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-mono)' }}>
+              <Clock size={13} color="#fb923c" />
+              <span>10:00 AM - 11:00 AM</span>
+            </div>
           </div>
         </div>
 
@@ -84,66 +105,86 @@ export default function StudentHome({ user, onNavigate, onOpenTestPaper }) {
           onClick={() => onNavigate('classes')}
           style={{
             marginTop: '16px',
-            background: '#ffffff',
-            color: 'var(--brand-800)',
+            background: 'linear-gradient(135deg, var(--accent-500), var(--accent-600))',
+            color: '#ffffff',
             border: 'none',
-            padding: '8px 16px',
-            borderRadius: 'var(--radius-md)',
-            fontSize: '12px',
-            fontWeight: 700,
+            borderRadius: '10px',
+            padding: '10px 18px',
+            fontSize: '11.5px',
+            fontWeight: 800,
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
             cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            boxShadow: '0 3px 10px rgba(234, 88, 12, 0.3)',
+            transition: 'var(--transition-smooth)'
           }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-1.5px)';
+            e.currentTarget.style.boxShadow = '0 6px 16px rgba(234, 88, 12, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 3px 10px rgba(234, 88, 12, 0.3)';
+          }}
+          onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.97)'}
+          onMouseUp={(e) => e.currentTarget.style.transform = 'translateY(-1.5px)'}
         >
-          View Schedule
+          View Full Schedule <ChevronRight size={14} />
         </button>
       </div>
 
-      {/* Quick Action 2x2 Grid covering empty space */}
+      {/* Quick Action 2x2 Grid - Smooth Ergonomic Cards */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '14px',
+          gap: '12px',
           flex: 1,
-          minHeight: '260px'
+          minHeight: '240px'
         }}>
           {[
             {
               id: 'attendance',
+              code: 'MOD_01',
               label: 'Attendance',
-              desc: 'Check records & log',
+              desc: 'Check logs & stats',
               icon: CheckCircle2,
-              bg: '#ecfdf5',
-              color: '#10b981',
-              border: '#bbf7d0'
+              bg: '#fff7ed',
+              color: 'var(--accent-600)',
+              border: '#fed7aa'
             },
             {
               id: 'tests',
+              code: 'MOD_02',
               label: 'Tests',
-              desc: 'Upcoming & results',
+              desc: 'Papers & scores',
               icon: FileText,
-              bg: '#fffbeb',
-              color: '#f59e0b',
-              border: '#fde68a'
+              bg: '#f0fdf4',
+              color: '#16a34a',
+              border: '#bbf7d0'
             },
             {
               id: 'materials',
+              code: 'MOD_03',
               label: 'Materials',
-              desc: 'Notes, PDFs & videos',
+              desc: 'PDFs & lectures',
               icon: BookOpen,
-              bg: '#eff6ff',
-              color: '#2563eb',
-              border: '#bfdbfe'
+              bg: 'var(--brand-50)',
+              color: 'var(--brand-600)',
+              border: 'var(--brand-200)'
             },
             {
               id: 'classes',
+              code: 'MOD_04',
               label: 'Schedule',
-              desc: 'Lectures & routine',
+              desc: 'Weekly routine',
               icon: Calendar,
-              bg: '#f5f3ff',
-              color: '#8b5cf6',
-              border: '#ddd6fe'
+              bg: '#f8fafc',
+              color: 'var(--brand-800)',
+              border: 'var(--border)'
             }
           ].map(action => {
             const Icon = action.icon;
@@ -154,49 +195,79 @@ export default function StudentHome({ user, onNavigate, onOpenTestPaper }) {
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textAlign: 'center',
+                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  textAlign: 'left',
                   background: 'var(--surface)',
-                  border: '1.5px solid var(--border)',
-                  borderRadius: '20px',
-                  padding: '18px 12px',
+                  border: '1px solid var(--border)',
+                  borderRadius: '14px',
+                  padding: '16px 14px',
                   cursor: 'pointer',
-                  boxShadow: '0 4px 16px rgba(15, 23, 42, 0.05)',
-                  transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                  boxShadow: 'var(--shadow-card)',
+                  transition: 'var(--transition-smooth)',
                   width: '100%',
                   boxSizing: 'border-box'
                 }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--accent-400)';
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(10, 31, 61, 0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-card)';
+                }}
+                onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.97)'}
+                onMouseUp={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
               >
-                <div style={{
-                  width: '54px',
-                  height: '54px',
-                  borderRadius: '16px',
-                  background: action.bg,
-                  border: `1px solid ${action.border}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: action.color,
-                  marginBottom: '10px'
-                }}>
-                  <Icon size={26} />
+                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                  <div style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '10px',
+                    background: action.bg,
+                    border: `1px solid ${action.border}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: action.color,
+                    transition: 'var(--transition-smooth)'
+                  }}>
+                    <Icon size={22} />
+                  </div>
+                  <span style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '9.5px',
+                    fontWeight: 700,
+                    color: 'var(--text-muted)',
+                    letterSpacing: '0.04em'
+                  }}>
+                    {action.code}
+                  </span>
                 </div>
-                <span style={{
-                  fontSize: '16px',
-                  fontWeight: 800,
-                  color: 'var(--brand-900)',
-                  marginBottom: '4px'
-                }}>
-                  {action.label}
-                </span>
-                <span style={{
-                  fontSize: '11px',
-                  fontWeight: 500,
-                  color: 'var(--text-muted)'
-                }}>
-                  {action.desc}
-                </span>
+
+                <div style={{ marginTop: '14px' }}>
+                  <span style={{
+                    fontSize: '15px',
+                    fontWeight: 800,
+                    color: 'var(--brand-900)',
+                    display: 'block',
+                    marginBottom: '2px',
+                    letterSpacing: '-0.01em'
+                  }}>
+                    {action.label}
+                  </span>
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    color: 'var(--text-muted)',
+                    lineHeight: 1.3,
+                    display: 'block'
+                  }}>
+                    {action.desc}
+                  </span>
+                </div>
               </button>
             );
           })}

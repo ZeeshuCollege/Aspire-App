@@ -89,16 +89,19 @@ export default function BottomNav({ role, activeTab, setActiveTab }) {
               border: 'none',
               cursor: 'pointer',
               padding: isSixTabs ? '4px 0' : '6px 0',
-              color: isActive ? 'var(--brand-800)' : 'var(--text-muted)',
-              transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+              color: isActive ? 'var(--accent-600)' : 'var(--text-muted)',
+              transition: 'all 0.25s var(--ease-smooth)',
               position: 'relative',
               minWidth: 0,
               touchAction: 'manipulation'
             }}
           >
             <div style={{
-              transform: isActive ? 'scale(1.12) translateY(-1px)' : 'scale(1)',
-              transition: 'transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)',
+              transform: isActive ? 'scale(1.1) translateY(-1px)' : 'scale(1)',
+              background: isActive ? 'var(--accent-50)' : 'transparent',
+              padding: '3px 10px',
+              borderRadius: 'var(--radius-full)',
+              transition: 'all 0.25s var(--ease-smooth)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
@@ -107,8 +110,9 @@ export default function BottomNav({ role, activeTab, setActiveTab }) {
             </div>
             <span style={{
               fontSize: isSixTabs ? '10px' : '11px',
-              fontWeight: isActive ? 700 : 500,
-              marginTop: isSixTabs ? '2px' : '4px',
+              fontWeight: isActive ? 800 : 500,
+              marginTop: isSixTabs ? '1px' : '3px',
+              color: isActive ? 'var(--brand-900)' : 'var(--text-muted)',
               transition: 'color 0.2s ease',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
@@ -121,12 +125,13 @@ export default function BottomNav({ role, activeTab, setActiveTab }) {
             {isActive && (
               <span style={{
                 position: 'absolute',
-                bottom: '-2px',
-                width: '18px',
+                top: '0px',
+                width: isSixTabs ? '24px' : '32px',
                 height: '3px',
-                background: 'var(--brand-800)',
+                background: 'linear-gradient(90deg, var(--brand-700), var(--accent-500))',
                 borderRadius: '9999px',
-                boxShadow: '0 1px 6px rgba(30, 58, 138, 0.4)'
+                boxShadow: '0 2px 8px rgba(234, 88, 12, 0.4)',
+                transition: 'all 0.25s var(--ease-smooth)'
               }} />
             )}
           </button>

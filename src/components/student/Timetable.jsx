@@ -27,7 +27,7 @@ export default function Timetable({ initialSubTab = 'schedule' }) {
     : (mockSchedule || []).filter(l => l.day === selectedDay);
 
   return (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '90px' }}>
+    <div className="view-transition-enter" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '90px' }}>
       {/* Top Segmented View Switcher */}
       <div className="tab-container">
         <button
@@ -51,51 +51,63 @@ export default function Timetable({ initialSubTab = 'schedule' }) {
       ) : (
         <>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--brand-900)' }}>Weekly Timetable</h3>
+            <div>
+              <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--brand-900)', margin: 0, letterSpacing: '-0.02em' }}>
+                Weekly Timetable
+              </h3>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                SCHEDULE_MATRIX // 7-DAY
+              </span>
+            </div>
             <span className="badge badge-accent">
-              {dayLectures.length} {dayLectures.length === 1 ? 'Class' : 'Classes'} Scheduled
+              {dayLectures.length} {dayLectures.length === 1 ? 'Class' : 'Classes'}
             </span>
           </div>
 
-          {/* Horizontal Day Selector Pills */}
+          {/* Horizontal Day Selector Smooth Pills */}
           <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
             {days.map(day => (
               <button
                 key={day}
                 onClick={() => setSelectedDay(day)}
                 style={{
-                  padding: '8px 16px',
-                  borderRadius: 'var(--radius-full)',
-                  border: 'none',
-                  background: selectedDay === day ? 'var(--brand-800)' : 'var(--surface)',
+                  padding: '8px 15px',
+                  borderRadius: '10px',
+                  border: selectedDay === day ? '1px solid var(--brand-900)' : '1px solid var(--border)',
+                  background: selectedDay === day ? 'var(--brand-900)' : 'var(--surface)',
                   color: selectedDay === day ? '#ffffff' : 'var(--text-secondary)',
-                  boxShadow: selectedDay === day ? '0 2px 8px rgba(30,58,138,0.25)' : 'var(--shadow-sm)',
-                  fontSize: '13px',
+                  boxShadow: selectedDay === day ? '0 4px 12px rgba(10, 31, 61, 0.2)' : 'none',
+                  fontSize: '12px',
+                  fontFamily: 'var(--font-mono)',
                   fontWeight: 700,
                   cursor: 'pointer',
-                  flexShrink: 0
+                  flexShrink: 0,
+                  transition: 'var(--transition-smooth)',
+                  transform: selectedDay === day ? 'translateY(-1px)' : 'none'
                 }}
               >
-                {day}
+                {day.toUpperCase()}
               </button>
             ))}
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-secondary)' }}>
-              {selectedDay} Schedule
+            <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+              {selectedDay.toUpperCase()} // SESSIONS
             </span>
-            <span className="badge badge-accent">
-              {dayLectures.length} {dayLectures.length === 1 ? 'Class' : 'Classes'}
+            <span className="badge badge-info" style={{ borderRadius: '9999px' }}>
+              Offline Classes
             </span>
           </div>
 
           {/* Schedule Timeline Cards */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {dayLectures.length === 0 ? (
-              <div className="card" style={{ padding: '30px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                <CalendarIcon size={32} style={{ margin: '0 auto 8px auto', opacity: 0.5 }} />
-                <p style={{ fontSize: '13px', margin: 0, fontWeight: 600 }}>No lectures scheduled for {selectedDay}</p>
+              <div className="card" style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--text-muted)', borderRadius: '14px' }}>
+                <CalendarIcon size={32} style={{ margin: '0 auto 8px auto', opacity: 0.4 }} />
+                <p style={{ fontSize: '13px', margin: 0, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                  NO LECTURES SCHEDULED FOR {selectedDay.toUpperCase()}
+                </p>
               </div>
             ) : (
               dayLectures.map((item, idx) => (
@@ -104,29 +116,37 @@ export default function Timetable({ initialSubTab = 'schedule' }) {
                   className="card"
                   style={{
                     padding: '16px',
-                    borderLeft: item.status === 'Ongoing' ? '4px solid var(--accent-500)' : '4px solid var(--brand-800)',
+                    borderRadius: '14px',
+                    borderLeft: item.status === 'Ongoing' ? '4px solid var(--accent-500)' : '4px solid var(--brand-700)',
                     position: 'relative'
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                      <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>{item.subject}</h4>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                        <Clock size={13} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                        <span className="badge badge-accent" style={{ fontSize: '9.5px', padding: '2px 6px' }}>
+                          LECTURE #{idx + 1}
+                        </span>
+                        {item.course && (
+                          <span className="badge badge-warning" style={{ fontSize: '9.5px', padding: '2px 6px' }}>
+                            {item.course}
+                          </span>
+                        )}
+                      </div>
+                      <h4 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--brand-900)', margin: '4px 0 0 0' }}>
+                        {item.subject}
+                      </h4>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px', fontFamily: 'var(--font-mono)' }}>
+                        <Clock size={13} color="var(--brand-700)" />
                         <span>{item.time}</span>
                       </div>
                     </div>
-                    {item.course && (
-                      <span className="badge badge-primary" style={{ fontSize: '10.5px' }}>
-                        {item.course}
-                      </span>
-                    )}
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--border)', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <UserCheck size={13} color="var(--success)" />
-                      {item.faculty || 'Faculty'}
+                  <div style={{ display: 'flex', alignItems: 'center', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+                      <UserCheck size={14} color="var(--success)" />
+                      {item.faculty || 'Senior Faculty'}
                     </span>
                   </div>
                 </div>

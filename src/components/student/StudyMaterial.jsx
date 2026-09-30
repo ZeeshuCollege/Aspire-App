@@ -15,79 +15,109 @@ export default function StudyMaterial({ onOpenViewer }) {
   });
 
   return (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '90px' }}>
-      <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--brand-900)' }}>Study Material</h3>
+    <div className="view-transition-enter" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '90px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--brand-900)', margin: 0, letterSpacing: '-0.02em' }}>
+            Study Repository
+          </h3>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+            DIGITAL_ASSETS // SECURE VIEWER
+          </span>
+        </div>
+        <span className="badge badge-accent">
+          {filtered.length} Files
+        </span>
+      </div>
 
-      {/* Search Input */}
+      {/* Search Input - Smooth Pill Box */}
       <div style={{ position: 'relative' }}>
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search material..."
+          placeholder="Search materials, subjects, chapters..."
           style={{
             width: '100%',
             padding: '12px 14px 12px 38px',
             border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-lg)',
+            borderRadius: '12px',
             fontSize: '13px',
             outline: 'none',
-            background: 'var(--surface)'
+            background: 'var(--surface)',
+            boxShadow: 'var(--shadow-sm)',
+            transition: 'var(--transition-smooth)'
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = 'var(--accent-500)';
+            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(249, 115, 22, 0.12)';
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = 'var(--border)';
+            e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
           }}
         />
-        <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+        <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)' }} />
       </div>
 
-      {/* Filter Chips */}
+      {/* Filter Smooth Pills */}
       <div style={{ display: 'flex', gap: '8px' }}>
         {filters.map(filter => (
           <button
             key={filter}
             onClick={() => setSelectedFilter(filter)}
             style={{
-              padding: '6px 14px',
-              borderRadius: 'var(--radius-full)',
-              border: 'none',
-              background: selectedFilter === filter ? 'var(--brand-800)' : 'var(--surface-alt)',
+              padding: '6px 16px',
+              borderRadius: '9999px',
+              border: selectedFilter === filter ? '1px solid var(--brand-900)' : '1px solid var(--border)',
+              background: selectedFilter === filter ? 'var(--brand-900)' : 'var(--surface)',
               color: selectedFilter === filter ? '#ffffff' : 'var(--text-secondary)',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer'
+              fontSize: '11.5px',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: selectedFilter === filter ? '0 2px 8px rgba(10, 31, 61, 0.18)' : 'none',
+              transition: 'var(--transition-smooth)',
+              transform: selectedFilter === filter ? 'translateY(-1px)' : 'none'
             }}
           >
-            {filter}
+            {filter.toUpperCase()}
           </button>
         ))}
       </div>
 
       {/* Material List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {filtered.map(mat => (
           <div
             key={mat.id}
             onClick={() => onOpenViewer({ title: mat.title, subtitle: `${mat.subject} • ${mat.chapter} (${mat.size})` })}
             className="card card-hover"
-            style={{ padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+            style={{ padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', borderRadius: '12px' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{
-                width: '40px',
-                height: '40px',
+                width: '42px',
+                height: '42px',
                 borderRadius: '10px',
-                background: mat.type === 'PDF' ? '#fee2e2' : '#e0e7ff',
-                color: mat.type === 'PDF' ? '#ef4444' : '#4f46e5',
+                background: mat.type === 'PDF' ? '#fff7ed' : 'var(--brand-50)',
+                color: mat.type === 'PDF' ? 'var(--accent-600)' : 'var(--brand-600)',
+                border: mat.type === 'PDF' ? '1px solid #fed7aa' : '1px solid var(--brand-200)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                transition: 'var(--transition-smooth)'
               }}>
                 {mat.type === 'PDF' ? <FileText size={20} /> : <Video size={20} />}
               </div>
               <div>
-                <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{mat.title}</h4>
-                <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{mat.subject} • {mat.chapter} • {mat.size}</p>
+                <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: '0 0 2px 0' }}>{mat.title}</h4>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0, fontFamily: 'var(--font-mono)' }}>
+                  {mat.subject} • {mat.chapter} • {mat.size}
+                </p>
               </div>
             </div>
-            <ChevronRight size={16} color="var(--text-muted)" />
+            <ChevronRight size={16} color="var(--brand-700)" />
           </div>
         ))}
       </div>
