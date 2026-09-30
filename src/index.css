@@ -4,6 +4,7 @@
    ========================================================================== */
 
 :root {
+  color-scheme: light;
   /* Brand Colors */
   --brand-900: #0f172a; /* Slate 900 - Admin Sidebar, Main Headings */
   --brand-800: #1e3a8a; /* Deep Royal Navy - Primary CTAs, Header Cards */
@@ -107,6 +108,28 @@ h1, h2, h3, h4, h5, h6 {
 
 button, input, select, textarea {
   font-family: inherit;
+  color-scheme: light !important;
+}
+
+/* Force high-contrast dark text and clean light background on all select dropdowns and native option dialog items */
+select, option, optgroup {
+  color-scheme: light !important;
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+select {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+option {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  -webkit-text-fill-color: #0f172a !important;
+  padding: 8px 12px;
 }
 
 /* Scrollbar Customization */

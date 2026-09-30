@@ -511,7 +511,7 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
                     value={formData.bloodGroup || ''}
                     onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
                     className="input-field"
-                    style={{ width: '100%', padding: '9px 12px', fontSize: '13px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)' }}
+                    style={{ width: '100%', padding: '9px 12px', fontSize: '13px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--brand-900)', colorScheme: 'light' }}
                   >
                     <option value="">Select your blood group</option>
                     {BLOOD_GROUPS.map(bg => (

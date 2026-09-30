@@ -660,7 +660,7 @@ export default function AdminTestsModal({ isOpen, onClose }) {
                   <select
                     value={newCourse}
                     onChange={e => setNewCourse(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1.5px solid var(--brand-500)', marginTop: '4px', fontSize: '13px', background: '#f0f9ff', fontWeight: 600, color: 'var(--brand-900)' }}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1.5px solid var(--brand-500)', marginTop: '4px', fontSize: '13px', background: '#f0f9ff', fontWeight: 600, color: 'var(--brand-900)', colorScheme: 'light' }}
                   >
                     {COURSE_OPTIONS.map(c => (
                       <option key={c} value={c}>{c}</option>
@@ -673,7 +673,7 @@ export default function AdminTestsModal({ isOpen, onClose }) {
                   <select
                     value={newSubject}
                     onChange={e => setNewSubject(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', background: '#ffffff' }}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', background: '#ffffff', color: 'var(--brand-900)', colorScheme: 'light' }}
                   >
                     {SUBJECT_OPTIONS.map(s => (
                       <option key={s} value={s}>{s}</option>
@@ -700,7 +700,7 @@ export default function AdminTestsModal({ isOpen, onClose }) {
                   <select
                     value={newDuration}
                     onChange={e => setNewDuration(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', background: '#ffffff' }}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', background: '#ffffff', color: 'var(--brand-900)', colorScheme: 'light' }}
                   >
                     {DURATION_OPTIONS.map(d => (
                       <option key={d} value={d}>{d}</option>

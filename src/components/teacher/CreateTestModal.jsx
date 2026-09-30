@@ -91,7 +91,9 @@ export default function CreateTestModal({ isOpen, onClose, onCreated }) {
                   border: '1px solid var(--border)',
                   borderRadius: 'var(--radius-md)',
                   fontSize: '13px',
-                  background: 'var(--surface)'
+                  background: 'var(--surface)',
+                  color: 'var(--brand-900)',
+                  colorScheme: 'light'
                 }}
               >
                 <option value="Physics">Physics</option>

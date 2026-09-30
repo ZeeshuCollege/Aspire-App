@@ -391,7 +391,10 @@ export default function AdminMarksModal({ isOpen, onClose }) {
                 fontSize: '12.5px',
                 fontWeight: 600,
                 border: '1.5px solid var(--border)',
-                textOverflow: 'ellipsis'
+                textOverflow: 'ellipsis',
+                background: 'var(--surface)',
+                color: 'var(--brand-900)',
+                colorScheme: 'light'
               }}
             >
               {tests.map(t => (
@@ -505,6 +508,8 @@ export default function AdminMarksModal({ isOpen, onClose }) {
               fontSize: '11.5px',
               fontWeight: 600,
               background: 'var(--surface)',
+              color: 'var(--brand-900)',
+              colorScheme: 'light',
               width: '110px',
               flexShrink: 0
             }}

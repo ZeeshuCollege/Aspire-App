@@ -1428,7 +1428,7 @@ export default function AdminMobileDashboard({
                 <select
                   value={newStudentCourse}
                   onChange={e => setNewStudentCourse(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px' }}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', background: 'var(--surface)', color: 'var(--brand-900)', colorScheme: 'light' }}
                 >
                   {COURSE_OPTIONS.map(course => (
                     <option key={course} value={course}>{course}</option>
@@ -1608,7 +1608,7 @@ export default function AdminMobileDashboard({
                 <select
                   value={newParentChildCourse}
                   onChange={e => setNewParentChildCourse(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', background: 'var(--surface)' }}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', background: 'var(--surface)', color: 'var(--brand-900)', colorScheme: 'light' }}
                 >
                   {COURSE_OPTIONS.map(course => (
                     <option key={course} value={course}>{course}</option>
@@ -2353,7 +2353,7 @@ export default function AdminMobileDashboard({
                   <select
                     value={newUserCourse}
                     onChange={e => setNewUserCourse(e.target.value)}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px' }}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', background: 'var(--surface)', color: 'var(--brand-900)', colorScheme: 'light' }}
                   >
                     {COURSE_OPTIONS.map(course => (
                       <option key={course} value={course}>{course}</option>

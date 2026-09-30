@@ -31,6 +31,9 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Enforce strict Light Mode so Android system dark mode NEVER renders white-on-white text in select dropdowns/dialogs
+        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
+
         registerPlugin(AppPermissionsPlugin.class);
         registerPlugin(SystemNavigationPlugin.class);
         super.onCreate(savedInstanceState);
@@ -48,6 +51,11 @@ public class MainActivity extends BridgeActivity {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 window.setStatusBarContrastEnforced(false);
                 window.setNavigationBarContrastEnforced(false);
+                try {
+                    if (getBridge() != null && getBridge().getWebView() != null) {
+                        getBridge().getWebView().getSettings().setForceDark(android.webkit.WebSettings.FORCE_DARK_OFF);
+                    }
+                } catch (Exception ignored) {}
             }
 
             // Dark icons for status bar and navigation bar on light/white surfaces

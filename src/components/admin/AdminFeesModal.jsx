@@ -949,7 +949,9 @@ export default function AdminFeesModal({ isOpen, onClose }) {
                     borderRadius: '8px',
                     border: '1px solid var(--border)',
                     fontSize: '13px',
-                    background: 'var(--surface)'
+                    background: 'var(--surface)',
+                    color: '#0f172a',
+                    colorScheme: 'light'
                   }}
                 >
                   <option value="9th Standard">9th Standard</option>

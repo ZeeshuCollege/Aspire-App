@@ -1584,7 +1584,8 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                     fontSize: '13px',
                     fontWeight: 700,
                     background: 'var(--surface)',
-                    color: 'var(--brand-900)'
+                    color: 'var(--brand-900)',
+                    colorScheme: 'light'
                   }}
                 >
                   {COURSE_OPTIONS.map(c => (
@@ -1698,6 +1699,7 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                     fontWeight: 800,
                     background: 'var(--surface)',
                     color: '#0284c7',
+                    colorScheme: 'light',
                     cursor: 'pointer'
                   }}
                 >
@@ -1761,7 +1763,8 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                           border: '1px solid var(--border)',
                           fontSize: '13px',
                           background: 'var(--surface)',
-                          color: 'var(--text-primary)'
+                          color: 'var(--text-primary)',
+                          colorScheme: 'light'
                         }}
                       >
                         {availableSubjectsForAdd.map(sub => (
@@ -1785,7 +1788,8 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                           border: '1px solid var(--border)',
                           fontSize: '13px',
                           background: 'var(--surface)',
-                          color: 'var(--text-primary)'
+                          color: 'var(--text-primary)',
+                          colorScheme: 'light'
                         }}
                       >
                         {facultyOptionsList.map(fac => (
@@ -1814,7 +1818,7 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                             <select
                               value={lec.fromHour}
                               onChange={e => handleLectureFieldChange(idx, 'fromHour', e.target.value)}
-                              style={{ padding: '4px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, background: 'var(--surface)' }}
+                              style={{ padding: '4px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, background: 'var(--surface)', color: '#0f172a', colorScheme: 'light' }}
                             >
                               {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
                             </select>
@@ -1822,7 +1826,7 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                             <select
                               value={lec.fromMinute}
                               onChange={e => handleLectureFieldChange(idx, 'fromMinute', e.target.value)}
-                              style={{ padding: '4px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, background: 'var(--surface)' }}
+                              style={{ padding: '4px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, background: 'var(--surface)', color: '#0f172a', colorScheme: 'light' }}
                             >
                               {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
                             </select>
@@ -1836,7 +1840,8 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                                 fontSize: '11px',
                                 fontWeight: 800,
                                 background: lec.fromPeriod === 'AM' ? '#e0f2fe' : '#fef3c7',
-                                color: lec.fromPeriod === 'AM' ? '#0369a1' : '#b45309'
+                                color: lec.fromPeriod === 'AM' ? '#0369a1' : '#b45309',
+                                colorScheme: 'light'
                               }}
                             >
                               <option value="AM">AM</option>
@@ -1859,7 +1864,7 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                             <select
                               value={lec.tillHour}
                               onChange={e => handleLectureFieldChange(idx, 'tillHour', e.target.value)}
-                              style={{ padding: '4px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, background: 'var(--surface)' }}
+                              style={{ padding: '4px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, background: 'var(--surface)', color: '#0f172a', colorScheme: 'light' }}
                             >
                               {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
                             </select>
@@ -1867,7 +1872,7 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                             <select
                               value={lec.tillMinute}
                               onChange={e => handleLectureFieldChange(idx, 'tillMinute', e.target.value)}
-                              style={{ padding: '4px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, background: 'var(--surface)' }}
+                              style={{ padding: '4px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, background: 'var(--surface)', color: '#0f172a', colorScheme: 'light' }}
                             >
                               {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
                             </select>
@@ -1881,7 +1886,8 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                                 fontSize: '11px',
                                 fontWeight: 800,
                                 background: lec.tillPeriod === 'AM' ? '#e0f2fe' : '#fef3c7',
-                                color: lec.tillPeriod === 'AM' ? '#0369a1' : '#b45309'
+                                color: lec.tillPeriod === 'AM' ? '#0369a1' : '#b45309',
+                                colorScheme: 'light'
                               }}
                             >
                               <option value="AM">AM</option>
