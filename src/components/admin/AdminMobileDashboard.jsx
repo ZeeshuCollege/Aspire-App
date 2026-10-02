@@ -9,7 +9,7 @@ import {
 import {
   BookOpen, CheckSquare, Plus, Search,
   Download, ChevronRight, Calendar, FileCheck, Trash2, Award,
-  Eye, EyeOff, IndianRupee
+  Eye, EyeOff, IndianRupee, TrendingUp
 } from 'lucide-react';
 import ScreenSlider from '../common/ScreenSlider';
 import AdminStudyMaterialsModal, { SUBJECT_OPTIONS, COURSE_OPTIONS } from './AdminStudyMaterialsModal';
@@ -18,6 +18,7 @@ import AdminTimetableModal from './AdminTimetableModal';
 import AdminAttendanceModal from './AdminAttendanceModal';
 import AdminMarksModal from './AdminMarksModal';
 import AdminFeesModal from './AdminFeesModal';
+import AdminStudentPerformanceModal from './AdminStudentPerformanceModal';
 
 export default function AdminMobileDashboard({
   activeTab,
@@ -45,6 +46,7 @@ export default function AdminMobileDashboard({
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showMarksModal, setShowMarksModal] = useState(false);
   const [showFeesModal, setShowFeesModal] = useState(false);
+  const [showPerformanceModal, setShowPerformanceModal] = useState(false);
   const [notices, setNotices] = useState(propNotices || initialNotices);
 
   useEffect(() => {
@@ -1026,6 +1028,65 @@ export default function AdminMobileDashboard({
                   <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                     Track, Edit & Alerts
                   </span>
+                </div>
+              </div>
+
+              {/* Student Performance Button (Quick Action) */}
+              <div
+                className="card"
+                onClick={() => setShowPerformanceModal(true)}
+                style={{
+                  gridColumn: 'span 2',
+                  padding: '14px 16px',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)',
+                  border: '1.5px solid #86efac',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                  boxShadow: 'var(--shadow-card)',
+                  transition: 'transform 0.15s ease, border-color 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#22c55e';
+                  e.currentTarget.style.transform = 'translateY(-1.5px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#86efac';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#dcfce7', color: '#15803d', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid #bbf7d0' }}>
+                    <TrendingUp size={22} />
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>
+                        Student Performance
+                      </h4>
+                      <span style={{
+                        fontSize: '9.5px',
+                        padding: '1px 6px',
+                        borderRadius: '999px',
+                        fontWeight: 800,
+                        background: '#dcfce7',
+                        color: '#166534',
+                        fontFamily: 'var(--font-mono)'
+                      }}>
+                        ANALYTICS
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>
+                      Search students, view progress cards & live line graphs
+                    </span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#15803d', fontWeight: 700, fontSize: '12px', flexShrink: 0 }}>
+                  <span>View</span>
+                  <ChevronRight size={18} />
                 </div>
               </div>
             </div>
@@ -2247,6 +2308,16 @@ export default function AdminMobileDashboard({
       <AdminFeesModal
         isOpen={showFeesModal}
         onClose={() => setShowFeesModal(false)}
+      />
+
+      {/* ── Student Performance Analytics & Line Graph Modal ── */}
+      <AdminStudentPerformanceModal
+        isOpen={showPerformanceModal}
+        onClose={() => setShowPerformanceModal(false)}
+        onOpenMarksModal={() => {
+          setShowPerformanceModal(false);
+          setShowMarksModal(true);
+        }}
       />
       {/* ── Add Universal User Modal (Student, Teacher, Parent, Admin) ── */}
       {showAddUserModal && (

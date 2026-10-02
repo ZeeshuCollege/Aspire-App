@@ -253,6 +253,17 @@ export default function AdminMarksModal({ isOpen, onClose }) {
         saveStoredStudents(updated);
       }
 
+      // Dispatch custom event for real-time live performance graph updates
+      window.dispatchEvent(new CustomEvent('aspire:marks-updated', {
+        detail: {
+          testId: selectedTestId,
+          testTitle: activeTest.title,
+          marks: studentMarks,
+          maxMarks: Number(maxMarks),
+          date: testDate
+        }
+      }));
+
       setSuccessToast(`✓ Marks successfully uploaded & published for "${activeTest.title}"!`);
       setTimeout(() => setSuccessToast(''), 3500);
     } catch {
