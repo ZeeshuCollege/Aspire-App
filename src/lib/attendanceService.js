@@ -141,9 +141,10 @@ export const saveBatchAttendance = async ({
   subject,
   teacherName = 'Faculty',
   students, // Array of { id, name, roll, status }
-  time
+  time,
+  dateStr: customDateStr
 }) => {
-  const dateStr = getTodayDateKey();
+  const dateStr = customDateStr || getTodayDateKey();
   const formattedTime = time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   const recordsToSave = students.map(s => ({

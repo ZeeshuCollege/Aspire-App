@@ -617,13 +617,9 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {ongoingLectures.map(lec => {
-                const attKey = `${lec.id}_${todayKey}`;
-                const marked = markedAttendanceMap[attKey] || markedAttendanceMap[lec.id];
-
-                return (
-                  <div
-                    key={lec.id}
+              {ongoingLectures.map(lec => (
+                <div
+                  key={lec.id}
                     style={{
                       background: 'var(--surface)',
                       borderRadius: '12px',
@@ -670,13 +666,10 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                       </span>
                     </div>
                   </div>
-                );
-              })}
+                ))}
             </div>
           </div>
         )}
-
-
 
         {/* ── SCHEDULED TIMETABLE LECTURES ── */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px', flexShrink: 0 }}>
@@ -708,13 +701,9 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
             </p>
           </div>
         ) : (
-          filteredLectures.map(lec => {
-            const attKey = `${lec.id}_${todayKey}`;
-            const marked = markedAttendanceMap[attKey] || markedAttendanceMap[lec.id];
-
-            return (
-              <div
-                key={lec.id}
+          filteredLectures.map(lec => (
+            <div
+              key={lec.id}
                 className="card"
                 style={{
                   padding: '14px',
@@ -813,8 +802,7 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                   </div>
                 </div>
               </div>
-            );
-          })
+            ))
         )}
       </div>
 

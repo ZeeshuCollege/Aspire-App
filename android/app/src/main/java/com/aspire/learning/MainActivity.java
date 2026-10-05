@@ -48,15 +48,14 @@ public class MainActivity extends BridgeActivity {
             window.setStatusBarColor(Color.TRANSPARENT);
             window.setNavigationBarColor(Color.TRANSPARENT);
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                window.setStatusBarContrastEnforced(false);
-                window.setNavigationBarContrastEnforced(false);
-                try {
-                    if (getBridge() != null && getBridge().getWebView() != null) {
+            try {
+                if (getBridge() != null && getBridge().getWebView() != null) {
+                    getBridge().getWebView().getSettings().setTextZoom(100);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         getBridge().getWebView().getSettings().setForceDark(android.webkit.WebSettings.FORCE_DARK_OFF);
                     }
-                } catch (Exception ignored) {}
-            }
+                }
+            } catch (Exception ignored) {}
 
             // Dark icons for status bar and navigation bar on light/white surfaces
             WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());

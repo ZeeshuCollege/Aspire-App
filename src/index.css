@@ -151,13 +151,18 @@ select {
   background-color: #ffffff !important;
   -webkit-text-fill-color: var(--text-primary) !important;
   border-radius: var(--radius-sm);
+  font-size: 13px !important;
+  line-height: normal !important;
 }
 
 option {
   color: var(--text-primary) !important;
   background-color: #ffffff !important;
   -webkit-text-fill-color: var(--text-primary) !important;
-  padding: 8px 12px;
+  font-size: 13.5px !important;
+  line-height: 1.35 !important;
+  padding: 6px 10px !important;
+  height: auto !important;
 }
 
 /* Scrollbar Customization - Smooth Ergonomic Pill Thumb */

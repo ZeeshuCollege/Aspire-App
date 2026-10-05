@@ -1,55 +1,49 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  ArrowLeft, Search, Users, CheckCircle2, Save
+  ArrowLeft, Search, Users, CheckCircle2, Save, FileText
 } from 'lucide-react';
-import { mockTests } from '../../lib/mockData';
 import { getStoredStudents, saveStoredStudents } from '../../lib/userAuthStore';
 import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
 
-// Empty fallback students if no students are enrolled in store yet
-const DEFAULT_SAMPLE_STUDENTS = [];
-
 export default function AdminMarksModal({ isOpen, onClose }) {
-  const [tests] = useState(() => {
-    try {
-      const saved = localStorage.getItem('aspire_tests_list');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (e) {}
-    return [];
-  });
-  const [selectedTestId, setSelectedTestId] = useState(() => {
-    try {
-      const saved = localStorage.getItem('aspire_tests_list');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0].id;
-      }
-    } catch (e) {}
-    return 'custom';
-  });
+  const [tests, setTests] = useState([]);
+  const [selectedTestId, setSelectedTestId] = useState('');
   const [selectedCourseFilter, setSelectedCourseFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Editable test parameters
+  // Load tests on mount / open
+  useEffect(() => {
+    if (!isOpen) return;
+    try {
+      const saved = localStorage.getItem('aspire_tests_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setTests(parsed);
+          if (parsed.length > 0) {
+            setSelectedTestId(prev => (prev && parsed.some(t => t.id === prev)) ? prev : parsed[0].id);
+          } else {
+            setSelectedTestId('');
+          }
+          return;
+        }
+      }
+    } catch (e) {}
+    setTests([]);
+    setSelectedTestId('');
+  }, [isOpen]);
+
+  // Selected test or null when no paper is selected
   const activeTest = useMemo(() => {
-    return tests.find(t => t.id === selectedTestId) || tests[0] || {
-      id: 'custom',
-      title: 'Classroom Unit Assessment',
-      subject: 'Physics (JEE)',
-      course: 'JEE',
-      maxMarks: 100,
-      passingMarks: 35
-    };
+    if (!selectedTestId) return null;
+    return tests.find(t => t.id === selectedTestId) || null;
   }, [tests, selectedTestId]);
 
-  const [maxMarks, setMaxMarks] = useState(activeTest.maxMarks || 100);
-  const [passingMarks, setPassingMarks] = useState(activeTest.passingMarks || 35);
-  const [testDate, setTestDate] = useState(activeTest.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }));
+  const [maxMarks, setMaxMarks] = useState(100);
+  const [passingMarks, setPassingMarks] = useState(35);
+  const [testDate, setTestDate] = useState(() => new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }));
 
-  // Student list: enrolled students from userAuthStore + default samples if none
+  // Student list: enrolled students from userAuthStore
   const [studentsList, setStudentsList] = useState([]);
   // Marks map: { [studentId]: { score: number | '', isAbsent: boolean, remarks: string } }
   const [studentMarks, setStudentMarks] = useState({});
@@ -57,8 +51,21 @@ export default function AdminMarksModal({ isOpen, onClose }) {
   const [successToast, setSuccessToast] = useState('');
   const [isClosing, setIsClosing] = useState(false);
 
-  // Compute live test metrics (Always at top level to maintain Hook call order)
+  // Compute live test metrics
   const stats = useMemo(() => {
+    if (!activeTest) {
+      return {
+        totalStudents: 0,
+        evaluatedCount: 0,
+        totalPresent: 0,
+        totalAbsent: 0,
+        avgScore: '—',
+        highestScore: '—',
+        lowestScore: '—',
+        passRate: 0
+      };
+    }
+
     let totalPresent = 0;
     let totalAbsent = 0;
     let totalScoreSum = 0;
@@ -98,7 +105,7 @@ export default function AdminMarksModal({ isOpen, onClose }) {
       lowestScore: lowest <= 100 ? lowest : '—',
       passRate
     };
-  }, [studentsList, studentMarks, passingMarks]);
+  }, [activeTest, studentsList, studentMarks, passingMarks]);
 
   // Load students & existing marks on mount or test change
   useEffect(() => {
@@ -107,6 +114,11 @@ export default function AdminMarksModal({ isOpen, onClose }) {
     const stored = getStoredStudents();
     const baseList = Array.isArray(stored) ? stored : [];
     setStudentsList(baseList);
+
+    if (!selectedTestId) {
+      setStudentMarks({});
+      return;
+    }
 
     // Load saved marks for this test from localStorage
     try {
@@ -131,7 +143,7 @@ export default function AdminMarksModal({ isOpen, onClose }) {
       });
       setStudentMarks(fallbackMap);
     }
-  }, [isOpen, selectedTestId, maxMarks]);
+  }, [isOpen, selectedTestId]);
 
   // Sync test metadata when test changes
   useEffect(() => {
@@ -221,16 +233,15 @@ export default function AdminMarksModal({ isOpen, onClose }) {
     });
   };
 
-  // Helper for Grade Badge
-  const getGradeInfo = (scoreStr, isAbsent) => {
+  // Dynamic Grade Color Helper
+  const getGradeInfo = (score, isAbsent) => {
     if (isAbsent) return { label: 'Absent', color: '#dc2626', bg: '#fef2f2', border: '#fecaca' };
-    if (scoreStr === '' || scoreStr === undefined) return { label: 'Pending', color: '#64748b', bg: '#f1f5f9', border: '#e2e8f0' };
-    const num = Number(scoreStr);
+    if (score === '' || score === null || score === undefined) return { label: 'Ungraded', color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' };
+    const num = Number(score);
     const max = Number(maxMarks) || 100;
     const pct = Math.round((num / max) * 100);
-
-    if (num < Number(passingMarks)) return { label: 'Fail', color: '#b91c1c', bg: '#fee2e2', border: '#fca5a5' };
-    if (pct >= 90) return { label: 'A+ (90%)', color: '#047857', bg: '#d1fae5', border: '#6ee7b7' };
+    if (pct < Number(passingMarks)) return { label: 'Fail', color: '#dc2626', bg: '#fef2f2', border: '#fecaca' };
+    if (pct >= 90) return { label: 'A+ (90%)', color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' };
     if (pct >= 75) return { label: 'A (75%)', color: '#059669', bg: '#ecfdf5', border: '#a7f3d0' };
     if (pct >= 60) return { label: 'B (60%)', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' };
     if (pct >= 45) return { label: 'C (45%)', color: '#d97706', bg: '#fffbeb', border: '#fde68a' };
@@ -239,6 +250,12 @@ export default function AdminMarksModal({ isOpen, onClose }) {
 
   // Save and publish marks
   const handleSaveMarks = () => {
+    if (!activeTest) {
+      setSuccessToast('⚠️ No Paper Selected. Please select a paper first.');
+      setTimeout(() => setSuccessToast(''), 3000);
+      return;
+    }
+
     try {
       // 1. Persist marks record for this test
       localStorage.setItem(`aspire_marks_${selectedTestId}`, JSON.stringify(studentMarks));
@@ -305,7 +322,7 @@ export default function AdminMarksModal({ isOpen, onClose }) {
         overflow: 'hidden'
       }}
     >
-      {/* Top Navigation Bar — Non-overflowing compact header */}
+      {/* Top Navigation Bar */}
       <div style={{
         background: 'var(--surface)',
         borderBottom: '1px solid var(--border)',
@@ -352,10 +369,11 @@ export default function AdminMarksModal({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* Header Publish Button — Compact so it never wraps text */}
+        {/* Header Publish Button */}
         <button
           type="button"
           onClick={handleSaveMarks}
+          disabled={!activeTest}
           className="btn-primary"
           style={{
             padding: '7px 12px',
@@ -366,7 +384,9 @@ export default function AdminMarksModal({ isOpen, onClose }) {
             gap: '5px',
             borderRadius: '8px',
             whiteSpace: 'nowrap',
-            flexShrink: 0
+            flexShrink: 0,
+            opacity: activeTest ? 1 : 0.5,
+            cursor: activeTest ? 'pointer' : 'not-allowed'
           }}
         >
           <Save size={14} />
@@ -404,13 +424,13 @@ export default function AdminMarksModal({ isOpen, onClose }) {
               Select Test to Grade
             </span>
             <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
-              {tests.length} tests available
+              {tests.length} {tests.length === 1 ? 'test' : 'tests'} available
             </span>
           </div>
 
           <div style={{ width: '100%' }}>
             <select
-              value={selectedTestId}
+              value={selectedTestId || ''}
               onChange={e => setSelectedTestId(e.target.value)}
               className="input-field"
               style={{
@@ -422,15 +442,22 @@ export default function AdminMarksModal({ isOpen, onClose }) {
                 border: '1.5px solid var(--border)',
                 textOverflow: 'ellipsis',
                 background: 'var(--surface)',
-                color: 'var(--brand-900)',
+                color: activeTest ? 'var(--brand-900)' : 'var(--text-muted)',
                 colorScheme: 'light'
               }}
             >
-              {tests.map(t => (
-                <option key={t.id} value={t.id}>
-                  {t.title} • {t.course}
-                </option>
-              ))}
+              {tests.length === 0 ? (
+                <option value="">No Paper Selected</option>
+              ) : (
+                <>
+                  <option value="">No Paper Selected</option>
+                  {tests.map(t => (
+                    <option key={t.id} value={t.id}>
+                      {t.title} • {t.course}
+                    </option>
+                  ))}
+                </>
+              )}
             </select>
           </div>
 
@@ -444,63 +471,75 @@ export default function AdminMarksModal({ isOpen, onClose }) {
             gap: '6px',
             alignItems: 'center'
           }}>
-            <div style={{ minWidth: 0 }}>
+            <div style={{ minWidth: 0, textAlign: 'center' }}>
               <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 700, display: 'block', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Max</span>
-              <input
-                type="number"
-                min="1"
-                max="1000"
-                value={maxMarks}
-                onChange={e => setMaxMarks(e.target.value)}
-                style={{ width: '100%', padding: '3px 4px', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, marginTop: '2px', textAlign: 'center', background: 'var(--surface)' }}
-              />
+              {activeTest ? (
+                <input
+                  type="number"
+                  min="1"
+                  max="1000"
+                  value={maxMarks}
+                  onChange={e => setMaxMarks(e.target.value)}
+                  style={{ width: '100%', padding: '3px 4px', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, marginTop: '2px', textAlign: 'center', background: 'var(--surface)' }}
+                />
+              ) : (
+                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>—</span>
+              )}
             </div>
-            <div style={{ minWidth: 0 }}>
+            <div style={{ minWidth: 0, textAlign: 'center' }}>
               <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 700, display: 'block', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Pass</span>
-              <input
-                type="number"
-                min="1"
-                max={maxMarks}
-                value={passingMarks}
-                onChange={e => setPassingMarks(e.target.value)}
-                style={{ width: '100%', padding: '3px 4px', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, marginTop: '2px', textAlign: 'center', background: 'var(--surface)' }}
-              />
+              {activeTest ? (
+                <input
+                  type="number"
+                  min="1"
+                  max={maxMarks}
+                  value={passingMarks}
+                  onChange={e => setPassingMarks(e.target.value)}
+                  style={{ width: '100%', padding: '3px 4px', borderRadius: '4px', border: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, marginTop: '2px', textAlign: 'center', background: 'var(--surface)' }}
+                />
+              ) : (
+                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>—</span>
+              )}
             </div>
             <div style={{ minWidth: 0, textAlign: 'center' }}>
               <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 700, display: 'block', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Date</span>
-              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)', display: 'block', marginTop: '5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{testDate}</span>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: activeTest ? 'var(--text-primary)' : 'var(--text-muted)', display: 'block', marginTop: '5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {activeTest ? testDate : '—'}
+              </span>
             </div>
             <div style={{ minWidth: 0, textAlign: 'center' }}>
               <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: 700, display: 'block', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Course</span>
-              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--brand-700)', display: 'block', marginTop: '5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeTest.course}</span>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: activeTest ? 'var(--brand-700)' : 'var(--text-muted)', display: 'block', marginTop: '5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {activeTest ? activeTest.course : '—'}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Live Performance KPI Ribbon — Non-overflowing 4-stat grid */}
+        {/* Live Performance KPI Ribbon */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
           <div className="card" style={{ padding: '8px 3px', textAlign: 'center', borderRadius: '10px' }}>
             <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: 700, display: 'block', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Evaluated</span>
             <h4 style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--brand-800)', margin: '2px 0 0 0', whiteSpace: 'nowrap' }}>
-              {stats.evaluatedCount}/{filteredStudents.length}
+              {activeTest ? `${stats.evaluatedCount}/${filteredStudents.length}` : '0/0'}
             </h4>
           </div>
           <div className="card" style={{ padding: '8px 3px', textAlign: 'center', borderRadius: '10px' }}>
             <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: 700, display: 'block', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Class Avg</span>
             <h4 style={{ fontSize: '13.5px', fontWeight: 800, color: '#0284c7', margin: '2px 0 0 0', whiteSpace: 'nowrap' }}>
-              {stats.avgScore}
+              {activeTest ? stats.avgScore : '—'}
             </h4>
           </div>
           <div className="card" style={{ padding: '8px 3px', textAlign: 'center', borderRadius: '10px' }}>
             <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: 700, display: 'block', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Highest</span>
             <h4 style={{ fontSize: '13.5px', fontWeight: 800, color: '#16a34a', margin: '2px 0 0 0', whiteSpace: 'nowrap' }}>
-              {stats.highestScore}
+              {activeTest ? stats.highestScore : '—'}
             </h4>
           </div>
           <div className="card" style={{ padding: '8px 3px', textAlign: 'center', borderRadius: '10px' }}>
             <span style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: 700, display: 'block', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Pass Rate</span>
             <h4 style={{ fontSize: '13.5px', fontWeight: 800, color: '#d97706', margin: '2px 0 0 0', whiteSpace: 'nowrap' }}>
-              {stats.passRate}%
+              {activeTest ? `${stats.passRate}%` : '0%'}
             </h4>
           </div>
         </div>
@@ -515,13 +554,15 @@ export default function AdminMarksModal({ isOpen, onClose }) {
               placeholder="Search student or roll..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
+              disabled={!activeTest}
               style={{
                 width: '100%',
                 padding: '7px 8px 7px 30px',
                 borderRadius: '8px',
                 border: '1px solid var(--border)',
                 fontSize: '12px',
-                background: 'var(--surface)'
+                background: 'var(--surface)',
+                opacity: activeTest ? 1 : 0.6
               }}
             />
           </div>
@@ -530,6 +571,7 @@ export default function AdminMarksModal({ isOpen, onClose }) {
           <select
             value={selectedCourseFilter}
             onChange={e => setSelectedCourseFilter(e.target.value)}
+            disabled={!activeTest}
             style={{
               padding: '7px 8px',
               borderRadius: '8px',
@@ -540,7 +582,8 @@ export default function AdminMarksModal({ isOpen, onClose }) {
               color: 'var(--brand-900)',
               colorScheme: 'light',
               width: '110px',
-              flexShrink: 0
+              flexShrink: 0,
+              opacity: activeTest ? 1 : 0.6
             }}
           >
             <option value="All">All Courses</option>
@@ -554,14 +597,26 @@ export default function AdminMarksModal({ isOpen, onClose }) {
         <div className="card" style={{ padding: '0 12px', background: 'var(--surface)', borderRadius: '12px' }}>
           <div style={{ padding: '10px 0 8px 0', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10.5px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Student ({filteredStudents.length})
+              Student ({activeTest ? filteredStudents.length : 0})
             </span>
             <span style={{ fontSize: '10.5px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Marks / {maxMarks}
+              Marks {activeTest ? `/ ${maxMarks}` : ''}
             </span>
           </div>
 
-          {filteredStudents.length === 0 ? (
+          {!activeTest ? (
+            <div style={{ padding: '36px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <FileText size={36} color="var(--brand-700)" style={{ margin: '0 auto 10px auto', opacity: 0.6 }} />
+              <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--brand-900)', margin: '0 0 6px 0' }}>
+                No Paper Selected
+              </h4>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0, maxWidth: '280px', marginInline: 'auto' }}>
+                {tests.length === 0
+                  ? 'No test papers available. Please add a test from the Test & Paper section.'
+                  : 'Please select a test paper from the dropdown above to view students and enter marks.'}
+              </p>
+            </div>
+          ) : filteredStudents.length === 0 ? (
             <div style={{ padding: '30px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
               <Users size={32} style={{ margin: '0 auto 8px auto', opacity: 0.5 }} />
               <p style={{ fontSize: '12.5px', margin: 0 }}>No students found matching current filter.</p>
@@ -607,7 +662,6 @@ export default function AdminMarksModal({ isOpen, onClose }) {
                       <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '95px', flexShrink: 1 }}>
                         {student.course || '12th Science'}
                       </span>
-                      {/* Grade Badge — whiteSpace nowrap so it NEVER breaks or clips through row boundary */}
                       <span style={{
                         fontSize: '9.5px',
                         fontWeight: 700,
@@ -695,6 +749,7 @@ export default function AdminMarksModal({ isOpen, onClose }) {
         <button
           type="button"
           onClick={handleSaveMarks}
+          disabled={!activeTest}
           className="btn-primary"
           style={{
             width: '100%',
@@ -706,11 +761,17 @@ export default function AdminMarksModal({ isOpen, onClose }) {
             justifyContent: 'center',
             gap: '6px',
             borderRadius: '10px',
-            boxShadow: '0 3px 12px rgba(30, 58, 138, 0.2)'
+            opacity: activeTest ? 1 : 0.6,
+            cursor: activeTest ? 'pointer' : 'not-allowed',
+            boxShadow: activeTest ? '0 3px 12px rgba(30, 58, 138, 0.2)' : 'none'
           }}
         >
           <Save size={16} />
-          <span>Save & Publish Marks ({stats.evaluatedCount}/{filteredStudents.length} entered)</span>
+          <span>
+            {activeTest 
+              ? `Save & Publish Marks (${stats.evaluatedCount}/${filteredStudents.length} entered)`
+              : 'No Paper Selected'}
+          </span>
         </button>
       </div>
     </div>

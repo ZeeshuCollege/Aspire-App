@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  ArrowLeft, Search, Users, CheckCircle2, X, Check, Calendar, CheckSquare, Sparkles, Filter
+  ArrowLeft, Search, Users, CheckCircle2, X, Check, Calendar, CheckSquare, 
+  Clock, User, BookOpen, ChevronRight, Sparkles, Filter
 } from 'lucide-react';
 import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
+import { DAYS_OF_WEEK, getSubjectsForCourse } from './AdminTimetableModal';
 import { getStoredStudents } from '../../lib/userAuthStore';
 import { getTodayDateKey, getBatchAttendance, saveBatchAttendance } from '../../lib/attendanceService';
 
@@ -10,19 +12,39 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('mark'); // 'mark' | 'records'
   const [selectedCourse, setSelectedCourse] = useState(COURSE_OPTIONS[0]);
   const [attendanceDate, setAttendanceDate] = useState(getTodayDateKey());
-  const [studentStatusMap, setStudentStatusMap] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [recordsCourseFilter, setRecordsCourseFilter] = useState('All');
+  const [selectedDayFilter, setSelectedDayFilter] = useState('All');
   const [toastMessage, setToastMessage] = useState('');
   const [isClosing, setIsClosing] = useState(false);
 
-  // Load registered students
+  // Timetable lectures loaded from localStorage
+  const [timetable, setTimetable] = useState([]);
+  const [lectureAttendanceCache, setLectureAttendanceCache] = useState({});
+
+  // Marking System Sheet states
+  const [selectedLectureForAttendance, setSelectedLectureForAttendance] = useState(null);
+  const [isLectureSheetClosing, setIsLectureSheetClosing] = useState(false);
+  const [modalSearchTerm, setModalSearchTerm] = useState('');
+  const [modalStudentStatusMap, setModalStudentStatusMap] = useState({});
+
+  // Registered students
   const [students, setStudents] = useState([]);
 
   useEffect(() => {
     if (!isOpen) return;
     const stored = getStoredStudents();
     setStudents(Array.isArray(stored) ? stored : []);
+
+    try {
+      const saved = localStorage.getItem('aspire_admin_timetable');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setTimetable(parsed);
+        }
+      }
+    } catch (e) {}
   }, [isOpen]);
 
   // Students belonging to selected course for marking
@@ -30,83 +52,162 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
     return students.filter(s => (s.course || 'JEE') === selectedCourse);
   }, [students, selectedCourse]);
 
-  // Load existing attendance for selected course and date
-  useEffect(() => {
-    if (!isOpen) return;
-    let isMounted = true;
-    (async () => {
-      try {
-        const records = await getBatchAttendance(selectedCourse, attendanceDate);
-        if (isMounted && Array.isArray(records) && records.length > 0) {
-          const map = {};
-          records.forEach(r => {
-            map[r.student_id] = r.status;
-          });
-          setStudentStatusMap(map);
-          return;
-        }
-      } catch (e) {}
+  // Day of week of the selected date (e.g. 'Mon', 'Tue'...)
+  const selectedDayOfWeek = useMemo(() => {
+    try {
+      const d = new Date(attendanceDate + 'T00:00:00');
+      const dayIndex = d.getDay();
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      return days[dayIndex] || 'Mon';
+    } catch (e) {
+      return 'Mon';
+    }
+  }, [attendanceDate]);
 
-      // Default to Present for all students in course if not yet marked
-      if (isMounted) {
-        const defaultMap = {};
-        courseStudents.forEach(s => {
-          defaultMap[s.id] = 'Present';
+  // Course lectures from timetable
+  const courseLectures = useMemo(() => {
+    return timetable.filter(l => (l.course || 'JEE') === selectedCourse);
+  }, [timetable, selectedCourse]);
+
+  // Fallback subjects if no timetable lectures exist yet
+  const fallbackSubjects = useMemo(() => {
+    try {
+      return getSubjectsForCourse(selectedCourse);
+    } catch (e) {
+      return ['Physics', 'Chemistry', 'Mathematics'];
+    }
+  }, [selectedCourse]);
+
+  // Effective lectures to display: either from timetable or generated fallback subjects
+  const effectiveLectures = useMemo(() => {
+    if (courseLectures.length > 0) {
+      if (selectedDayFilter === 'All') return courseLectures;
+      return courseLectures.filter(l => l.day === selectedDayFilter);
+    }
+
+    // Default subject sessions when timetable has no entries for this course
+    return fallbackSubjects.slice(0, 4).map((subj, idx) => ({
+      id: `session_${selectedCourse}_${subj.replace(/\s+/g, '_')}`,
+      subject: subj,
+      course: selectedCourse,
+      day: selectedDayOfWeek,
+      time: idx === 0 ? '09:00 AM - 10:30 AM' : (idx === 1 ? '10:45 AM - 12:15 PM' : (idx === 2 ? '01:00 PM - 02:30 PM' : '02:45 PM - 04:15 PM')),
+      faculty: `${subj.split(' ')[0]} Faculty`
+    }));
+  }, [courseLectures, selectedDayFilter, fallbackSubjects, selectedCourse, selectedDayOfWeek]);
+
+  // Open full attendance marking system for a clicked lecture
+  const handleOpenLectureAttendance = async (lecture) => {
+    setSelectedLectureForAttendance(lecture);
+    setModalSearchTerm('');
+
+    // Check existing attendance records
+    try {
+      const existing = await getBatchAttendance(lecture.id, attendanceDate);
+      if (Array.isArray(existing) && existing.length > 0) {
+        const map = {};
+        existing.forEach(r => {
+          map[r.student_id] = r.status;
         });
-        setStudentStatusMap(defaultMap);
+        setModalStudentStatusMap(map);
+        return;
       }
-    })();
+      const existingPrefix = await getBatchAttendance(`${selectedCourse}_${lecture.id}`, attendanceDate);
+      if (Array.isArray(existingPrefix) && existingPrefix.length > 0) {
+        const map = {};
+        existingPrefix.forEach(r => {
+          map[r.student_id] = r.status;
+        });
+        setModalStudentStatusMap(map);
+        return;
+      }
+    } catch (e) {}
 
-    return () => { isMounted = false; };
-  }, [isOpen, selectedCourse, attendanceDate, courseStudents]);
+    // Default: all enrolled course students marked Present
+    const defaultMap = {};
+    courseStudents.forEach(s => {
+      defaultMap[s.id] = 'Present';
+    });
+    setModalStudentStatusMap(defaultMap);
+  };
 
-  const handleToggleStudent = (studentId) => {
-    setStudentStatusMap(prev => ({
+  const handleCloseLectureSheet = () => {
+    if (isLectureSheetClosing) return;
+    setIsLectureSheetClosing(true);
+    setTimeout(() => {
+      setSelectedLectureForAttendance(null);
+      setIsLectureSheetClosing(false);
+    }, 250);
+  };
+
+  const handleToggleModalStudent = (studentId) => {
+    setModalStudentStatusMap(prev => ({
       ...prev,
       [studentId]: prev[studentId] === 'Present' ? 'Absent' : 'Present'
     }));
   };
 
-  const handleMarkAll = (status) => {
+  const handleModalMarkAll = (status) => {
     const updated = {};
     courseStudents.forEach(s => {
       updated[s.id] = status;
     });
-    setStudentStatusMap(updated);
+    setModalStudentStatusMap(updated);
   };
 
-  const handleSaveAttendance = async () => {
+  const handleSaveLectureAttendance = async () => {
+    if (!selectedLectureForAttendance) return;
     if (courseStudents.length === 0) {
-      setToastMessage('⚠️ No students registered in this course.');
+      setToastMessage(`⚠️ No students enrolled in ${selectedCourse}.`);
       setTimeout(() => setToastMessage(''), 3000);
       return;
     }
 
-    try {
-      const studentRecords = courseStudents.map(s => ({
-        id: s.id,
-        name: s.name,
-        roll: s.roll || s.rollNumber || '—',
-        status: studentStatusMap[s.id] || 'Present'
-      }));
+    const studentRecords = courseStudents.map(s => ({
+      id: s.id,
+      name: s.name,
+      roll: s.roll || s.rollNumber || '—',
+      status: modalStudentStatusMap[s.id] || 'Present'
+    }));
 
+    const pCount = studentRecords.filter(s => s.status === 'Present').length;
+    const tCount = studentRecords.length;
+
+    try {
       await saveBatchAttendance({
-        batchId: selectedCourse,
-        batchName: selectedCourse,
+        batchId: selectedLectureForAttendance.id,
+        batchName: `${selectedCourse} - ${selectedLectureForAttendance.subject}`,
+        subject: selectedLectureForAttendance.subject,
+        teacherName: selectedLectureForAttendance.faculty || 'Faculty',
+        time: selectedLectureForAttendance.time,
         dateStr: attendanceDate,
-        students: studentRecords,
-        facultyName: 'Institute Admin'
+        students: studentRecords
       });
 
-      setToastMessage(`✓ Attendance saved for ${selectedCourse} (${attendanceDate})!`);
+      // Update card metadata in cache and localStorage
+      const meta = { marked: true, present: pCount, total: tCount };
+      localStorage.setItem(`aspire_att_meta_${selectedLectureForAttendance.id}_${attendanceDate}`, JSON.stringify(meta));
+      setLectureAttendanceCache(prev => ({
+        ...prev,
+        [`${selectedLectureForAttendance.id}_${attendanceDate}`]: meta
+      }));
+
+      setToastMessage(`✓ Attendance saved for ${selectedLectureForAttendance.subject} (${pCount}/${tCount} Present)`);
       setTimeout(() => setToastMessage(''), 3500);
-    } catch (err) {
-      setToastMessage('✓ Attendance saved locally.');
+
+      handleCloseLectureSheet();
+    } catch (e) {
+      setToastMessage(`✓ Attendance saved locally`);
       setTimeout(() => setToastMessage(''), 3000);
+      handleCloseLectureSheet();
     }
   };
 
   const handleBack = () => {
+    if (selectedLectureForAttendance) {
+      handleCloseLectureSheet();
+      return;
+    }
     if (isClosing) return;
     setIsClosing(true);
     setTimeout(() => {
@@ -124,7 +225,7 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
     };
     window.addEventListener('app:back', handleAppBack);
     return () => window.removeEventListener('app:back', handleAppBack);
-  }, [isOpen, isClosing]);
+  }, [isOpen, isClosing, selectedLectureForAttendance, isLectureSheetClosing]);
 
   if (!isOpen) return null;
 
@@ -137,10 +238,17 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
     return matchesCourse && matchesSearch;
   });
 
-  // Calculate live counts for Mark tab
-  const presentCount = courseStudents.filter(s => (studentStatusMap[s.id] || 'Present') === 'Present').length;
-  const absentCount = courseStudents.length - presentCount;
-  const attendanceRate = courseStudents.length > 0 ? Math.round((presentCount / courseStudents.length) * 100) : 0;
+  // Modal student stats
+  const modalPresentCount = courseStudents.filter(s => (modalStudentStatusMap[s.id] || 'Present') === 'Present').length;
+  const modalAbsentCount = courseStudents.length - modalPresentCount;
+  const modalRate = courseStudents.length > 0 ? Math.round((modalPresentCount / courseStudents.length) * 100) : 0;
+
+  // Filtered students inside marking modal
+  const filteredModalStudents = courseStudents.filter(s => {
+    if (!modalSearchTerm) return true;
+    const q = modalSearchTerm.toLowerCase();
+    return (s.name || '').toLowerCase().includes(q) || (s.roll || s.rollNumber || '').toLowerCase().includes(q);
+  });
 
   return (
     <div
@@ -201,7 +309,7 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#ecfdf5', padding: '4px 8px', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
           <CheckCircle2 size={13} color="#10b981" />
           <span style={{ fontSize: '11px', fontWeight: 700, color: '#047857' }}>
-            {activeTab === 'mark' ? `${attendanceRate}% Rate` : `${students.length} Students`}
+            {activeTab === 'mark' ? `${courseStudents.length} Students` : `${students.length} Students`}
           </span>
         </div>
       </div>
@@ -285,7 +393,7 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
           {/* Controls: Course selector & Date Picker */}
           <div style={{ padding: '12px 16px', background: 'var(--surface)', borderBottom: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {/* Standard Course Selection Buttons */}
+            {/* Course Selection Buttons */}
             <div>
               <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 Select Course
@@ -318,19 +426,19 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
               </div>
             </div>
 
-            {/* Date Picker & Quick Actions Bar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Calendar size={14} color="var(--brand-700)" />
+            {/* Date Picker Bar */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Calendar size={15} color="var(--brand-700)" />
                 <input
                   type="date"
                   value={attendanceDate}
                   onChange={e => setAttendanceDate(e.target.value)}
                   style={{
-                    padding: '5px 8px',
+                    padding: '6px 10px',
                     borderRadius: '8px',
                     border: '1px solid var(--border)',
-                    fontSize: '12px',
+                    fontSize: '12.5px',
                     fontWeight: 700,
                     background: 'var(--surface-alt)',
                     color: 'var(--brand-900)'
@@ -338,177 +446,213 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <button
-                  type="button"
-                  onClick={() => handleMarkAll('Present')}
-                  style={{
-                    padding: '5px 9px',
-                    borderRadius: '8px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    background: '#ecfdf5',
-                    color: '#047857',
-                    border: '1px solid #a7f3d0',
-                    cursor: 'pointer'
-                  }}
-                >
-                  ✓ All Present
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleMarkAll('Absent')}
-                  style={{
-                    padding: '5px 9px',
-                    borderRadius: '8px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    background: '#fef2f2',
-                    color: '#b91c1c',
-                    border: '1px solid #fecaca',
-                    cursor: 'pointer'
-                  }}
-                >
-                  ✕ All Absent
-                </button>
+              <div style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                color: 'var(--brand-800)',
+                background: 'var(--brand-50)',
+                padding: '4px 9px',
+                borderRadius: '8px',
+                border: '1px solid var(--border)'
+              }}>
+                Day: {selectedDayOfWeek}
               </div>
             </div>
 
-            {/* Quick Stats Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
-              <div style={{ background: 'var(--surface-alt)', padding: '6px 4px', borderRadius: '8px', textAlign: 'center', border: '1px solid var(--border)' }}>
-                <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Total</div>
-                <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--brand-900)' }}>{courseStudents.length}</div>
+            {/* Optional Day filter if timetable has lectures for multiple days */}
+            {courseLectures.length > 0 && (
+              <div style={{ display: 'flex', gap: '5px', overflowX: 'auto', paddingBottom: '2px', scrollbarWidth: 'none' }}>
+                {['All', ...DAYS_OF_WEEK].map(day => {
+                  const isDayActive = selectedDayFilter === day;
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => setSelectedDayFilter(day)}
+                      style={{
+                        padding: '4px 9px',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                        fontWeight: isDayActive ? 700 : 500,
+                        border: isDayActive ? '1px solid var(--brand-700)' : '1px solid var(--border)',
+                        background: isDayActive ? 'var(--brand-700)' : 'var(--surface-alt)',
+                        color: isDayActive ? '#ffffff' : 'var(--text-secondary)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {day === selectedDayOfWeek && day !== 'All' ? `${day} (Today)` : day}
+                    </button>
+                  );
+                })}
               </div>
-              <div style={{ background: '#ecfdf5', padding: '6px 4px', borderRadius: '8px', textAlign: 'center', border: '1px solid #a7f3d0' }}>
-                <div style={{ fontSize: '9.5px', color: '#047857', fontWeight: 700, textTransform: 'uppercase' }}>Present</div>
-                <div style={{ fontSize: '13px', fontWeight: 800, color: '#047857' }}>{presentCount}</div>
-              </div>
-              <div style={{ background: '#fef2f2', padding: '6px 4px', borderRadius: '8px', textAlign: 'center', border: '1px solid #fecaca' }}>
-                <div style={{ fontSize: '9.5px', color: '#b91c1c', fontWeight: 700, textTransform: 'uppercase' }}>Absent</div>
-                <div style={{ fontSize: '13px', fontWeight: 800, color: '#b91c1c' }}>{absentCount}</div>
-              </div>
-              <div style={{ background: '#f0f9ff', padding: '6px 4px', borderRadius: '8px', textAlign: 'center', border: '1px solid #bae6fd' }}>
-                <div style={{ fontSize: '9.5px', color: '#0369a1', fontWeight: 700, textTransform: 'uppercase' }}>Rate</div>
-                <div style={{ fontSize: '13px', fontWeight: 800, color: '#0369a1' }}>{attendanceRate}%</div>
-              </div>
-            </div>
+            )}
           </div>
 
-          {/* Student List for Selected Course */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {courseStudents.length === 0 ? (
+          {/* ── Lectures Section ── */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '11.5px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Select a Lecture to Mark Attendance
+              </span>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                {effectiveLectures.length} {effectiveLectures.length === 1 ? 'Lecture' : 'Lectures'}
+              </span>
+            </div>
+
+            {effectiveLectures.length === 0 ? (
               <div className="card" style={{ padding: '36px 20px', textAlign: 'center', borderRadius: '12px' }}>
-                <Users size={36} color="var(--text-muted)" style={{ margin: '0 auto 10px auto', opacity: 0.5 }} />
+                <Clock size={36} color="var(--text-muted)" style={{ margin: '0 auto 10px auto', opacity: 0.5 }} />
                 <h4 style={{ fontSize: '14.5px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>
-                  No Students Enrolled in {selectedCourse}
+                  No Lectures Found for {selectedCourse}
                 </h4>
                 <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
-                  Add students to the {selectedCourse} course from the Students tab in Admin.
+                  No scheduled lecture match the selected day filter.
                 </p>
               </div>
             ) : (
-              courseStudents.map(student => {
-                const status = studentStatusMap[student.id] || 'Present';
-                const isPresent = status === 'Present';
+              effectiveLectures.map(lec => {
+                const cardKey = `${lec.id}_${attendanceDate}`;
+                let cardMeta = lectureAttendanceCache[cardKey];
+                if (!cardMeta) {
+                  try {
+                    const raw = localStorage.getItem(`aspire_att_meta_${lec.id}_${attendanceDate}`);
+                    if (raw) {
+                      cardMeta = JSON.parse(raw);
+                    }
+                  } catch (e) {}
+                }
+                const isMarked = Boolean(cardMeta && cardMeta.marked);
 
                 return (
                   <div
-                    key={student.id}
+                    key={lec.id}
+                    onClick={() => handleOpenLectureAttendance(lec)}
+                    role="button"
+                    tabIndex={0}
                     style={{
-                      padding: '10px 14px',
-                      borderRadius: '12px',
-                      background: isPresent ? '#f0fdf4' : '#fef2f2',
-                      border: isPresent ? '1px solid #bbf7d0' : '1px solid #fecaca',
+                      background: 'var(--surface)',
+                      border: isMarked ? '1.5px solid #10b981' : '1px solid var(--border)',
+                      borderRadius: '14px',
+                      padding: '13px 15px',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
                       display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: '10px',
-                      transition: 'all 0.15s ease'
+                      flexDirection: 'column',
+                      gap: '9px',
+                      transition: 'transform 0.12s ease, box-shadow 0.12s ease'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                      <div style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        background: isPresent ? '#dcfce7' : '#fee2e2',
-                        color: isPresent ? '#15803d' : '#b91c1c',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '12.5px',
-                        fontWeight: 800,
-                        flexShrink: 0
-                      }}>
-                        {student.name ? student.name.charAt(0).toUpperCase() : 'S'}
+                    {/* Top Row: Subject Title + Status Badge */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                        <div style={{
+                          width: '34px',
+                          height: '34px',
+                          borderRadius: '10px',
+                          background: isMarked ? '#ecfdf5' : 'var(--brand-50)',
+                          color: isMarked ? '#047857' : 'var(--brand-700)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}>
+                          <BookOpen size={16} />
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <h4 style={{
+                            fontSize: '14px',
+                            fontWeight: 800,
+                            color: 'var(--brand-900)',
+                            margin: 0,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {lec.subject}
+                          </h4>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                            {lec.course || selectedCourse}
+                          </span>
+                        </div>
                       </div>
-                      <div style={{ minWidth: 0 }}>
-                        <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--brand-900)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {student.name}
+
+                      {isMarked ? (
+                        <span style={{
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          background: '#ecfdf5',
+                          color: '#047857',
+                          border: '1px solid #a7f3d0',
+                          padding: '4px 9px',
+                          borderRadius: '20px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0
+                        }}>
+                          <CheckCircle2 size={12} />
+                          <span>{cardMeta?.present ?? 0}/{cardMeta?.total ?? courseStudents.length} Present</span>
                         </span>
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                          Roll: {student.roll || student.rollNumber || '—'}
+                      ) : (
+                        <span style={{
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          background: 'var(--brand-50)',
+                          color: 'var(--brand-700)',
+                          border: '1px solid var(--border)',
+                          padding: '4px 9px',
+                          borderRadius: '20px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0
+                        }}>
+                          <span>Tap to Mark</span>
+                          <ChevronRight size={12} />
                         </span>
-                      </div>
+                      )}
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleToggleStudent(student.id)}
-                      style={{
-                        padding: '6px 14px',
-                        borderRadius: '8px',
-                        fontSize: '12px',
-                        fontWeight: 800,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        border: isPresent ? '1.5px solid #10b981' : '1.5px solid #ef4444',
-                        background: isPresent ? '#10b981' : '#ef4444',
-                        color: '#ffffff',
-                        boxShadow: isPresent ? '0 2px 6px rgba(16, 185, 129, 0.25)' : '0 2px 6px rgba(239, 68, 68, 0.25)',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      {isPresent ? <Check size={13} strokeWidth={3} /> : <X size={13} strokeWidth={3} />}
-                      <span>{status}</span>
-                    </button>
+                    {/* Bottom Row: Time, Faculty, Day */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      fontSize: '11.5px',
+                      color: 'var(--text-secondary)',
+                      flexWrap: 'wrap',
+                      paddingTop: '6px',
+                      borderTop: '1px solid var(--border)'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <Clock size={13} color="var(--brand-600)" />
+                        <span style={{ fontWeight: 600 }}>{lec.time || 'Class Time'}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <User size={13} color="var(--brand-600)" />
+                        <span>{lec.faculty || 'Faculty'}</span>
+                      </div>
+                      {lec.day && (
+                        <span style={{
+                          marginLeft: 'auto',
+                          fontSize: '10.5px',
+                          fontWeight: 700,
+                          background: 'var(--surface-alt)',
+                          padding: '2px 7px',
+                          borderRadius: '6px',
+                          color: 'var(--brand-800)',
+                          border: '1px solid var(--border)'
+                        }}>
+                          {lec.day}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
               })
             )}
-          </div>
-
-          {/* ── Fixed Bottom Button covering left to right ── */}
-          <div style={{
-            padding: '12px 16px',
-            paddingBottom: 'calc(12px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)))',
-            background: 'var(--surface)',
-            borderTop: '1px solid var(--border)',
-            flexShrink: 0
-          }}>
-            <button
-              type="button"
-              onClick={handleSaveAttendance}
-              className="btn-primary"
-              style={{
-                width: '100%',
-                padding: '13px 18px',
-                fontSize: '13.5px',
-                fontWeight: 800,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                borderRadius: '12px',
-                boxShadow: '0 4px 14px rgba(10, 31, 61, 0.2)'
-              }}
-            >
-              <CheckCircle2 size={18} />
-              <span>Save Attendance for {selectedCourse}</span>
-            </button>
           </div>
         </div>
       ) : (
@@ -642,6 +786,342 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
                 );
               })
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── FULL ATTENDANCE MARKING MODAL SHEET (When a Lecture Card is Clicked) ── */}
+      {selectedLectureForAttendance && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            maxWidth: '480px',
+            margin: '0 auto',
+            background: 'rgba(10, 31, 61, 0.55)',
+            backdropFilter: 'blur(3px)',
+            zIndex: 10050,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+            animation: 'fadeIn 0.18s ease-out'
+          }}
+          onClick={handleCloseLectureSheet}
+        >
+          <div
+            className={isLectureSheetClosing ? 'closing' : ''}
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'var(--canvas)',
+              borderTopLeftRadius: '20px',
+              borderTopRightRadius: '20px',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 -8px 30px rgba(0, 0, 0, 0.25)',
+              overflow: 'hidden',
+              animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
+            }}
+          >
+            {/* Sheet Handle */}
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '10px', paddingBottom: '4px' }}>
+              <div style={{ width: '40px', height: '4px', borderRadius: '4px', background: 'var(--border)' }} />
+            </div>
+
+            {/* Sheet Header */}
+            <div style={{
+              padding: '10px 16px 12px',
+              background: 'var(--surface)',
+              borderBottom: '1px solid var(--border)',
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: '12px'
+            }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    background: 'var(--brand-800)',
+                    color: '#ffffff',
+                    padding: '2px 7px',
+                    borderRadius: '6px'
+                  }}>
+                    {selectedCourse}
+                  </span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                    • {attendanceDate}
+                  </span>
+                </div>
+                <h3 style={{ fontSize: '16.5px', fontWeight: 800, color: 'var(--brand-900)', margin: '0 0 4px 0' }}>
+                  {selectedLectureForAttendance.subject}
+                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Clock size={12} color="var(--brand-600)" />
+                    {selectedLectureForAttendance.time || 'Class Time'}
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <User size={12} color="var(--brand-600)" />
+                    {selectedLectureForAttendance.faculty || 'Faculty'}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCloseLectureSheet}
+                style={{
+                  background: 'var(--surface-alt)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: 'var(--text-secondary)'
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Controls Row: Search + All Present / All Absent */}
+            <div style={{
+              padding: '10px 16px',
+              background: 'var(--surface)',
+              borderBottom: '1px solid var(--border)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <input
+                    type="text"
+                    placeholder="Search enrolled students..."
+                    value={modalSearchTerm}
+                    onChange={e => setModalSearchTerm(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '7px 10px 7px 30px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border)',
+                      fontSize: '12px',
+                      background: 'var(--surface-alt)',
+                      color: 'var(--brand-900)'
+                    }}
+                  />
+                  <Search size={13} color="var(--text-muted)" style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)' }} />
+                  {modalSearchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => setModalSearchTerm('')}
+                      style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleModalMarkAll('Present')}
+                  style={{
+                    padding: '7px 10px',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    background: '#ecfdf5',
+                    color: '#047857',
+                    border: '1px solid #a7f3d0',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  ✓ All Present
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleModalMarkAll('Absent')}
+                  style={{
+                    padding: '7px 10px',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    background: '#fef2f2',
+                    color: '#b91c1c',
+                    border: '1px solid #fecaca',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  ✕ All Absent
+                </button>
+              </div>
+
+              {/* Attendance Quick Stats Strip */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                <span>Enrolled: <strong style={{ color: 'var(--brand-900)' }}>{courseStudents.length}</strong></span>
+                <span style={{ color: '#047857' }}>Present: <strong>{modalPresentCount}</strong></span>
+                <span style={{ color: '#b91c1c' }}>Absent: <strong>{modalAbsentCount}</strong></span>
+                <span style={{ color: 'var(--brand-700)' }}>Rate: <strong>{modalRate}%</strong></span>
+              </div>
+            </div>
+
+            {/* Students List in Modal */}
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '12px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              maxHeight: '48vh'
+            }}>
+              {courseStudents.length === 0 ? (
+                <div className="card" style={{ padding: '30px 16px', textAlign: 'center', borderRadius: '12px' }}>
+                  <Users size={32} color="var(--text-muted)" style={{ margin: '0 auto 8px auto', opacity: 0.5 }} />
+                  <h4 style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>
+                    No Students Enrolled in {selectedCourse}
+                  </h4>
+                  <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                    Add students to the {selectedCourse} course from the Students tab in Admin.
+                  </p>
+                </div>
+              ) : filteredModalStudents.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px 10px', color: 'var(--text-muted)', fontSize: '12px' }}>
+                  No students match "{modalSearchTerm}"
+                </div>
+              ) : (
+                filteredModalStudents.map(student => {
+                  const status = modalStudentStatusMap[student.id] || 'Present';
+                  const isPresent = status === 'Present';
+
+                  return (
+                    <div
+                      key={student.id}
+                      onClick={() => handleToggleModalStudent(student.id)}
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: '12px',
+                        background: isPresent ? '#f0fdf4' : '#fef2f2',
+                        border: isPresent ? '1px solid #bbf7d0' : '1px solid #fecaca',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '10px',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          background: isPresent ? '#dcfce7' : '#fee2e2',
+                          color: isPresent ? '#15803d' : '#b91c1c',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '12.5px',
+                          fontWeight: 800,
+                          flexShrink: 0
+                        }}>
+                          {student.name ? student.name.charAt(0).toUpperCase() : 'S'}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--brand-900)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {student.name}
+                          </span>
+                          <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                            Roll: {student.roll || student.rollNumber || '—'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleToggleModalStudent(student.id);
+                        }}
+                        style={{
+                          padding: '6px 14px',
+                          borderRadius: '8px',
+                          fontSize: '11.5px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          border: isPresent ? '1.5px solid #10b981' : '1.5px solid #ef4444',
+                          background: isPresent ? '#10b981' : '#ef4444',
+                          color: '#ffffff',
+                          boxShadow: isPresent ? '0 2px 6px rgba(16, 185, 129, 0.25)' : '0 2px 6px rgba(239, 68, 68, 0.25)',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        {isPresent ? <Check size={13} strokeWidth={3} /> : <X size={13} strokeWidth={3} />}
+                        <span>{status}</span>
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Sheet Fixed Bottom Actions */}
+            <div style={{
+              padding: '12px 16px',
+              paddingBottom: 'calc(12px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)))',
+              background: 'var(--surface)',
+              borderTop: '1px solid var(--border)',
+              display: 'flex',
+              gap: '10px'
+            }}>
+              <button
+                type="button"
+                onClick={handleCloseLectureSheet}
+                style={{
+                  flex: 1,
+                  padding: '12px 14px',
+                  borderRadius: '12px',
+                  border: '1px solid var(--border)',
+                  background: 'var(--surface-alt)',
+                  color: 'var(--text-secondary)',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveLectureAttendance}
+                className="btn-primary"
+                style={{
+                  flex: 2,
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  boxShadow: '0 4px 14px rgba(10, 31, 61, 0.2)'
+                }}
+              >
+                <CheckCircle2 size={16} />
+                <span>Save Attendance ({modalPresentCount}/{courseStudents.length})</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

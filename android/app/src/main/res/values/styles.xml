@@ -11,6 +11,7 @@
         <item name="android:textColor">@color/textPrimary</item>
         <item name="android:textColorPrimary">@color/textPrimary</item>
         <item name="android:textColorSecondary">#475569</item>
+        <item name="alertDialogTheme">@style/AppAlertDialogTheme</item>
         <item name="android:alertDialogTheme">@style/AppAlertDialogTheme</item>
     </style>
 
@@ -27,17 +28,26 @@
         <item name="android:textColorPrimary">@color/textPrimary</item>
         <item name="android:textColorSecondary">#475569</item>
         <item name="android:textColorAlertDialogListItem">@color/textPrimary</item>
+        <item name="alertDialogTheme">@style/AppAlertDialogTheme</item>
         <item name="android:alertDialogTheme">@style/AppAlertDialogTheme</item>
     </style>
 
     <style name="AppAlertDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
-        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowBackground">@drawable/dialog_background</item>
         <item name="android:colorBackground">@android:color/white</item>
         <item name="android:textColor">#0f172a</item>
         <item name="android:textColorPrimary">#0f172a</item>
         <item name="android:textColorSecondary">#475569</item>
         <item name="android:textColorAlertDialogListItem">#0f172a</item>
         <item name="colorAccent">#2563eb</item>
+        <item name="android:listPreferredItemHeightSmall">50dp</item>
+        <item name="android:listPreferredItemHeight">50dp</item>
+        <item name="listPreferredItemHeightSmall">50dp</item>
+        <item name="listPreferredItemHeight">50dp</item>
+        <item name="singleChoiceItemLayout">@layout/select_dialog_singlechoice</item>
+        <item name="multiChoiceItemLayout">@layout/select_dialog_multichoice</item>
+        <item name="listItemLayout">@layout/select_dialog_item</item>
     </style>
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
