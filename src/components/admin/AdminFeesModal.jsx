@@ -20,13 +20,11 @@ import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
 
 const FILTER_OPTIONS = [
   { id: 'All', label: 'All' },
-  { id: '9th', label: '9th' },
-  { id: '10th', label: '10th' },
-  { id: '11th', label: '11th' },
-  { id: '12th', label: '12th' },
   { id: 'JEE', label: 'JEE' },
   { id: 'NEET', label: 'NEET' },
-  { id: 'MHT-CET', label: 'MHT-CET' }
+  { id: 'MHT-CET', label: 'MHT-CET' },
+  { id: '9th', label: '9th' },
+  { id: '10th', label: '10th' }
 ];
 
 export default function AdminFeesModal({ isOpen, onClose }) {
@@ -39,9 +37,9 @@ export default function AdminFeesModal({ isOpen, onClose }) {
   // Manual Add Modal States
   const [showAddModal, setShowAddModal] = useState(false);
   const [addStudentName, setAddStudentName] = useState('');
-  const [addStudentCourse, setAddStudentCourse] = useState('12th Science');
-  const [addTotalFee, setAddTotalFee] = useState('20000');
-  const [addPaidFee, setAddPaidFee] = useState('0');
+  const [addStudentCourse, setAddStudentCourse] = useState('JEE');
+  const [addTotalFee, setAddTotalFee] = useState('');
+  const [addPaidFee, setAddPaidFee] = useState('');
   const [addRemarks, setAddRemarks] = useState('');
 
   // Edit Mode States (when card is opened)
@@ -135,6 +133,11 @@ export default function AdminFeesModal({ isOpen, onClose }) {
     const paidNum = Math.max(0, Number(editPaidFee) || 0);
     const totalNum = Math.max(0, Number(editTotalFee) || 0);
 
+    if (paidNum > totalNum) {
+      showToast(`⚠️ Paid fees (₹${paidNum.toLocaleString('en-IN')}) cannot exceed total fees (₹${totalNum.toLocaleString('en-IN')}).`);
+      return;
+    }
+
     const updated = updateStudentFeeRecord(selectedStudent.id, {
       paidFee: paidNum,
       totalFee: totalNum
@@ -187,19 +190,27 @@ export default function AdminFeesModal({ isOpen, onClose }) {
       return;
     }
 
+    const totalNum = Math.max(0, Number(addTotalFee) || 0);
+    const paidNum = Math.max(0, Number(addPaidFee) || 0);
+
+    if (paidNum > totalNum) {
+      showToast(`⚠️ Paid fees (₹${paidNum.toLocaleString('en-IN')}) cannot exceed total fees (₹${totalNum.toLocaleString('en-IN')}).`);
+      return;
+    }
+
     const { updatedList, newEntry } = addManualFeeRecord({
       name: addStudentName.trim(),
       course: addStudentCourse,
-      totalFee: Number(addTotalFee) || 0,
-      paidFee: Number(addPaidFee) || 0,
+      totalFee: totalNum,
+      paidFee: paidNum,
       remarks: addRemarks.trim() || 'Manual Entry'
     });
 
     setFeesList(updatedList);
     setShowAddModal(false);
     setAddStudentName('');
-    setAddTotalFee('20000');
-    setAddPaidFee('0');
+    setAddTotalFee('');
+    setAddPaidFee('');
     setAddRemarks('');
 
     showToast(`✓ Added fee record for ${newEntry.name} (${formatFeeFraction(newEntry.paidFee, newEntry.totalFee)})`);
@@ -273,27 +284,6 @@ export default function AdminFeesModal({ isOpen, onClose }) {
             </p>
           </div>
         </div>
-
-        {/* Button for admin to add these details manually too */}
-        <button
-          type="button"
-          onClick={() => setShowAddModal(true)}
-          className="btn-primary"
-          style={{
-            padding: '7px 12px',
-            fontSize: '11.5px',
-            fontWeight: 700,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            borderRadius: '8px',
-            whiteSpace: 'nowrap',
-            flexShrink: 0
-          }}
-        >
-          <Plus size={14} />
-          <span>Add Details</span>
-        </button>
       </div>
 
       {/* ── Toast Notification Banner ── */}
@@ -573,6 +563,36 @@ export default function AdminFeesModal({ isOpen, onClose }) {
             );
           })
         )}
+      </div>
+
+      {/* ── Fixed Bottom Button: Add Fee Details covering left to right ── */}
+      <div style={{
+        padding: '12px 16px',
+        paddingBottom: 'calc(12px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)))',
+        background: 'var(--surface)',
+        borderTop: '1px solid var(--border)',
+        flexShrink: 0
+      }}>
+        <button
+          type="button"
+          onClick={() => setShowAddModal(true)}
+          className="btn-primary"
+          style={{
+            width: '100%',
+            padding: '13px 18px',
+            fontSize: '13.5px',
+            fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 14px rgba(10, 31, 61, 0.2)'
+          }}
+        >
+          <Plus size={18} />
+          <span>Add Fee Details</span>
+        </button>
       </div>
 
       {/* ── Student Fee Details Sheet (When Card is Opened) ── */}
@@ -954,13 +974,9 @@ export default function AdminFeesModal({ isOpen, onClose }) {
                     colorScheme: 'light'
                   }}
                 >
-                  <option value="9th Standard">9th Standard</option>
-                  <option value="10th Standard">10th Standard</option>
-                  <option value="11th Science">11th Science</option>
-                  <option value="12th Science">12th Science</option>
-                  <option value="JEE (Mains + Adv)">JEE (Mains + Adv)</option>
-                  <option value="NEET">NEET</option>
-                  <option value="MHT-CET">MHT-CET</option>
+                  {COURSE_OPTIONS.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
               </div>
 

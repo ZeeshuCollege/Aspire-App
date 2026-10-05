@@ -1,69 +1,108 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  ArrowLeft, Search, Users, BookOpen, CheckSquare, 
-  CheckCircle2, ChevronDown, ChevronUp, X, Check 
+  ArrowLeft, Search, Users, CheckCircle2, X, Check, Calendar, CheckSquare, Sparkles, Filter
 } from 'lucide-react';
-import { mockBatchStudents, mockLectureAttendance } from '../../lib/mockData';
 import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
-import { updateAttendanceByAdmin } from '../../lib/attendanceService';
-
-const COURSE_ATTENDANCE_DATA = [
-  { course: 'Std 9th', code: 'STD-9', totalStudents: 28, presentToday: 24, absentToday: 4, rate: 86, batch: 'Class 9 Foundation', trend: '+1.5%' },
-  { course: 'Std 10th', code: 'STD-10', totalStudents: 32, presentToday: 29, absentToday: 3, rate: 90, batch: 'Class 10 Board', trend: '+2.1%' },
-  { course: '11th Science', code: 'SCI-11', totalStudents: 36, presentToday: 31, absentToday: 5, rate: 87, batch: 'Class 11 - A', trend: '-0.8%' },
-  { course: '12th Science', code: 'SCI-12', totalStudents: 40, presentToday: 36, absentToday: 4, rate: 89, batch: 'Class 12 - Science', trend: '+3.2%' },
-  { course: 'NEET', code: 'NEET', totalStudents: 38, presentToday: 35, absentToday: 3, rate: 92, batch: 'NEET 12 - B', trend: '+4.0%' },
-  { course: 'JEE (Mains + Adv)', code: 'JEE', totalStudents: 42, presentToday: 40, absentToday: 2, rate: 94, batch: 'JEE 12 - A', trend: '+1.8%' },
-  { course: 'MHT-CET', code: 'MHT-CET', totalStudents: 32, presentToday: 28, absentToday: 4, rate: 88, batch: 'CET Mastery', trend: '+0.5%' }
-];
-
-const SUBJECT_ATTENDANCE_DATA = [
-  { subject: 'Physics', code: 'PHY', faculty: 'Physics Faculty', rate: 92, lecturesDone: 36, activeBatches: 'JEE 12-A, NEET 12-B, Class 11-A', health: 'Excellent' },
-  { subject: 'Mathematics', code: 'MATH', faculty: 'Mathematics Faculty', rate: 89, lecturesDone: 34, activeBatches: 'JEE 12-A, Class 11-A, Class 10-A', health: 'Good' },
-  { subject: 'Chemistry', code: 'CHEM', faculty: 'Chemistry Faculty', rate: 88, lecturesDone: 32, activeBatches: 'NEET 12-B, Class 10-A', health: 'Good' },
-  { subject: 'Biology', code: 'BIO', faculty: 'Biology Faculty', rate: 93, lecturesDone: 30, activeBatches: 'NEET 12-B', health: 'Excellent' },
-  { subject: 'English', code: 'ENG', faculty: 'English Faculty', rate: 85, lecturesDone: 24, activeBatches: 'Std 9th, 10th, 11th, 12th', health: 'Average' },
-  { subject: 'Science (Foundation)', code: 'SCI', faculty: 'Science Faculty', rate: 90, lecturesDone: 28, activeBatches: 'Class 10-A, Class 9-A', health: 'Good' }
-];
+import { getStoredStudents } from '../../lib/userAuthStore';
+import { getTodayDateKey, getBatchAttendance, saveBatchAttendance } from '../../lib/attendanceService';
 
 export default function AdminAttendanceModal({ isOpen, onClose }) {
-  const [activeTab, setActiveTab] = useState('student'); // 'student' | 'course' | 'subject'
+  const [activeTab, setActiveTab] = useState('mark'); // 'mark' | 'records'
+  const [selectedCourse, setSelectedCourse] = useState(COURSE_OPTIONS[0]);
+  const [attendanceDate, setAttendanceDate] = useState(getTodayDateKey());
+  const [studentStatusMap, setStudentStatusMap] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCourse, setSelectedCourse] = useState('All');
-  const [expandedStudentId, setExpandedStudentId] = useState(null);
-  const [studentsList, setStudentsList] = useState(mockBatchStudents);
-
+  const [recordsCourseFilter, setRecordsCourseFilter] = useState('All');
+  const [toastMessage, setToastMessage] = useState('');
   const [isClosing, setIsClosing] = useState(false);
 
-  const handleAdminToggleStatus = async (studentId) => {
-    const student = studentsList.find(s => s.id === studentId);
-    if (!student) return;
+  // Load registered students
+  const [students, setStudents] = useState([]);
 
-    const newStatus = student.todayAttendance === 'Present' ? 'Absent' : 'Present';
+  useEffect(() => {
+    if (!isOpen) return;
+    const stored = getStoredStudents();
+    setStudents(Array.isArray(stored) ? stored : []);
+  }, [isOpen]);
 
-    setStudentsList(prev => prev.map(s => {
-      if (s.id === studentId) {
-        const delta = newStatus === 'Present' ? 1 : -1;
-        const newAttended = Math.max(0, s.attendedCount + delta);
-        return {
-          ...s,
-          todayAttendance: newStatus,
-          adminOverridden: true,
-          attendedCount: newAttended,
-          attendanceRate: Math.round((newAttended / s.totalCount) * 100)
-        };
+  // Students belonging to selected course for marking
+  const courseStudents = useMemo(() => {
+    return students.filter(s => (s.course || 'JEE') === selectedCourse);
+  }, [students, selectedCourse]);
+
+  // Load existing attendance for selected course and date
+  useEffect(() => {
+    if (!isOpen) return;
+    let isMounted = true;
+    (async () => {
+      try {
+        const records = await getBatchAttendance(selectedCourse, attendanceDate);
+        if (isMounted && Array.isArray(records) && records.length > 0) {
+          const map = {};
+          records.forEach(r => {
+            map[r.student_id] = r.status;
+          });
+          setStudentStatusMap(map);
+          return;
+        }
+      } catch (e) {}
+
+      // Default to Present for all students in course if not yet marked
+      if (isMounted) {
+        const defaultMap = {};
+        courseStudents.forEach(s => {
+          defaultMap[s.id] = 'Present';
+        });
+        setStudentStatusMap(defaultMap);
       }
-      return s;
+    })();
+
+    return () => { isMounted = false; };
+  }, [isOpen, selectedCourse, attendanceDate, courseStudents]);
+
+  const handleToggleStudent = (studentId) => {
+    setStudentStatusMap(prev => ({
+      ...prev,
+      [studentId]: prev[studentId] === 'Present' ? 'Absent' : 'Present'
     }));
+  };
+
+  const handleMarkAll = (status) => {
+    const updated = {};
+    courseStudents.forEach(s => {
+      updated[s.id] = status;
+    });
+    setStudentStatusMap(updated);
+  };
+
+  const handleSaveAttendance = async () => {
+    if (courseStudents.length === 0) {
+      setToastMessage('⚠️ No students registered in this course.');
+      setTimeout(() => setToastMessage(''), 3000);
+      return;
+    }
 
     try {
-      await updateAttendanceByAdmin({
-        studentId,
-        newStatus,
-        adminName: 'Institute Admin'
+      const studentRecords = courseStudents.map(s => ({
+        id: s.id,
+        name: s.name,
+        roll: s.roll || s.rollNumber || '—',
+        status: studentStatusMap[s.id] || 'Present'
+      }));
+
+      await saveBatchAttendance({
+        batchId: selectedCourse,
+        batchName: selectedCourse,
+        dateStr: attendanceDate,
+        students: studentRecords,
+        facultyName: 'Institute Admin'
       });
+
+      setToastMessage(`✓ Attendance saved for ${selectedCourse} (${attendanceDate})!`);
+      setTimeout(() => setToastMessage(''), 3500);
     } catch (err) {
-      console.error('Failed to update attendance by admin:', err);
+      setToastMessage('✓ Attendance saved locally.');
+      setTimeout(() => setToastMessage(''), 3000);
     }
   };
 
@@ -80,34 +119,48 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
   useEffect(() => {
     if (!isOpen) return;
     const handleAppBack = (e) => {
-      if (expandedStudentId) {
-        setExpandedStudentId(null);
-        e.detail?.markHandled();
-      } else {
-        handleBack();
-        e.detail?.markHandled();
-      }
+      handleBack();
+      e.detail?.markHandled?.();
     };
     window.addEventListener('app:back', handleAppBack);
     return () => window.removeEventListener('app:back', handleAppBack);
-  }, [isOpen, expandedStudentId, isClosing]);
+  }, [isOpen, isClosing]);
 
   if (!isOpen) return null;
 
-  // Filter students
-  const filteredStudents = studentsList.filter(std => {
-    const matchesSearch = !searchTerm ||
-      std.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (std.roll && std.roll.includes(searchTerm));
-    const matchesCourse = selectedCourse === 'All' || std.course === selectedCourse;
-    return matchesSearch && matchesCourse;
+  // Filter students for Records Tab
+  const filteredRecordsStudents = students.filter(s => {
+    const matchesCourse = recordsCourseFilter === 'All' || (s.course || 'JEE') === recordsCourseFilter;
+    const matchesSearch = !searchTerm || 
+      (s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.roll || s.rollNumber || '').toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCourse && matchesSearch;
   });
 
+  // Calculate live counts for Mark tab
+  const presentCount = courseStudents.filter(s => (studentStatusMap[s.id] || 'Present') === 'Present').length;
+  const absentCount = courseStudents.length - presentCount;
+  const attendanceRate = courseStudents.length > 0 ? Math.round((presentCount / courseStudents.length) * 100) : 0;
+
   return (
-    <div className={`fullscreen-page-modal ${isClosing ? 'closing' : ''}`}>
-      {/* Header */}
+    <div
+      className={`fullscreen-page-modal ${isClosing ? 'closing' : ''}`}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        maxWidth: '480px',
+        margin: '0 auto',
+        background: 'var(--canvas)',
+        zIndex: 10000,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden'
+      }}
+    >
+      {/* ── Top Header ── */}
       <div style={{
-        padding: '16px',
+        padding: '12px 16px 10px',
+        paddingTop: 'calc(12px + max(var(--safe-area-top, 0px), env(safe-area-inset-top, 0px), 24px))',
         background: 'var(--surface)',
         borderBottom: '1px solid var(--border)',
         display: 'flex',
@@ -115,7 +168,7 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
         justifyContent: 'space-between',
         flexShrink: 0
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button
             type="button"
             onClick={handleBack}
@@ -123,8 +176,9 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
             style={{
               background: 'var(--surface-alt)',
               border: '1px solid var(--border)',
-              borderRadius: '10px',
-              padding: '8px',
+              borderRadius: '50%',
+              width: '34px',
+              height: '34px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -136,21 +190,39 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
           </button>
           <div>
             <h3 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>
-              Attendance Center
+              Attendance
             </h3>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-              Student, course & subject analytics
+              Mark attendance & student logs
             </span>
           </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#ecfdf5', padding: '4px 8px', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
           <CheckCircle2 size={13} color="#10b981" />
-          <span style={{ fontSize: '11px', fontWeight: 700, color: '#047857' }}>89% Avg</span>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#047857' }}>
+            {activeTab === 'mark' ? `${attendanceRate}% Rate` : `${students.length} Students`}
+          </span>
         </div>
       </div>
 
-      {/* 3 Main View Tabs */}
+      {/* ── Toast Notification ── */}
+      {toastMessage && (
+        <div style={{
+          background: '#10b981',
+          color: '#ffffff',
+          padding: '8px 14px',
+          fontSize: '12px',
+          fontWeight: 700,
+          textAlign: 'center',
+          flexShrink: 0,
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          {toastMessage}
+        </div>
+      )}
+
+      {/* ── Standard 2 Tabs: Mark Attendance vs Student Records ── */}
       <div style={{
         display: 'flex',
         padding: '8px 16px',
@@ -161,65 +233,17 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
       }}>
         <button
           type="button"
-          onClick={() => setActiveTab('student')}
+          onClick={() => setActiveTab('mark')}
           style={{
             flex: 1,
-            padding: '9px',
+            padding: '8px 12px',
             borderRadius: '10px',
-            fontSize: '12px',
+            fontSize: '12.5px',
             fontWeight: 700,
             cursor: 'pointer',
-            border: activeTab === 'student' ? '1.5px solid #0ea5e9' : '1px solid var(--border)',
-            background: activeTab === 'student' ? '#f0f9ff' : 'var(--surface-alt)',
-            color: activeTab === 'student' ? '#0369a1' : 'var(--text-secondary)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            transition: 'all 0.15s ease'
-          }}
-        >
-          <Users size={14} />
-          <span>Student-wise</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('course')}
-          style={{
-            flex: 1,
-            padding: '9px',
-            borderRadius: '10px',
-            fontSize: '12px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            border: activeTab === 'course' ? '1.5px solid #8b5cf6' : '1px solid var(--border)',
-            background: activeTab === 'course' ? '#f5f3ff' : 'var(--surface-alt)',
-            color: activeTab === 'course' ? '#6d28d9' : 'var(--text-secondary)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            transition: 'all 0.15s ease'
-          }}
-        >
-          <BookOpen size={14} />
-          <span>Course-wise</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('subject')}
-          style={{
-            flex: 1,
-            padding: '9px',
-            borderRadius: '10px',
-            fontSize: '12px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            border: activeTab === 'subject' ? '1.5px solid #10b981' : '1px solid var(--border)',
-            background: activeTab === 'subject' ? '#ecfdf5' : 'var(--surface-alt)',
-            color: activeTab === 'subject' ? '#047857' : 'var(--text-secondary)',
+            border: activeTab === 'mark' ? '1.5px solid var(--brand-700)' : '1px solid var(--border)',
+            background: activeTab === 'mark' ? 'var(--brand-50)' : 'var(--surface-alt)',
+            color: activeTab === 'mark' ? 'var(--brand-900)' : 'var(--text-secondary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -228,359 +252,399 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
           }}
         >
           <CheckSquare size={14} />
-          <span>Subject-wise</span>
+          <span>Mark Attendance</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('records')}
+          style={{
+            flex: 1,
+            padding: '8px 12px',
+            borderRadius: '10px',
+            fontSize: '12.5px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            border: activeTab === 'records' ? '1.5px solid var(--brand-700)' : '1px solid var(--border)',
+            background: activeTab === 'records' ? 'var(--brand-50)' : 'var(--surface-alt)',
+            color: activeTab === 'records' ? 'var(--brand-900)' : 'var(--text-secondary)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <Users size={14} />
+          <span>Student Records</span>
         </button>
       </div>
 
-      {/* Main Content Area */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        
-        {/* ====================================================================
-            TAB 1: STUDENT-WISE ATTENDANCE
-           ==================================================================== */}
-        {activeTab === 'student' && (
-          <>
-            {/* Search & Course Filters */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ position: 'relative' }}>
+      {/* ── Main Content Area ── */}
+      {activeTab === 'mark' ? (
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+          {/* Controls: Course selector & Date Picker */}
+          <div style={{ padding: '12px 16px', background: 'var(--surface)', borderBottom: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* Standard Course Selection Buttons */}
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Select Course
+              </div>
+              <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '2px', scrollbarWidth: 'none' }}>
+                {COURSE_OPTIONS.map(c => {
+                  const isActive = selectedCourse === c;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setSelectedCourse(c)}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '20px',
+                        fontSize: '12px',
+                        fontWeight: isActive ? 700 : 500,
+                        whiteSpace: 'nowrap',
+                        border: isActive ? '1.5px solid var(--brand-700)' : '1px solid var(--border)',
+                        background: isActive ? 'var(--brand-800)' : 'var(--surface)',
+                        color: isActive ? '#ffffff' : 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {c}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Date Picker & Quick Actions Bar */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Calendar size={14} color="var(--brand-700)" />
                 <input
-                  type="text"
-                  placeholder="Search student by name or roll #..."
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
+                  type="date"
+                  value={attendanceDate}
+                  onChange={e => setAttendanceDate(e.target.value)}
                   style={{
-                    width: '100%',
-                    padding: '9px 12px 9px 36px',
-                    borderRadius: '10px',
+                    padding: '5px 8px',
+                    borderRadius: '8px',
                     border: '1px solid var(--border)',
-                    background: 'var(--surface)',
-                    fontSize: '13px'
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    background: 'var(--surface-alt)',
+                    color: 'var(--brand-900)'
                   }}
                 />
-                <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)' }}
-                  >
-                    <X size={14} />
-                  </button>
-                )}
               </div>
 
-              {/* Course pills */}
-              <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '2px' }}>
-                {['All', ...COURSE_OPTIONS].map(c => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setSelectedCourse(c)}
-                    style={{
-                      padding: '4px 10px',
-                      borderRadius: '999px',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      whiteSpace: 'nowrap',
-                      border: selectedCourse === c ? '1px solid #0ea5e9' : '1px solid var(--border)',
-                      background: selectedCourse === c ? '#e0f2fe' : 'var(--surface)',
-                      color: selectedCourse === c ? '#0284c7' : 'var(--text-secondary)',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {c}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => handleMarkAll('Present')}
+                  style={{
+                    padding: '5px 9px',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    background: '#ecfdf5',
+                    color: '#047857',
+                    border: '1px solid #a7f3d0',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ✓ All Present
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleMarkAll('Absent')}
+                  style={{
+                    padding: '5px 9px',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    background: '#fef2f2',
+                    color: '#b91c1c',
+                    border: '1px solid #fecaca',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ✕ All Absent
+                </button>
               </div>
             </div>
 
-            {/* Attendance Compliance Summary */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-              <div className="card" style={{ padding: '10px', textAlign: 'center', background: '#f0fdf4' }}>
-                <span style={{ fontSize: '10px', color: '#16a34a', fontWeight: 700 }}>Present Today</span>
-                <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#15803d', margin: '2px 0 0 0' }}>
-                  {studentsList.filter(s => s.todayAttendance === 'Present').length}
-                </h4>
+            {/* Quick Stats Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+              <div style={{ background: 'var(--surface-alt)', padding: '6px 4px', borderRadius: '8px', textAlign: 'center', border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Total</div>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--brand-900)' }}>{courseStudents.length}</div>
               </div>
-              <div className="card" style={{ padding: '10px', textAlign: 'center', background: '#fef2f2' }}>
-                <span style={{ fontSize: '10px', color: '#dc2626', fontWeight: 700 }}>Absent Today</span>
-                <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#b91c1c', margin: '2px 0 0 0' }}>
-                  {studentsList.filter(s => s.todayAttendance === 'Absent').length}
-                </h4>
+              <div style={{ background: '#ecfdf5', padding: '6px 4px', borderRadius: '8px', textAlign: 'center', border: '1px solid #a7f3d0' }}>
+                <div style={{ fontSize: '9.5px', color: '#047857', fontWeight: 700, textTransform: 'uppercase' }}>Present</div>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: '#047857' }}>{presentCount}</div>
               </div>
-              <div className="card" style={{ padding: '10px', textAlign: 'center', background: '#eff6ff' }}>
-                <span style={{ fontSize: '10px', color: '#2563eb', fontWeight: 700 }}>Institute Rate</span>
-                <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#1d4ed8', margin: '2px 0 0 0' }}>
-                  {Math.round((studentsList.filter(s => s.todayAttendance === 'Present').length / (studentsList.length || 1)) * 100)}%
-                </h4>
+              <div style={{ background: '#fef2f2', padding: '6px 4px', borderRadius: '8px', textAlign: 'center', border: '1px solid #fecaca' }}>
+                <div style={{ fontSize: '9.5px', color: '#b91c1c', fontWeight: 700, textTransform: 'uppercase' }}>Absent</div>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: '#b91c1c' }}>{absentCount}</div>
+              </div>
+              <div style={{ background: '#f0f9ff', padding: '6px 4px', borderRadius: '8px', textAlign: 'center', border: '1px solid #bae6fd' }}>
+                <div style={{ fontSize: '9.5px', color: '#0369a1', fontWeight: 700, textTransform: 'uppercase' }}>Rate</div>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: '#0369a1' }}>{attendanceRate}%</div>
               </div>
             </div>
+          </div>
 
-            {/* Students List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {filteredStudents.map(std => {
-                const isExpanded = expandedStudentId === std.id;
-                const isHigh = std.attendanceRate >= 85;
-                const isLow = std.attendanceRate < 75;
+          {/* Student List for Selected Course */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {courseStudents.length === 0 ? (
+              <div className="card" style={{ padding: '36px 20px', textAlign: 'center', borderRadius: '12px' }}>
+                <Users size={36} color="var(--text-muted)" style={{ margin: '0 auto 10px auto', opacity: 0.5 }} />
+                <h4 style={{ fontSize: '14.5px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>
+                  No Students Enrolled in {selectedCourse}
+                </h4>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                  Add students to the {selectedCourse} course from the Students tab in Admin.
+                </p>
+              </div>
+            ) : (
+              courseStudents.map(student => {
+                const status = studentStatusMap[student.id] || 'Present';
+                const isPresent = status === 'Present';
 
                 return (
                   <div
-                    key={std.id}
-                    className="card"
+                    key={student.id}
                     style={{
-                      padding: '14px',
+                      padding: '10px 14px',
+                      borderRadius: '12px',
+                      background: isPresent ? '#f0fdf4' : '#fef2f2',
+                      border: isPresent ? '1px solid #bbf7d0' : '1px solid #fecaca',
                       display: 'flex',
-                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
                       gap: '10px',
-                      cursor: 'pointer',
                       transition: 'all 0.15s ease'
                     }}
-                    onClick={() => setExpandedStudentId(isExpanded ? null : std.id)}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <img
-                          src={std.avatar}
-                          alt={std.name}
-                          style={{ width: '42px', height: '42px', borderRadius: '12px', objectFit: 'cover', border: '1.5px solid var(--border)' }}
-                        />
-                        <div>
-                          <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>
-                            {std.name}
-                          </h4>
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                            Roll #{std.roll} • {std.course}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Attendance % badge */}
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{
-                          display: 'inline-block',
-                          padding: '3px 8px',
-                          borderRadius: '8px',
-                          fontSize: '12px',
-                          fontWeight: 800,
-                          background: isHigh ? '#dcfce7' : isLow ? '#fee2e2' : '#fef3c7',
-                          color: isHigh ? '#15803d' : isLow ? '#b91c1c' : '#b45309'
-                        }}>
-                          {std.attendanceRate}%
-                        </span>
-                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
-                          {std.attendedCount}/{std.totalCount} Attended
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Today's Status & Expand Arrow (Admin can toggle status) */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: '8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Today:</span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAdminToggleStatus(std.id);
-                          }}
-                          style={{
-                            padding: '3px 8px',
-                            borderRadius: '8px',
-                            fontSize: '11px',
-                            fontWeight: 800,
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            border: std.todayAttendance === 'Present' ? '1px solid #bbf7d0' : '1px solid #fecaca',
-                            background: std.todayAttendance === 'Present' ? '#ecfdf5' : '#fef2f2',
-                            color: std.todayAttendance === 'Present' ? '#15803d' : '#b91c1c',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
-                          }}
-                          title="Click to override / change attendance as Admin"
-                        >
-                          {std.todayAttendance === 'Present' ? <Check size={12} strokeWidth={2.5} /> : <X size={12} strokeWidth={2.5} />}
-                          <span>{std.todayAttendance}</span>
-                          <span style={{
-                            fontSize: '9px',
-                            background: 'rgba(0,0,0,0.06)',
-                            padding: '1px 4px',
-                            borderRadius: '4px',
-                            marginLeft: '2px',
-                            color: 'var(--text-secondary)'
-                          }}>
-                            Change
-                          </span>
-                        </button>
-                        {std.adminOverridden && (
-                          <span style={{ fontSize: '9px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '1px 5px', borderRadius: '4px', fontWeight: 700 }}>
-                            Admin Edited
-                          </span>
-                        )}
-                      </div>
-
-                      <span style={{ fontSize: '11px', color: '#0ea5e9', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2px' }}>
-                        {isExpanded ? (
-                          <><span>Hide Log</span> <ChevronUp size={14} /></>
-                        ) : (
-                          <><span>Past Lectures</span> <ChevronDown size={14} /></>
-                        )}
-                      </span>
-                    </div>
-
-                    {/* Expanded 5-lecture log */}
-                    {isExpanded && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
                       <div style={{
-                        marginTop: '4px',
-                        padding: '10px 12px',
-                        background: 'var(--surface-alt)',
-                        borderRadius: '10px',
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        background: isPresent ? '#dcfce7' : '#fee2e2',
+                        color: isPresent ? '#15803d' : '#b91c1c',
                         display: 'flex',
-                        flexDirection: 'column',
-                        gap: '6px'
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '12.5px',
+                        fontWeight: 800,
+                        flexShrink: 0
                       }}>
-                        <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                          Recent Lecture History
-                        </span>
-                        {mockLectureAttendance.slice(0, 5).map((lec, idx) => (
-                          <div key={lec.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11.5px', padding: '4px 0', borderBottom: idx < 4 ? '1px solid var(--border)' : 'none' }}>
-                            <div>
-                              <strong style={{ color: 'var(--brand-900)' }}>{lec.subject}</strong>: {lec.topic}
-                              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{lec.date} • {lec.time}</div>
-                            </div>
-                            <span className={`badge ${lec.status === 'Present' ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '10px' }}>
-                              {lec.status}
-                            </span>
-                          </div>
-                        ))}
+                        {student.name ? student.name.charAt(0).toUpperCase() : 'S'}
                       </div>
-                    )}
+                      <div style={{ minWidth: 0 }}>
+                        <span style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--brand-900)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {student.name}
+                        </span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                          Roll: {student.roll || student.rollNumber || '—'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleToggleStudent(student.id)}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        border: isPresent ? '1.5px solid #10b981' : '1.5px solid #ef4444',
+                        background: isPresent ? '#10b981' : '#ef4444',
+                        color: '#ffffff',
+                        boxShadow: isPresent ? '0 2px 6px rgba(16, 185, 129, 0.25)' : '0 2px 6px rgba(239, 68, 68, 0.25)',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {isPresent ? <Check size={13} strokeWidth={3} /> : <X size={13} strokeWidth={3} />}
+                      <span>{status}</span>
+                    </button>
                   </div>
                 );
-              })}
-            </div>
-          </>
-        )}
+              })
+            )}
+          </div>
 
-        {/* ====================================================================
-            TAB 2: COURSE-WISE ATTENDANCE
-           ==================================================================== */}
-        {activeTab === 'course' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)' }}>
-              Course & Stream Overview ({COURSE_ATTENDANCE_DATA.length} Programs)
-            </div>
+          {/* ── Fixed Bottom Button covering left to right ── */}
+          <div style={{
+            padding: '12px 16px',
+            paddingBottom: 'calc(12px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)))',
+            background: 'var(--surface)',
+            borderTop: '1px solid var(--border)',
+            flexShrink: 0
+          }}>
+            <button
+              type="button"
+              onClick={handleSaveAttendance}
+              className="btn-primary"
+              style={{
+                width: '100%',
+                padding: '13px 18px',
+                fontSize: '13.5px',
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                borderRadius: '12px',
+                boxShadow: '0 4px 14px rgba(10, 31, 61, 0.2)'
+              }}
+            >
+              <CheckCircle2 size={18} />
+              <span>Save Attendance for {selectedCourse}</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* ── TAB 2: STUDENT RECORDS ── */
+        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* Search Box */}
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              placeholder="Search student by name or roll..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '9px 12px 9px 34px',
+                borderRadius: '10px',
+                border: '1px solid var(--border)',
+                background: 'var(--surface)',
+                fontSize: '13px',
+                color: 'var(--text-primary)'
+              }}
+            />
+            <Search size={15} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
 
-            {COURSE_ATTENDANCE_DATA.map(c => {
-              const isHigh = c.rate >= 90;
+          {/* Course Filter Pills */}
+          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '2px', scrollbarWidth: 'none' }}>
+            {['All', ...COURSE_OPTIONS].map(course => {
+              const isActive = recordsCourseFilter === course;
               return (
-                <div key={c.course} className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>
-                        {c.course}
-                      </h4>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                        Batch: {c.batch} • Code: {c.code}
-                      </span>
-                    </div>
-
-                    <div style={{ textAlign: 'right' }}>
-                      <span style={{
-                        fontSize: '18px',
-                        fontWeight: 800,
-                        color: isHigh ? '#16a34a' : '#2563eb'
-                      }}>
-                        {c.rate}%
-                      </span>
-                      <span style={{ fontSize: '10px', color: '#16a34a', display: 'block', fontWeight: 700 }}>
-                        {c.trend} vs last wk
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
-                    <div style={{
-                      width: `${c.rate}%`,
-                      height: '100%',
-                      background: isHigh ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)' : 'linear-gradient(90deg, #0ea5e9 0%, #2563eb 100%)',
-                      borderRadius: '999px'
-                    }} />
-                  </div>
-
-                  {/* Metrics grid */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', paddingTop: '4px' }}>
-                    <div style={{ padding: '8px', background: 'var(--surface-alt)', borderRadius: '8px', textAlign: 'center' }}>
-                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>Total Enrolled</span>
-                      <strong style={{ fontSize: '13px', color: 'var(--brand-900)' }}>{c.totalStudents}</strong>
-                    </div>
-                    <div style={{ padding: '8px', background: '#f0fdf4', borderRadius: '8px', textAlign: 'center' }}>
-                      <span style={{ fontSize: '10px', color: '#15803d', display: 'block' }}>Present Today</span>
-                      <strong style={{ fontSize: '13px', color: '#16a34a' }}>{c.presentToday}</strong>
-                    </div>
-                    <div style={{ padding: '8px', background: '#fef2f2', borderRadius: '8px', textAlign: 'center' }}>
-                      <span style={{ fontSize: '10px', color: '#b91c1c', display: 'block' }}>Absent Today</span>
-                      <strong style={{ fontSize: '13px', color: '#ef4444' }}>{c.absentToday}</strong>
-                    </div>
-                  </div>
-                </div>
+                <button
+                  key={course}
+                  type="button"
+                  onClick={() => setRecordsCourseFilter(course)}
+                  style={{
+                    padding: '5px 12px',
+                    borderRadius: '20px',
+                    fontSize: '11.5px',
+                    fontWeight: isActive ? 700 : 500,
+                    whiteSpace: 'nowrap',
+                    border: isActive ? '1.5px solid var(--brand-700)' : '1px solid var(--border)',
+                    background: isActive ? 'var(--brand-800)' : 'var(--surface)',
+                    color: isActive ? '#ffffff' : 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {course}
+                </button>
               );
             })}
           </div>
-        )}
 
-        {/* ====================================================================
-            TAB 3: SUBJECT-WISE ATTENDANCE
-           ==================================================================== */}
-        {activeTab === 'subject' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)' }}>
-              Subject & Department Analytics
-            </div>
-
-            {SUBJECT_ATTENDANCE_DATA.map(s => (
-              <div key={s.subject} className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>
-                      {s.subject}
-                    </h4>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                      Faculty: <strong style={{ color: 'var(--brand-800)' }}>{s.faculty}</strong>
-                    </span>
-                  </div>
-
-                  <span style={{
-                    padding: '4px 10px',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    fontWeight: 800,
-                    background: s.rate >= 90 ? '#dcfce7' : '#eff6ff',
-                    color: s.rate >= 90 ? '#15803d' : '#1d4ed8'
-                  }}>
-                    {s.rate}% Avg
-                  </span>
-                </div>
-
-                {/* Progress bar */}
-                <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '999px', overflow: 'hidden' }}>
-                  <div style={{
-                    width: `${s.rate}%`,
-                    height: '100%',
-                    background: s.rate >= 90 ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)' : 'linear-gradient(90deg, #3b82f6 0%, #1e40af 100%)',
-                    borderRadius: '999px'
-                  }} />
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--text-secondary)', borderTop: '1px solid var(--border)', paddingTop: '8px' }}>
-                  <span>Lectures Conducted: <strong>{s.lecturesDone}</strong></span>
-                  <span>Health: <strong style={{ color: s.health === 'Excellent' ? '#16a34a' : '#2563eb' }}>{s.health}</strong></span>
-                </div>
+          {/* Students List in Records */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {filteredRecordsStudents.length === 0 ? (
+              <div className="card" style={{ padding: '36px 20px', textAlign: 'center', borderRadius: '12px' }}>
+                <Users size={36} color="var(--text-muted)" style={{ margin: '0 auto 10px auto', opacity: 0.5 }} />
+                <h4 style={{ fontSize: '14.5px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>No Student Records</h4>
+                <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                  No students found matching the selected filter.
+                </p>
               </div>
-            ))}
+            ) : (
+              filteredRecordsStudents.map(student => {
+                const attended = Number(student.attendedLectures || student.attendedCount || 0);
+                const total = Number(student.totalLectures || student.totalCount || 0);
+                const pct = total > 0 ? Math.round((attended / total) * 100) : (student.overallAttendance || 0);
+
+                return (
+                  <div
+                    key={student.id}
+                    className="card"
+                    style={{
+                      padding: '12px 14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      borderRadius: '12px',
+                      background: 'var(--surface)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                      <div style={{
+                        width: '34px',
+                        height: '34px',
+                        borderRadius: '50%',
+                        background: 'var(--brand-50)',
+                        color: 'var(--brand-700)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '13px',
+                        fontWeight: 800,
+                        flexShrink: 0
+                      }}>
+                        {student.name ? student.name.charAt(0).toUpperCase() : 'S'}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <h4 style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--brand-900)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {student.name}
+                        </h4>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                          {student.course || 'JEE'} • Roll: {student.roll || student.rollNumber || '—'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <span style={{
+                        fontSize: '13.5px',
+                        fontWeight: 800,
+                        color: pct >= 75 ? '#047857' : (pct >= 50 ? '#d97706' : '#dc2626')
+                      }}>
+                        {pct}%
+                      </span>
+                      <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'block' }}>
+                        Attendance
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

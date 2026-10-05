@@ -164,16 +164,15 @@ export async function fetchFeesFromSupabase() {
           } catch (e) {}
         }
 
-        const existing = map.get(key) || map.get(p.full_name);
-        const total = feeData?.totalFee !== undefined ? Number(feeData.totalFee) : (existing?.totalFee || 20000);
-        const paid = feeData?.paidFee !== undefined ? Number(feeData.paidFee) : (existing?.paidFee || 0);
+        const total = feeData?.totalFee !== undefined ? Number(feeData.totalFee) : (existing?.totalFee || 0);
+        const paid = feeData?.paidFee !== undefined ? Math.min(total, Number(feeData.paidFee)) : (existing?.paidFee || 0);
 
         map.set(key, {
           id: p.id,
           name: p.full_name,
           roll: p.roll_number || existing?.roll || '—',
           rollNumber: p.roll_number || existing?.rollNumber || '—',
-          course: p.course || existing?.course || '12th Science',
+          course: p.course || existing?.course || 'JEE',
           email: p.email,
           totalFee: total,
           paidFee: paid,
@@ -197,8 +196,8 @@ export async function fetchFeesFromSupabase() {
             name: std.name,
             roll: std.roll || std.rollNumber || '—',
             rollNumber: std.rollNumber || std.roll || '—',
-            course: std.course || '12th Science',
-            totalFee: 20000,
+            course: std.course || 'JEE',
+            totalFee: 0,
             paidFee: 0,
             isFullyPaid: false,
             lastPaymentDate: '—',
@@ -258,8 +257,12 @@ export function updateStudentFeeRecord(studentId, updates) {
 
   const updatedList = current.map(item => {
     if (item.id === studentId || item.name === studentId) {
-      const newTotal = updates.totalFee !== undefined ? Number(updates.totalFee) : item.totalFee;
-      const newPaid = updates.paidFee !== undefined ? Number(updates.paidFee) : item.paidFee;
+      const newTotal = updates.totalFee !== undefined ? Math.max(0, Number(updates.totalFee)) : item.totalFee;
+      let newPaid = updates.paidFee !== undefined ? Math.max(0, Number(updates.paidFee)) : item.paidFee;
+      // Requirement: The maximum value which can be added to paid fees is the total fees value
+      if (newPaid > newTotal) {
+        newPaid = newTotal;
+      }
       const fullPaid = updates.isFullyPaid !== undefined 
         ? updates.isFullyPaid 
         : (newPaid >= newTotal && newTotal > 0);
@@ -325,8 +328,10 @@ export function markStudentAsFullPaid(studentId) {
  */
 export function addManualFeeRecord(record) {
   const fees = getStoredFees();
-  const total = Number(record.totalFee) || 0;
-  const paid = Number(record.paidFee) || 0;
+  const total = Math.max(0, Number(record.totalFee) || 0);
+  const rawPaid = Math.max(0, Number(record.paidFee) || 0);
+  // Maximum value which can be added to paid fees is the total fees value
+  const paid = Math.min(total, rawPaid);
   const isFull = paid >= total && total > 0;
 
   const newEntry = {
@@ -334,7 +339,7 @@ export function addManualFeeRecord(record) {
     name: record.name.trim(),
     roll: record.roll || record.rollNumber || '—',
     rollNumber: record.rollNumber || record.roll || '—',
-    course: record.course || '12th Science',
+    course: record.course || 'JEE',
     totalFee: total,
     paidFee: paid,
     isFullyPaid: isFull,

@@ -5,7 +5,18 @@ import { Calendar } from 'lucide-react';
 export default function TestsView({ onOpenTestPaper }) {
   const [tab, setTab] = useState('upcoming');
 
-  const tests = mockTests.filter(t => t.status.toLowerCase() === tab);
+  const [testsList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aspire_tests_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  });
+
+  const tests = testsList.filter(t => (t.status || 'Upcoming').toLowerCase() === tab);
 
   return (
     <div className="view-transition-enter" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '90px' }}>
@@ -41,8 +52,17 @@ export default function TestsView({ onOpenTestPaper }) {
 
       {/* Test List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {tests.map(test => (
-          <div key={test.id} className="card" style={{ padding: '16px' }}>
+        {tests.length === 0 ? (
+          <div className="card" style={{ padding: '36px 20px', textAlign: 'center', borderRadius: '12px' }}>
+            <Calendar size={36} color="var(--text-muted)" style={{ margin: '0 auto 10px auto', opacity: 0.5 }} />
+            <h4 style={{ fontSize: '14.5px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>No Tests Found</h4>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+              {tab === 'upcoming' ? 'No tests scheduled at the moment.' : 'No completed tests evaluated yet.'}
+            </p>
+          </div>
+        ) : (
+          tests.map(test => (
+            <div key={test.id} className="card" style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <span className="badge badge-warning" style={{ marginBottom: '4px' }}>
@@ -95,8 +115,9 @@ export default function TestsView({ onOpenTestPaper }) {
               View Test Paper (In-App)
             </button>
           </div>
-        ))}
-      </div>
+        ))
+      )}
+    </div>
     </div>
   );
 }

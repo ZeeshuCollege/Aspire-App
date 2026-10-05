@@ -6,13 +6,11 @@ import {
 import { mockStudyMaterials } from '../../lib/mockData';
 
 export const COURSE_OPTIONS = [
-  'Std 9th',
-  'Std 10th',
-  '11th Science',
-  '12th Science',
+  'JEE',
   'NEET',
-  'JEE (Mains + Adv)',
-  'MHT-CET'
+  'MHT-CET',
+  '9th',
+  '10th'
 ];
 
 export const SUBJECT_OPTIONS = [
@@ -26,45 +24,43 @@ export const SUBJECT_OPTIONS = [
   'Chemistry (NEET)',
   'Biology (NEET)',
 
+  // MHT-CET
+  'Physics (CET)',
+  'Chemistry (CET)',
+  'Maths (CET)',
+  'Biology (CET)',
+
   // 9th Standard
-  'English (9th)',
-  'Hindi (9th)',
-  'Urdu (9th)',
-  'Marathi (9th)',
-  'Geography (9th)',
-  'History (9th)',
-  'Maths (9th)',
   'Science (9th)',
+  'Maths (9th)',
+  'English (9th)',
+  'Social Science (9th)',
 
   // 10th Standard
-  'English (10th)',
-  'Hindi (10th)',
-  'Urdu (10th)',
-  'Marathi (10th)',
-  'Geography (10th)',
-  'History (10th)',
-  'Maths (10th)',
   'Science (10th)',
-
-  // 11th Standard
-  'English (11th)',
-  'Hindi (11th)',
-  'Urdu (11th)',
-  'Marathi (11th)',
-  'Geography (11th)',
-  'History (11th)',
-
-  // 12th Standard
-  'English (12th)',
-  'Hindi (12th)',
-  'Urdu (12th)',
-  'Marathi (12th)',
-  'Geography (12th)',
-  'History (12th)'
+  'Maths (10th)',
+  'English (10th)',
+  'Social Science (10th)'
 ];
 
 export default function AdminStudyMaterialsModal({ isOpen, onClose }) {
-  const [materials, setMaterials] = useState(mockStudyMaterials);
+  const [materials, setMaterials] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aspire_study_materials');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('aspire_study_materials', JSON.stringify(materials));
+    } catch (e) {}
+  }, [materials]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourseFilter, setSelectedCourseFilter] = useState('All');
   
@@ -75,7 +71,7 @@ export default function AdminStudyMaterialsModal({ isOpen, onClose }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newSubject, setNewSubject] = useState('Physics (JEE)');
-  const [newCourse, setNewCourse] = useState('12th Science');
+  const [newCourse, setNewCourse] = useState('JEE');
   const [newChapter, setNewChapter] = useState('');
   const [newType, setNewType] = useState('PDF');
   const [newAttachmentUrl, setNewAttachmentUrl] = useState('');
@@ -254,13 +250,6 @@ export default function AdminStudyMaterialsModal({ isOpen, onClose }) {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
-            onClick={() => setShowAddForm(true)}
-            className="btn-primary"
-            style={{ padding: '8px 16px', fontSize: '13px', gap: '6px', display: 'flex', alignItems: 'center' }}
-          >
-            <Plus size={16} /> Add Study Material
-          </button>
-          <button
             onClick={handleBack}
             aria-label="Close"
             style={{
@@ -405,6 +394,36 @@ export default function AdminStudyMaterialsModal({ isOpen, onClose }) {
               </div>
             ))
           )}
+        </div>
+
+        {/* ── Shifted Add Study Material Button covering Left to Right ── */}
+        <div style={{
+          padding: '12px 16px',
+          paddingBottom: 'calc(12px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)))',
+          background: 'var(--surface)',
+          borderTop: '1px solid var(--border)',
+          flexShrink: 0
+        }}>
+          <button
+            type="button"
+            onClick={() => setShowAddForm(true)}
+            className="btn-primary"
+            style={{
+              width: '100%',
+              padding: '13px 18px',
+              fontSize: '13.5px',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              borderRadius: '12px',
+              boxShadow: '0 4px 14px rgba(10, 31, 61, 0.2)'
+            }}
+          >
+            <Plus size={18} />
+            <span>Add Study Material</span>
+          </button>
         </div>
 
       {/* ====================================================================

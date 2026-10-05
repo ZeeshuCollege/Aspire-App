@@ -16,7 +16,23 @@ export const DURATION_OPTIONS = [
 ];
 
 export default function AdminTestsModal({ isOpen, onClose }) {
-  const [tests, setTests] = useState(mockTests);
+  const [tests, setTests] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aspire_tests_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('aspire_tests_list', JSON.stringify(tests));
+    } catch (e) {}
+  }, [tests]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourseFilter, setSelectedCourseFilter] = useState('All');
 
@@ -27,7 +43,7 @@ export default function AdminTestsModal({ isOpen, onClose }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newSubject, setNewSubject] = useState('Physics (JEE)');
-  const [newCourse, setNewCourse] = useState('12th Science');
+  const [newCourse, setNewCourse] = useState('JEE');
   const [newDate, setNewDate] = useState(new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }));
   const [newDuration, setNewDuration] = useState('90 min');
   const [newMaxMarks, setNewMaxMarks] = useState('100');
@@ -212,13 +228,6 @@ export default function AdminTestsModal({ isOpen, onClose }) {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
-            onClick={() => setShowAddForm(true)}
-            className="btn-primary"
-            style={{ padding: '8px 16px', fontSize: '13px', gap: '6px', display: 'flex', alignItems: 'center', background: 'var(--brand-900)' }}
-          >
-            <Plus size={16} /> Add Test
-          </button>
-          <button
             onClick={handleBack}
             aria-label="Close"
             style={{
@@ -363,6 +372,36 @@ export default function AdminTestsModal({ isOpen, onClose }) {
               </div>
             ))
           )}
+        </div>
+
+        {/* ── Shifted Add Test Button covering Left to Right ── */}
+        <div style={{
+          padding: '12px 16px',
+          paddingBottom: 'calc(12px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)))',
+          background: 'var(--surface)',
+          borderTop: '1px solid var(--border)',
+          flexShrink: 0
+        }}>
+          <button
+            type="button"
+            onClick={() => setShowAddForm(true)}
+            className="btn-primary"
+            style={{
+              width: '100%',
+              padding: '13px 18px',
+              fontSize: '13.5px',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              borderRadius: '12px',
+              boxShadow: '0 4px 14px rgba(10, 31, 61, 0.2)'
+            }}
+          >
+            <Plus size={18} />
+            <span>Add Test & Paper</span>
+          </button>
         </div>
 
       {/* ====================================================================

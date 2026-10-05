@@ -69,15 +69,17 @@ export default function App() {
       const saved = localStorage.getItem('aspire_notices_list');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map(n => ({
+        if (Array.isArray(parsed)) {
+          // Completely purge any legacy mock notices (n-1, n-2, n-3, etc)
+          const filtered = parsed.filter(n => n && !String(n.id).startsWith('n-'));
+          return filtered.map(n => ({
             ...n,
             courses: n.courses || n.targetCourses || ['All Courses']
           }));
         }
       }
     } catch (e) {}
-    return mockNotices;
+    return [];
   });
 
   useEffect(() => {

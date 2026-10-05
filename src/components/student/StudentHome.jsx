@@ -2,6 +2,16 @@ import React from 'react';
 import { Calendar, FileText, BookOpen, CheckCircle2, ChevronRight, Clock } from 'lucide-react';
 
 export default function StudentHome({ user, onNavigate, onOpenTestPaper }) {
+  const todayLecture = (() => {
+    try {
+      const timetable = JSON.parse(localStorage.getItem('aspire_admin_timetable') || '[]');
+      if (Array.isArray(timetable) && timetable.length > 0) {
+        return timetable[0];
+      }
+    } catch (e) {}
+    return null;
+  })();
+
   return (
     <div className="view-transition-enter" style={{
       padding: '16px',
@@ -69,7 +79,7 @@ export default function StudentHome({ user, onNavigate, onOpenTestPaper }) {
         </div>
       </div>
 
-      {/* Today's Class Card - Smooth Curved Block with Logo Accent Strip */}
+      {/* Today's Class Card */}
       <div style={{
         background: 'linear-gradient(135deg, var(--brand-950) 0%, var(--brand-900) 100%)',
         border: '1px solid var(--brand-800)',
@@ -85,18 +95,18 @@ export default function StudentHome({ user, onNavigate, onOpenTestPaper }) {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
               <span className="badge" style={{ background: 'rgba(249, 115, 22, 0.2)', color: '#fb923c', border: '1px solid rgba(249, 115, 22, 0.4)', borderRadius: '9999px', fontSize: '10px', fontWeight: 800, padding: '3px 9px' }}>
-                TODAY'S LECTURE
+                {todayLecture ? "TODAY'S LECTURE" : 'SCHEDULE'}
               </span>
               <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.75)' }}>
-                [ROOM 105]
+                {todayLecture ? `[${todayLecture.course || 'ROOM 105'}]` : '[INSTITUTE]'}
               </span>
             </div>
             <h3 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 4px 0', letterSpacing: '-0.01em' }}>
-              Physics // Mechanics & Waves
+              {todayLecture ? `${todayLecture.subject} • ${todayLecture.faculty || 'Faculty'}` : 'No scheduled lectures today'}
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-mono)' }}>
               <Clock size={13} color="#fb923c" />
-              <span>10:00 AM - 11:00 AM</span>
+              <span>{todayLecture ? `${todayLecture.day}: ${todayLecture.time}` : 'Regular batch timetable active'}</span>
             </div>
           </div>
         </div>

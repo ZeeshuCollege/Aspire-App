@@ -10,8 +10,26 @@ import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
 const DEFAULT_SAMPLE_STUDENTS = [];
 
 export default function AdminMarksModal({ isOpen, onClose }) {
-  const [tests] = useState(mockTests);
-  const [selectedTestId, setSelectedTestId] = useState(mockTests[0]?.id || 't-01');
+  const [tests] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aspire_tests_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  });
+  const [selectedTestId, setSelectedTestId] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aspire_tests_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0].id;
+      }
+    } catch (e) {}
+    return 'custom';
+  });
   const [selectedCourseFilter, setSelectedCourseFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -21,7 +39,7 @@ export default function AdminMarksModal({ isOpen, onClose }) {
       id: 'custom',
       title: 'Classroom Unit Assessment',
       subject: 'Physics (JEE)',
-      course: '12th Science',
+      course: 'JEE',
       maxMarks: 100,
       passingMarks: 35
     };

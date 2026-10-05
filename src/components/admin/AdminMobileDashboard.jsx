@@ -6,6 +6,7 @@ import {
   getStoredParents, saveStoredParents, deleteStoredParent,
   addRegisteredUser
 } from '../../lib/userAuthStore';
+import { getStoredFees } from '../../lib/feeService';
 import {
   BookOpen, CheckSquare, Plus, Search,
   Download, ChevronRight, Calendar, FileCheck, Trash2, Award,
@@ -19,6 +20,73 @@ import AdminAttendanceModal from './AdminAttendanceModal';
 import AdminMarksModal from './AdminMarksModal';
 import AdminFeesModal from './AdminFeesModal';
 import AdminStudentPerformanceModal from './AdminStudentPerformanceModal';
+
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function generateSimplePDF(title, sections) {
+  let streamContent = `BT /F1 15 Tf 50 780 Td (${title.replace(/[()\\]/g, '')}) Tj ET\n`;
+  let y = 750;
+  streamContent += `BT /F1 10 Tf 50 ${y} Td (Generated: ${new Date().toLocaleDateString('en-IN')}) Tj ET\n`;
+  y -= 25;
+
+  sections.forEach(sec => {
+    if (y < 60) return;
+    streamContent += `BT /F1 12 Tf 50 ${y} Td (${sec.title.replace(/[()\\]/g, '')}) Tj ET\n`;
+    y -= 16;
+    (sec.lines || []).slice(0, 10).forEach(line => {
+      if (y < 50) return;
+      const cleanLine = String(line || '').replace(/[()\\]/g, '');
+      streamContent += `BT /F1 9 Tf 50 ${y} Td (${cleanLine}) Tj ET\n`;
+      y -= 13;
+    });
+    y -= 10;
+  });
+
+  const streamLength = streamContent.length;
+  const pdfData = `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length ${streamLength} >>
+stream
+${streamContent}
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000010 00000 n 
+0000000060 00000 n 
+0000000117 00000 n 
+0000000226 00000 n 
+0000000295 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+368
+%%EOF`;
+
+  return new Blob([pdfData], { type: 'application/pdf' });
+}
 
 export default function AdminMobileDashboard({
   activeTab,
@@ -201,6 +269,160 @@ export default function AdminMobileDashboard({
       propSetNotices(prev => prev.filter(n => n.id !== noticeId));
     }
     setNotices(prev => prev.filter(n => n.id !== noticeId));
+  };
+
+  const handleExport = (format) => {
+    try {
+      const currentStudents = getStoredStudents() || [];
+      const currentTeachers = getStoredTeachers() || [];
+      const currentFees = getStoredFees() || [];
+
+      let timetableList = [];
+      try {
+        timetableList = JSON.parse(localStorage.getItem('aspire_admin_timetable') || '[]');
+      } catch (e) {}
+
+      let testsList = [];
+      try {
+        testsList = JSON.parse(localStorage.getItem('aspire_tests_list') || '[]');
+      } catch (e) {}
+
+      let studyMaterials = [];
+      try {
+        studyMaterials = JSON.parse(localStorage.getItem('aspire_study_materials') || '[]');
+      } catch (e) {}
+
+      const timestamp = new Date().toISOString().split('T')[0];
+
+      if (format === 'csv') {
+        let csvContent = '\uFEFF';
+        csvContent += 'ASPIRE LEARNING CENTRE - COMPLETE INSTITUTE DATA REPORT\n';
+        csvContent += `Generated On: ${new Date().toLocaleString()}\n\n`;
+
+        csvContent += '=== STUDENTS ===\n';
+        csvContent += 'ID,Name,Email,Course,Roll Number,Phone\n';
+        currentStudents.forEach(s => {
+          csvContent += `"${s.id || ''}","${s.name || ''}","${s.email || ''}","${s.course || ''}","${s.roll || s.rollNumber || ''}","${s.phone || ''}"\n`;
+        });
+
+        csvContent += '\n=== FACULTY / TEACHERS ===\n';
+        csvContent += 'ID,Name,Email,Subject,Phone\n';
+        currentTeachers.forEach(t => {
+          csvContent += `"${t.id || ''}","${t.name || ''}","${t.email || ''}","${t.subject || ''}","${t.phone || ''}"\n`;
+        });
+
+        csvContent += '\n=== FEES DETAILS ===\n';
+        csvContent += 'Student ID,Name,Course,Total Fee (Rs),Paid Fee (Rs),Pending Fee (Rs),Status\n';
+        currentFees.forEach(f => {
+          const rem = Math.max(0, (f.totalFee || 0) - (f.paidFee || 0));
+          csvContent += `"${f.id || ''}","${f.name || ''}","${f.course || ''}","${f.totalFee || 0}","${f.paidFee || 0}","${rem}","${f.isFullyPaid ? 'Full Paid' : 'Pending'}"\n`;
+        });
+
+        csvContent += '\n=== TIMETABLE ===\n';
+        csvContent += 'Course,Day,Time,Subject,Faculty\n';
+        timetableList.forEach(l => {
+          csvContent += `"${l.course || ''}","${l.day || ''}","${l.time || ''}","${l.subject || ''}","${l.faculty || ''}"\n`;
+        });
+
+        csvContent += '\n=== TESTS & EXAMS ===\n';
+        csvContent += 'Title,Course,Subject,Total Marks,Date\n';
+        testsList.forEach(t => {
+          csvContent += `"${t.title || ''}","${t.course || ''}","${t.subject || ''}","${t.totalMarks || ''}","${t.date || ''}"\n`;
+        });
+
+        csvContent += '\n=== STUDY MATERIALS ===\n';
+        csvContent += 'Title,Course,Subject,Type,File Size\n';
+        studyMaterials.forEach(m => {
+          csvContent += `"${m.title || ''}","${m.course || ''}","${m.subject || ''}","${m.type || ''}","${m.fileSize || ''}"\n`;
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        triggerDownload(blob, `Aspire_Institute_Data_${timestamp}.csv`);
+        setExportFeedback('✓ CSV downloaded successfully!');
+      } else if (format === 'xlsx') {
+        let excelContent = `
+          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+          <head>
+            <meta http-equiv="content-type" content="text/plain; charset=UTF-8"/>
+            <style>
+              table { border-collapse: collapse; width: 100%; margin-bottom: 20px; font-family: Arial, sans-serif; font-size: 12px; }
+              th { background-color: #0284c7; color: #ffffff; border: 1px solid #cbd5e1; padding: 6px 10px; font-weight: bold; }
+              td { border: 1px solid #cbd5e1; padding: 5px 8px; }
+              .hdr { background-color: #0a1f3d; color: #ffffff; font-size: 14px; font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <h2>Aspire Learning Centre - Full Institute Report</h2>
+            <p>Generated on: ${new Date().toLocaleString()}</p>
+            <table border="1">
+              <tr class="hdr"><td colspan="5">STUDENTS ENROLLED (${currentStudents.length})</td></tr>
+              <tr><th>Name</th><th>Email</th><th>Course</th><th>Roll No</th><th>Phone</th></tr>
+              ${currentStudents.map(s => `<tr><td>${s.name || ''}</td><td>${s.email || ''}</td><td>${s.course || ''}</td><td>${s.roll || s.rollNumber || ''}</td><td>${s.phone || ''}</td></tr>`).join('')}
+            </table>
+            <table border="1">
+              <tr class="hdr"><td colspan="4">FACULTY MEMBERS (${currentTeachers.length})</td></tr>
+              <tr><th>Name</th><th>Email</th><th>Subject</th><th>Phone</th></tr>
+              ${currentTeachers.map(t => `<tr><td>${t.name || ''}</td><td>${t.email || ''}</td><td>${t.subject || ''}</td><td>${t.phone || ''}</td></tr>`).join('')}
+            </table>
+            <table border="1">
+              <tr class="hdr"><td colspan="6">FEES MANAGEMENT (${currentFees.length})</td></tr>
+              <tr><th>Student Name</th><th>Course</th><th>Total Fee (Rs)</th><th>Paid Fee (Rs)</th><th>Pending Fee (Rs)</th><th>Status</th></tr>
+              ${currentFees.map(f => {
+                const rem = Math.max(0, (f.totalFee || 0) - (f.paidFee || 0));
+                return `<tr><td>${f.name || ''}</td><td>${f.course || ''}</td><td>${f.totalFee || 0}</td><td>${f.paidFee || 0}</td><td>${rem}</td><td>${f.isFullyPaid ? 'Full Paid' : 'Pending'}</td></tr>`;
+              }).join('')}
+            </table>
+            <table border="1">
+              <tr class="hdr"><td colspan="5">TIMETABLE LECTURES (${timetableList.length})</td></tr>
+              <tr><th>Course</th><th>Day</th><th>Time</th><th>Subject</th><th>Faculty</th></tr>
+              ${timetableList.map(l => `<tr><td>${l.course || ''}</td><td>${l.day || ''}</td><td>${l.time || ''}</td><td>${l.subject || ''}</td><td>${l.faculty || ''}</td></tr>`).join('')}
+            </table>
+            <table border="1">
+              <tr class="hdr"><td colspan="4">TESTS & EXAMS (${testsList.length})</td></tr>
+              <tr><th>Title</th><th>Course</th><th>Subject</th><th>Date</th></tr>
+              ${testsList.map(t => `<tr><td>${t.title || ''}</td><td>${t.course || ''}</td><td>${t.subject || ''}</td><td>${t.date || ''}</td></tr>`).join('')}
+            </table>
+          </body>
+          </html>
+        `;
+        const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        triggerDownload(blob, `Aspire_Institute_Data_${timestamp}.xlsx`);
+        setExportFeedback('✓ Excel (.xlsx) downloaded successfully!');
+      } else if (format === 'pdf') {
+        const sections = [
+          {
+            title: `Students Enrolled (${currentStudents.length})`,
+            lines: currentStudents.map(s => `${s.name || 'Student'} | ${s.course || 'JEE'} | Roll: ${s.roll || s.rollNumber || 'N/A'}`)
+          },
+          {
+            title: `Faculty Members (${currentTeachers.length})`,
+            lines: currentTeachers.map(t => `${t.name || 'Faculty'} | ${t.subject || 'All Subjects'} | ${t.email || ''}`)
+          },
+          {
+            title: `Fees Summary (${currentFees.length})`,
+            lines: currentFees.map(f => `${f.name}: Paid Rs ${f.paidFee || 0} / ${f.totalFee || 0} (${f.isFullyPaid ? 'Full Paid' : 'Pending'})`)
+          },
+          {
+            title: `Timetable Schedule (${timetableList.length})`,
+            lines: timetableList.map(l => `${l.course} | ${l.day} ${l.time} | ${l.subject} (${l.faculty})`)
+          },
+          {
+            title: `Tests & Papers (${testsList.length})`,
+            lines: testsList.map(t => `${t.title || 'Test'} | ${t.course} | ${t.subject || ''} | ${t.date || ''}`)
+          }
+        ];
+
+        const pdfBlob = generateSimplePDF('ASPIRE LEARNING CENTRE - INSTITUTE REPORT', sections);
+        triggerDownload(pdfBlob, `Aspire_Institute_Data_${timestamp}.pdf`);
+        setExportFeedback('✓ PDF (.pdf) downloaded successfully!');
+      }
+
+      setTimeout(() => setExportFeedback(''), 4000);
+    } catch (err) {
+      console.error('Export error:', err);
+      setExportFeedback('⚠️ Export failed. Please try again.');
+      setTimeout(() => setExportFeedback(''), 4000);
+    }
   };
 
   const closeModal = (key, setter) => {
@@ -652,11 +874,6 @@ export default function AdminMobileDashboard({
     setNewFacultyBatches([]);
     setNewFacultySubjects([]);
     handleCloseAddFacultyModal();
-  };
-
-  const handleExport = (format) => {
-    setExportFeedback(`Exported to ASPIRE_Report.${format}`);
-    setTimeout(() => setExportFeedback(''), 2500);
   };
 
   const handleAddStudent = async (e) => {

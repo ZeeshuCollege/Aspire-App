@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  ArrowLeft, Plus, Search, Calendar, Clock, 
-  User, Trash2, X, Check, SkipForward,
-  UserCheck, CheckCircle2
+  ArrowLeft, Plus, Search, Clock, 
+  User, Trash2, X, Check, SkipForward
 } from 'lucide-react';
 import { COURSE_OPTIONS, SUBJECT_OPTIONS } from './AdminStudyMaterialsModal';
-import { mockBatches } from '../../lib/mockData';
-import { getStoredStudents, getStoredTeachers } from '../../lib/userAuthStore';
-import { saveBatchAttendance, getTodayDateKey } from '../../lib/attendanceService';
+import { getStoredTeachers } from '../../lib/userAuthStore';
 
 export const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -116,35 +113,6 @@ function createInitialWeekData(course) {
   return data;
 }
 
-function getStudentsForBatch(batchOrLecture) {
-  const courseKey = (batchOrLecture?.course || batchOrLecture?.courseName || '').trim();
-  
-  // Fetch real stored students from userAuthStore
-  try {
-    const stored = getStoredStudents();
-    if (Array.isArray(stored) && stored.length > 0) {
-      const matched = stored.filter(s => {
-        if (!courseKey) return true;
-        const sCourse = (s.course || '').toLowerCase();
-        const sBatch = (s.batches || '').toLowerCase();
-        const targetCourse = courseKey.toLowerCase();
-        const targetBatch = (batchOrLecture?.name || '').toLowerCase();
-        return sCourse.includes(targetCourse) || (targetBatch && sBatch.includes(targetBatch));
-      });
-      const pool = matched.length > 0 ? matched : stored;
-      return pool.map(s => ({
-        id: s.id,
-        name: s.name,
-        roll: s.rollNumber || s.roll || 'ASPIRE-01',
-        rollNumber: s.rollNumber || s.roll || 'ASPIRE-01',
-        todayAttendance: 'Present'
-      }));
-    }
-  } catch (e) {}
-
-  return [];
-}
-
 const INITIAL_TIMETABLE = [];
 
 export default function AdminTimetableModal({ isOpen, onClose }) {
@@ -186,22 +154,6 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
   const [isClosing, setIsClosing] = useState(false);
   const [isAddClosing, setIsAddClosing] = useState(false);
 
-  // ── Attendance Marking States ──
-  const [markedAttendanceMap, setMarkedAttendanceMap] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('aspire_timetable_marked_attendance') || '{}');
-    } catch (e) {
-      return {};
-    }
-  });
-  const [showAttendanceSheet, setShowAttendanceSheet] = useState(false);
-  const [selectedBatchForAttendance, setSelectedBatchForAttendance] = useState(null);
-  const [attendanceDate, setAttendanceDate] = useState(() => getTodayDateKey());
-  const [batchStudents, setBatchStudents] = useState([]);
-  const [attendanceFilter, setAttendanceFilter] = useState('All'); // 'All' | 'Present' | 'Absent'
-  const [attendanceStudentSearch, setAttendanceStudentSearch] = useState('');
-  const [isAttendanceClosing, setIsAttendanceClosing] = useState(false);
-
   // Save to localStorage whenever timetable updates
   useEffect(() => {
     try {
@@ -235,136 +187,21 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
     }, 320);
   };
 
-  // ── Attendance Handlers ──
-  const handleOpenAttendanceModal = (batchOrLecture) => {
-    setSelectedBatchForAttendance(batchOrLecture);
-    const dateKey = getTodayDateKey();
-    setAttendanceDate(dateKey);
-
-    const students = getStudentsForBatch(batchOrLecture);
-    const storageKey = `${batchOrLecture.id}_${dateKey}`;
-    const previous = markedAttendanceMap[storageKey] || markedAttendanceMap[batchOrLecture.id];
-
-    if (previous && previous.records) {
-      // Restore previous marked states
-      setBatchStudents(students.map(s => {
-        const found = previous.records.find(r => r.id === s.id);
-        return found ? { ...s, todayAttendance: found.status } : s;
-      }));
-    } else {
-      setBatchStudents(students);
-    }
-
-    setAttendanceFilter('All');
-    setAttendanceStudentSearch('');
-    setShowAttendanceSheet(true);
-  };
-
-  const handleCloseAttendanceModal = () => {
-    if (isAttendanceClosing) return;
-    setIsAttendanceClosing(true);
-    setTimeout(() => {
-      setIsAttendanceClosing(false);
-      setShowAttendanceSheet(false);
-      setSelectedBatchForAttendance(null);
-    }, 320);
-  };
-
-  const handleToggleStudentAttendance = (studentId) => {
-    setBatchStudents(prev => prev.map(s => {
-      if (s.id === studentId) {
-        return {
-          ...s,
-          todayAttendance: s.todayAttendance === 'Present' ? 'Absent' : 'Present'
-        };
-      }
-      return s;
-    }));
-  };
-
-  const handleMarkAllStudents = (status) => {
-    setBatchStudents(prev => prev.map(s => ({
-      ...s,
-      todayAttendance: status
-    })));
-  };
-
-  const handleSaveAttendance = async () => {
-    if (!selectedBatchForAttendance) return;
-
-    const presentCount = batchStudents.filter(s => s.todayAttendance === 'Present').length;
-    const totalCount = batchStudents.length;
-    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const batchId = selectedBatchForAttendance.id || 'batch-custom';
-    const batchName = selectedBatchForAttendance.course || selectedBatchForAttendance.name || 'Batch';
-    const subject = selectedBatchForAttendance.subject || 'Lecture';
-
-    const savePayload = {
-      batchId,
-      batchName,
-      subject,
-      teacherName: selectedBatchForAttendance.faculty || 'Institute Admin',
-      students: batchStudents.map(s => ({
-        id: s.id,
-        name: s.name,
-        roll: s.roll || s.rollNumber,
-        status: s.todayAttendance
-      })),
-      time: timeStr
-    };
-
-    try {
-      await saveBatchAttendance(savePayload);
-    } catch (e) {
-      console.warn('Attendance local fallback applied:', e);
-    }
-
-    const attendanceRecord = {
-      batchId,
-      batchName,
-      subject,
-      date: attendanceDate,
-      time: timeStr,
-      presentCount,
-      totalCount,
-      rate: Math.round((presentCount / (totalCount || 1)) * 100),
-      records: batchStudents.map(s => ({ id: s.id, status: s.todayAttendance }))
-    };
-
-    const updatedMap = {
-      ...markedAttendanceMap,
-      [`${batchId}_${attendanceDate}`]: attendanceRecord,
-      [batchId]: attendanceRecord
-    };
-
-    setMarkedAttendanceMap(updatedMap);
-    try {
-      localStorage.setItem('aspire_timetable_marked_attendance', JSON.stringify(updatedMap));
-    } catch (e) {}
-
-    setToastMessage(`✓ Attendance saved for ${batchName} (${presentCount}/${totalCount} Present)`);
-    setTimeout(() => setToastMessage(''), 3500);
-    handleCloseAttendanceModal();
-  };
-
   // Android back button integration
   useEffect(() => {
     if (!isOpen) return;
     const handleAppBack = (e) => {
-      if (showAttendanceSheet) {
-        handleCloseAttendanceModal();
-        e.detail?.markHandled();
-      } else if (showAddModal) {
+      if (showAddModal) {
         handleCloseAddModal();
-        e.detail?.markHandled();
+        e.detail?.markHandled?.();
       } else {
         handleBack();
-        e.detail?.markHandled();
+        e.detail?.markHandled?.();
       }
     };
     window.addEventListener('app:back', handleAppBack);
     return () => window.removeEventListener('app:back', handleAppBack);
-  }, [isOpen, showAttendanceSheet, showAddModal, isClosing, isAddClosing, isAttendanceClosing]);
+  }, [isOpen, showAddModal, isClosing, isAddClosing]);
 
   if (!isOpen) return null;
 
@@ -548,36 +385,13 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
     return matchesCourse && matchesDay && matchesSearch;
   });
 
-  // Search in mockBatches as well so admin can mark attendance of any batch anytime by searching it
-  const matchedBatches = searchTerm ? (mockBatches || []).filter(b => 
-    b && (
-      (b.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (b.subject || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (b.courseName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (b.faculty || '').toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  ) : [];
-
   // Ongoing classes to show on front
-  const ongoingLectures = timetable.filter(l => l.status === 'Ongoing');
-  const todayKey = getTodayDateKey();
+  const ongoingLectures = (timetable || []).filter(l => l && l.status === 'Ongoing');
 
   const availableSubjectsForAdd = getSubjectsForCourse(selectedAddCourse);
   const facultyOptionsList = getFacultyOptions();
   const currentDayState = weekData[activeAddDay] || { lectureCount: 2, lectures: [] };
   const currentLectures = currentDayState.lectures || [];
-
-  // Filter students inside Attendance Modal
-  const filteredAttendanceStudents = batchStudents.filter(std => {
-    const matchesFilter = attendanceFilter === 'All' || std.todayAttendance === attendanceFilter;
-    const matchesSearch = !attendanceStudentSearch ||
-      std.name.toLowerCase().includes(attendanceStudentSearch.toLowerCase()) ||
-      (std.roll && std.roll.toLowerCase().includes(attendanceStudentSearch.toLowerCase()));
-    return matchesFilter && matchesSearch;
-  });
-
-  const presentCountInModal = batchStudents.filter(s => s.todayAttendance === 'Present').length;
-  const absentCountInModal = batchStudents.filter(s => s.todayAttendance === 'Absent').length;
 
   return (
     <div className={`fullscreen-page-modal ${isClosing ? 'closing' : ''}`}>
@@ -613,33 +427,13 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
           </button>
           <div style={{ minWidth: 0 }}>
             <h3 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--brand-900)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              Timetable &amp; Attendance
+              Timetable
             </h3>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              Ongoing classes &amp; mark batch attendance anytime
+              Class schedules &amp; weekly lectures
             </span>
           </div>
         </div>
-
-        <button
-          type="button"
-          onClick={handleOpenAddModal}
-          className="btn-primary"
-          style={{
-            padding: '8px 14px',
-            fontSize: '12px',
-            borderRadius: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            boxShadow: '0 2px 8px rgba(14, 165, 233, 0.3)',
-            whiteSpace: 'nowrap',
-            flexShrink: 0
-          }}
-        >
-          <Plus size={15} />
-          <span>Add Timetable</span>
-        </button>
       </div>
 
       {/* Toast Notification */}
@@ -868,35 +662,12 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid var(--border)', marginTop: '2px' }}>
-                      {marked ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 800, color: '#059669' }}>
-                          <CheckCircle2 size={14} color="#10b981" />
-                          <span>Marked: {marked.presentCount}/{marked.totalCount} ({marked.rate || 90}%)</span>
-                        </div>
-                      ) : (
-                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#f59e0b' }}>
-                          ⏳ Attendance Pending
-                        </span>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={() => handleOpenAttendanceModal(lec)}
-                        className="btn-primary"
-                        style={{
-                          padding: '7px 14px',
-                          fontSize: '12px',
-                          fontWeight: 800,
-                          borderRadius: '8px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          boxShadow: '0 2px 8px rgba(14, 165, 233, 0.3)'
-                        }}
-                      >
-                        <UserCheck size={14} />
-                        <span>{marked ? 'Update Attendance' : 'Mark Attendance'}</span>
-                      </button>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)' }}>
+                        Faculty: {lec.faculty}
+                      </span>
+                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#059669' }}>
+                        In Progress
+                      </span>
                     </div>
                   </div>
                 );
@@ -905,82 +676,7 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
           </div>
         )}
 
-        {/* ── SEARCHED BATCHES SECTION (If searching matches institute batches) ── */}
-        {searchTerm && matchedBatches.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
-            <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Institute Batches Matching "{searchTerm}"
-            </span>
-            {matchedBatches.map(batch => {
-              const attKey = `${batch.id}_${todayKey}`;
-              const marked = markedAttendanceMap[attKey] || markedAttendanceMap[batch.id];
 
-              return (
-                <div
-                  key={batch.id}
-                  className="card"
-                  style={{
-                    padding: '14px',
-                    borderRadius: '12px',
-                    border: '1.5px solid #0ea5e9',
-                    background: '#f0f9ff',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                    flexShrink: 0
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 800, color: '#0369a1', background: '#e0f2fe', padding: '3px 8px', borderRadius: '6px' }}>
-                      {batch.name}
-                    </span>
-                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)' }}>
-                      {batch.studentsCount} Enrolled
-                    </span>
-                  </div>
-
-                  <div>
-                    <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>
-                      {batch.courseName}
-                    </h4>
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                      Faculty: {batch.faculty} • Time: {batch.time}
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid #bae6fd' }}>
-                    {marked ? (
-                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#059669' }}>
-                        ✓ Marked: {marked.presentCount}/{marked.totalCount}
-                      </span>
-                    ) : (
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                        Ready for attendance
-                      </span>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() => handleOpenAttendanceModal({
-                        id: batch.id,
-                        course: batch.courseName,
-                        name: batch.name,
-                        subject: batch.subject,
-                        faculty: batch.faculty,
-                        time: batch.time
-                      })}
-                      className="btn-primary"
-                      style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}
-                    >
-                      <UserCheck size={14} />
-                      <span>Mark Batch Attendance</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
 
         {/* ── SCHEDULED TIMETABLE LECTURES ── */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px', flexShrink: 0 }}>
@@ -1116,399 +812,11 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                     <span>Faculty: <strong style={{ color: 'var(--brand-900)' }}>{lec.faculty}</strong></span>
                   </div>
                 </div>
-
-                {/* Mark Attendance Button on card */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  paddingTop: '8px',
-                  borderTop: '1px dashed var(--border)',
-                  marginTop: '2px'
-                }}>
-                  {marked ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 800, color: '#059669' }}>
-                      <CheckCircle2 size={13} color="#10b981" />
-                      <span>{marked.presentCount}/{marked.totalCount} Present</span>
-                    </div>
-                  ) : (
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                      Attendance not marked
-                    </span>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => handleOpenAttendanceModal(lec)}
-                    style={{
-                      padding: '5px 11px',
-                      borderRadius: '8px',
-                      fontSize: '11px',
-                      fontWeight: 800,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      border: marked ? '1px solid #10b981' : '1px solid #0ea5e9',
-                      background: marked ? '#ecfdf5' : '#e0f2fe',
-                      color: marked ? '#047857' : '#0284c7',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <UserCheck size={13} />
-                    <span>{marked ? 'Edit Attendance' : 'Mark Attendance'}</span>
-                  </button>
-                </div>
               </div>
             );
           })
         )}
       </div>
-
-      {/* ── MODAL SHEET 1: ATTENDANCE MARKING MODAL SHEET ── */}
-      {showAttendanceSheet && selectedBatchForAttendance && (
-        <div
-          className={`modal-backdrop-05s ${isAttendanceClosing ? 'closing' : ''}`}
-          onClick={(e) => { if (e.target === e.currentTarget) handleCloseAttendanceModal(); }}
-        >
-          <div
-            className={`modal-sheet-05s ${isAttendanceClosing ? 'closing' : ''}`}
-            style={{
-              padding: '20px',
-              maxHeight: '92vh',
-              display: 'flex',
-              flexDirection: 'column'
-            }}
-          >
-            <div className="sheet-drag-handle" />
-
-            {/* Attendance Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', flexShrink: 0 }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#0369a1', background: '#e0f2fe', padding: '2px 7px', borderRadius: '6px' }}>
-                    {selectedBatchForAttendance.course || selectedBatchForAttendance.name}
-                  </span>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)' }}>
-                    {selectedBatchForAttendance.subject}
-                  </span>
-                </div>
-                <h4 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--brand-900)', margin: '4px 0 0 0' }}>
-                  Mark Batch Attendance
-                </h4>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                  Faculty: {selectedBatchForAttendance.faculty} • Time: {selectedBatchForAttendance.time}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={handleCloseAttendanceModal}
-                style={{
-                  background: 'var(--surface-alt)',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '28px',
-                  height: '28px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer'
-                }}
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Date Selector & Stats Overview Bar */}
-            <div style={{
-              background: 'var(--surface-alt)',
-              borderRadius: '12px',
-              padding: '10px 12px',
-              border: '1px solid var(--border)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-              marginBottom: '12px',
-              flexShrink: 0
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                  Attendance Date:
-                </label>
-                <input
-                  type="date"
-                  value={attendanceDate}
-                  onChange={e => setAttendanceDate(e.target.value)}
-                  style={{
-                    padding: '4px 8px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border)',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    background: 'var(--surface)',
-                    color: 'var(--brand-900)'
-                  }}
-                />
-              </div>
-
-              {/* Stats badges */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
-                <div style={{ background: 'var(--surface)', padding: '6px', borderRadius: '8px', textAlign: 'center', border: '1px solid var(--border)' }}>
-                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700 }}>Total</div>
-                  <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)' }}>{batchStudents.length}</div>
-                </div>
-                <div style={{ background: '#ecfdf5', padding: '6px', borderRadius: '8px', textAlign: 'center', border: '1px solid #a7f3d0' }}>
-                  <div style={{ fontSize: '10px', color: '#047857', fontWeight: 700 }}>Present</div>
-                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#047857' }}>{presentCountInModal}</div>
-                </div>
-                <div style={{ background: '#fef2f2', padding: '6px', borderRadius: '8px', textAlign: 'center', border: '1px solid #fecaca' }}>
-                  <div style={{ fontSize: '10px', color: '#b91c1c', fontWeight: 700 }}>Absent</div>
-                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#b91c1c' }}>{absentCountInModal}</div>
-                </div>
-                <div style={{ background: '#f0f9ff', padding: '6px', borderRadius: '8px', textAlign: 'center', border: '1px solid #bae6fd' }}>
-                  <div style={{ fontSize: '10px', color: '#0369a1', fontWeight: 700 }}>Rate</div>
-                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#0369a1' }}>
-                    {batchStudents.length > 0 ? Math.round((presentCountInModal / batchStudents.length) * 100) : 0}%
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions & Filters Bar */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px', flexShrink: 0 }}>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => handleMarkAllStudents('Present')}
-                  style={{
-                    flex: 1,
-                    padding: '7px',
-                    borderRadius: '8px',
-                    fontSize: '11px',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    background: '#ecfdf5',
-                    color: '#047857',
-                    border: '1px solid #a7f3d0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <Check size={13} />
-                  <span>Mark All Present</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleMarkAllStudents('Absent')}
-                  style={{
-                    flex: 1,
-                    padding: '7px',
-                    borderRadius: '8px',
-                    fontSize: '11px',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    background: '#fef2f2',
-                    color: '#b91c1c',
-                    border: '1px solid #fecaca',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <X size={13} />
-                  <span>Mark All Absent</span>
-                </button>
-              </div>
-
-              {/* Filter pills & search */}
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <input
-                    type="text"
-                    placeholder="Search student or roll..."
-                    value={attendanceStudentSearch}
-                    onChange={e => setAttendanceStudentSearch(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '7px 10px 7px 28px',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border)',
-                      fontSize: '12px',
-                      background: 'var(--surface)'
-                    }}
-                  />
-                  <Search size={14} color="var(--text-muted)" style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)' }} />
-                </div>
-
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  {['All', 'Present', 'Absent'].map(tab => (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setAttendanceFilter(tab)}
-                      style={{
-                        padding: '6px 10px',
-                        borderRadius: '8px',
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        border: attendanceFilter === tab ? '1px solid #0ea5e9' : '1px solid var(--border)',
-                        background: attendanceFilter === tab ? '#e0f2fe' : 'var(--surface)',
-                        color: attendanceFilter === tab ? '#0284c7' : 'var(--text-secondary)'
-                      }}
-                    >
-                      {tab}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Students List */}
-            <div style={{
-              flex: 1,
-              overflowY: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-              paddingRight: '2px'
-            }}>
-              {filteredAttendanceStudents.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--text-muted)', fontSize: '13px' }}>
-                  No students found matching filters.
-                </div>
-              ) : (
-                filteredAttendanceStudents.map(student => {
-                  const isPresent = student.todayAttendance === 'Present';
-
-                  return (
-                    <div
-                      key={student.id}
-                      style={{
-                        padding: '10px 12px',
-                        borderRadius: '10px',
-                        background: isPresent ? '#f0fdf4' : '#fef2f2',
-                        border: isPresent ? '1px solid #bbf7d0' : '1px solid #fecaca',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '10px',
-                        flexShrink: 0
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                        <div style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '50%',
-                          background: isPresent ? '#dcfce7' : '#fee2e2',
-                          color: isPresent ? '#15803d' : '#b91c1c',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '12px',
-                          fontWeight: 800,
-                          flexShrink: 0
-                        }}>
-                          {student.name.charAt(0)}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--brand-900)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {student.name}
-                          </span>
-                          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                            Roll: {student.roll || student.rollNumber}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Status Toggle Buttons */}
-                      <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStudentAttendance(student.id)}
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: '8px',
-                            fontSize: '11px',
-                            fontWeight: 800,
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease',
-                            border: isPresent ? '1.5px solid #10b981' : '1px solid var(--border)',
-                            background: isPresent ? '#10b981' : 'var(--surface)',
-                            color: isPresent ? '#ffffff' : 'var(--text-muted)'
-                          }}
-                        >
-                          Present
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStudentAttendance(student.id)}
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: '8px',
-                            fontSize: '11px',
-                            fontWeight: 800,
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease',
-                            border: !isPresent ? '1.5px solid #ef4444' : '1px solid var(--border)',
-                            background: !isPresent ? '#ef4444' : 'var(--surface)',
-                            color: !isPresent ? '#ffffff' : 'var(--text-muted)'
-                          }}
-                        >
-                          Absent
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Bottom Actions Bar */}
-            <div style={{
-              paddingTop: '12px',
-              borderTop: '1px solid var(--border)',
-              display: 'flex',
-              gap: '10px',
-              marginTop: '10px',
-              flexShrink: 0
-            }}>
-              <button
-                type="button"
-                onClick={handleCloseAttendanceModal}
-                className="btn-secondary"
-                style={{ flex: 1, padding: '12px', fontSize: '13px', fontWeight: 700, borderRadius: '10px' }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveAttendance}
-                className="btn-primary"
-                style={{
-                  flex: 1.5,
-                  padding: '12px',
-                  fontSize: '13px',
-                  fontWeight: 800,
-                  borderRadius: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px'
-                }}
-              >
-                <Check size={16} />
-                <span>Save Attendance ({presentCountInModal}/{batchStudents.length})</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── MODAL SHEET 2: ADD WEEKLY TIMETABLE MODAL SHEET ── */}
       {showAddModal && (
@@ -1956,6 +1264,36 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
           </div>
         </div>
       )}
+
+      {/* ── Fixed Bottom Button: Add Timetable covering left to right ── */}
+      <div style={{
+        padding: '12px 16px',
+        paddingBottom: 'calc(12px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)))',
+        background: 'var(--surface)',
+        borderTop: '1px solid var(--border)',
+        flexShrink: 0
+      }}>
+        <button
+          type="button"
+          onClick={handleOpenAddModal}
+          className="btn-primary"
+          style={{
+            width: '100%',
+            padding: '13px 18px',
+            fontSize: '13.5px',
+            fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 14px rgba(10, 31, 61, 0.2)'
+          }}
+        >
+          <Plus size={18} />
+          <span>Add Timetable</span>
+        </button>
+      </div>
     </div>
   );
 }

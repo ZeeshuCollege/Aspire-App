@@ -6,11 +6,22 @@ export default function StudyMaterial({ onOpenViewer }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All');
 
+  const [materialsList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aspire_study_materials');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  });
+
   const filters = ['All', 'PDF', 'Video'];
 
-  const filtered = mockStudyMaterials.filter(m => {
-    const matchesFilter = selectedFilter === 'All' || m.type.toLowerCase() === selectedFilter.toLowerCase();
-    const matchesSearch = m.title.toLowerCase().includes(searchTerm.toLowerCase()) || m.subject.toLowerCase().includes(searchTerm.toLowerCase());
+  const filtered = materialsList.filter(m => {
+    const matchesFilter = selectedFilter === 'All' || (m.type || '').toLowerCase() === selectedFilter.toLowerCase();
+    const matchesSearch = (m.title || '').toLowerCase().includes(searchTerm.toLowerCase()) || (m.subject || '').toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -88,38 +99,48 @@ export default function StudyMaterial({ onOpenViewer }) {
 
       {/* Material List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {filtered.map(mat => (
-          <div
-            key={mat.id}
-            onClick={() => onOpenViewer({ title: mat.title, subtitle: `${mat.subject} • ${mat.chapter} (${mat.size})` })}
-            className="card card-hover"
-            style={{ padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', borderRadius: '12px' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '10px',
-                background: mat.type === 'PDF' ? '#fff7ed' : 'var(--brand-50)',
-                color: mat.type === 'PDF' ? 'var(--accent-600)' : 'var(--brand-600)',
-                border: mat.type === 'PDF' ? '1px solid #fed7aa' : '1px solid var(--brand-200)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'var(--transition-smooth)'
-              }}>
-                {mat.type === 'PDF' ? <FileText size={20} /> : <Video size={20} />}
-              </div>
-              <div>
-                <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: '0 0 2px 0' }}>{mat.title}</h4>
-                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0, fontFamily: 'var(--font-mono)' }}>
-                  {mat.subject} • {mat.chapter} • {mat.size}
-                </p>
-              </div>
-            </div>
-            <ChevronRight size={16} color="var(--brand-700)" />
+        {filtered.length === 0 ? (
+          <div className="card" style={{ padding: '36px 20px', textAlign: 'center', borderRadius: '12px' }}>
+            <FileText size={36} color="var(--text-muted)" style={{ margin: '0 auto 10px auto', opacity: 0.5 }} />
+            <h4 style={{ fontSize: '14.5px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>No Study Materials Available</h4>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+              Your faculty will upload class notes, question papers, and lecture materials here.
+            </p>
           </div>
-        ))}
+        ) : (
+          filtered.map(mat => (
+            <div
+              key={mat.id}
+              onClick={() => onOpenViewer({ title: mat.title, subtitle: `${mat.subject} • ${mat.chapter} (${mat.size})` })}
+              className="card card-hover"
+              style={{ padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', borderRadius: '12px' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '10px',
+                  background: mat.type === 'PDF' ? '#fff7ed' : 'var(--brand-50)',
+                  color: mat.type === 'PDF' ? 'var(--accent-600)' : 'var(--brand-600)',
+                  border: mat.type === 'PDF' ? '1px solid #fed7aa' : '1px solid var(--brand-200)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'var(--transition-smooth)'
+                }}>
+                  {mat.type === 'PDF' ? <FileText size={20} /> : <Video size={20} />}
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: '0 0 2px 0' }}>{mat.title}</h4>
+                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0, fontFamily: 'var(--font-mono)' }}>
+                    {mat.subject} • {mat.chapter} • {mat.size}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight size={16} color="var(--brand-700)" />
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
