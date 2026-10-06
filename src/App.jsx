@@ -153,6 +153,9 @@ export default function App() {
       const updated = { ...prev, ...updatedData };
       try {
         localStorage.setItem(`aspire_${currentRole}_profile`, JSON.stringify(updated));
+        if (updated.course) {
+          localStorage.setItem('aspire_user_course', updated.course);
+        }
       } catch (e) {
         console.error(e);
       }
@@ -162,7 +165,26 @@ export default function App() {
 
   const [classesSubTab, setClassesSubTab] = useState('schedule');
 
-  // Filter notices based on role and enrolled course
+  // Normalize course strings across all variations (JEE, NEET, MHT-CET, 9th, 10th, 11th, 12th)
+  const normalizeCourse = (raw) => {
+    if (!raw || typeof raw !== 'string') return '';
+    const s = raw.trim().toLowerCase();
+
+    // Specific competitive exams
+    if (s.includes('jee')) return 'jee';
+    if (s.includes('neet')) return 'neet';
+    if (s.includes('mht') || s.includes('cet')) return 'mht-cet';
+
+    // Standard school grades
+    if (s.includes('9th') || s === '9' || s.includes('std 9') || s.includes('class 9')) return '9th';
+    if (s.includes('10th') || s === '10' || s.includes('std 10') || s.includes('class 10')) return '10th';
+    if (s.includes('11th') || s === '11' || s.includes('std 11') || s.includes('class 11')) return '11th';
+    if (s.includes('12th') || s === '12' || s.includes('std 12') || s.includes('class 12')) return '12th';
+
+    return s.replace(/[^a-z0-9]/g, '');
+  };
+
+  // Filter notices strictly based on role and enrolled course
   const isNoticeForUser = (notice, user, role) => {
     if (!notice) return false;
     // Admins and teachers see all institute notices
@@ -171,25 +193,50 @@ export default function App() {
     const targetCourses = notice.courses || notice.targetCourses;
     // If no course restriction or set to All Courses, visible to everyone
     if (!targetCourses || !Array.isArray(targetCourses) || targetCourses.length === 0) return true;
-    if (targetCourses.includes('All') || targetCourses.includes('All Courses')) return true;
+    if (targetCourses.some(t => {
+      const s = String(t).trim().toLowerCase();
+      return s === 'all' || s === 'all courses' || s === 'all batches';
+    })) {
+      return true;
+    }
 
+    // Resolve user course strictly for students and parents
+    let userCourse = null;
     if (role === 'student') {
-      const studentCourse = (user?.course || user?.enrolledCourse || '12th Science').trim().toLowerCase();
-      return targetCourses.some(c => {
-        const tc = c.trim().toLowerCase();
-        return tc === studentCourse || tc.includes(studentCourse) || studentCourse.includes(tc);
-      });
+      userCourse = user?.course || user?.enrolledCourse;
+      if (!userCourse) {
+        try {
+          const savedProfile = JSON.parse(localStorage.getItem('aspire_student_profile') || '{}');
+          userCourse = savedProfile.course;
+        } catch (e) {}
+      }
+      if (!userCourse) {
+        userCourse = localStorage.getItem('aspire_user_course') || 'JEE';
+      }
+    } else if (role === 'parent') {
+      userCourse = user?.linkedChild?.course || user?.linkedChild?.class || user?.linkedChildCourse || user?.course;
+      if (!userCourse) {
+        try {
+          const savedProfile = JSON.parse(localStorage.getItem('aspire_parent_profile') || '{}');
+          userCourse = savedProfile.linkedChild?.course || savedProfile.linkedChild?.class || savedProfile.linkedChildCourse || savedProfile.course;
+        } catch (e) {}
+      }
+      if (!userCourse) {
+        userCourse = localStorage.getItem('aspire_parent_child_course') || localStorage.getItem('aspire_user_course') || 'JEE';
+      }
     }
 
-    if (role === 'parent') {
-      const childCourse = (user?.linkedChild?.class || user?.linkedChild?.course || user?.childCourse || '12th Science').trim().toLowerCase();
-      return targetCourses.some(c => {
-        const tc = c.trim().toLowerCase();
-        return tc === childCourse || tc.includes(childCourse) || childCourse.includes(tc);
-      });
-    }
+    if (!userCourse) return false;
 
-    return true;
+    const userCoursesArray = Array.isArray(userCourse) ? userCourse : [userCourse];
+    const normalizedUserCourses = userCoursesArray.map(normalizeCourse).filter(Boolean);
+
+    if (normalizedUserCourses.length === 0) return false;
+
+    return targetCourses.some(target => {
+      const normTarget = normalizeCourse(target);
+      return normalizedUserCourses.includes(normTarget);
+    });
   };
 
   const visibleNotices = notices.filter(n => isNoticeForUser(n, currentUser, currentRole));
@@ -270,7 +317,8 @@ export default function App() {
       const activeRole = localStorage.getItem('aspire_user_role') || currentRole || 'student';
       if (activeRole === 'admin') return; // Admins don't get popup notifications for notices
 
-      const applies = isNoticeForUser(notice, currentUser, activeRole);
+      const activeUser = currentUser || getUserForRole(activeRole);
+      const applies = isNoticeForUser(notice, activeUser, activeRole);
       if (!applies) return;
 
       try {
@@ -499,10 +547,15 @@ export default function App() {
       phone: userAuth.phone !== undefined ? userAuth.phone : '',
       bloodGroup: userAuth.bloodGroup !== undefined ? userAuth.bloodGroup : '',
       role: userAuth.role || 'student',
-      course: userAuth.course || base.course,
+      course: userAuth.course || base.course || 'JEE',
       rollNumber: userAuth.rollNumber || base.rollNumber,
       avatar: userAvatar
     };
+    if (matched.course) {
+      try {
+        localStorage.setItem('aspire_user_course', matched.course);
+      } catch (e) {}
+    }
     setCurrentRole(userAuth.role);
     setCurrentUser(matched);
     setIsLoggedIn(true);
@@ -564,7 +617,8 @@ export default function App() {
                     id: sessionData.user.id,
                     email: sessionData.user.email,
                     role: userMeta.role || 'student',
-                    name: userMeta.full_name || sessionData.user.email?.split('@')[0] || 'ASPIRE User'
+                    name: userMeta.full_name || sessionData.user.email?.split('@')[0] || 'ASPIRE User',
+                    course: userMeta.course || 'JEE'
                   });
                 }
               }
@@ -599,7 +653,8 @@ export default function App() {
           id: session.user.id,
           email: session.user.email,
           role: incomingRole,
-          name: userMeta.full_name || session.user.email?.split('@')[0] || 'ASPIRE User'
+          name: userMeta.full_name || session.user.email?.split('@')[0] || 'ASPIRE User',
+          course: userMeta.course || 'JEE'
         });
       }
     });

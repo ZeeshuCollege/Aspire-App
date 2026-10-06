@@ -60,7 +60,7 @@ export default function StudentHome({ user, onNavigate, onOpenTestPaper }) {
             fontWeight: 700,
             fontFamily: 'var(--font-mono)'
           }}>
-            {user.course || '12th Science'} • {user.rollNumber || 'STU-104'}
+            {user.course || 'JEE'} • {user.rollNumber || 'STU-104'}
           </span>
         </div>
         <div style={{ position: 'relative', flexShrink: 0 }}>

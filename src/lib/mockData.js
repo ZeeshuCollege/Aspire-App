@@ -18,15 +18,15 @@ export const mockUsers = {
     name: 'Student',
     role: 'student',
     course: 'JEE',
-    rollNumber: '',
+    rollNumber: 'ASPIRE-101',
     email: '',
     phone: '',
     bloodGroup: '',
     parentName: '',
     parentPhone: '',
     avatar: DEFAULT_GREY_AVATAR,
-    overallAttendance: 0,
-    overallPerformance: 0
+    overallAttendance: 92,
+    overallPerformance: 88
   },
   teacher: {
     id: 'tch-empty',
@@ -50,12 +50,14 @@ export const mockUsers = {
     email: '',
     phone: '',
     avatar: DEFAULT_GREY_AVATAR,
+    course: 'JEE',
     linkedChild: {
-      name: '',
-      class: '',
-      attendance: 0,
-      tests: 0,
-      performance: 0
+      name: 'Aarav Sharma',
+      class: 'JEE',
+      course: 'JEE',
+      attendance: 92,
+      tests: 88,
+      performance: 90
     }
   }
 };

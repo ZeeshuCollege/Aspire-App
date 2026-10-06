@@ -137,7 +137,7 @@ export default function AdminMobileDashboard({
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentEmail, setNewStudentEmail] = useState('');
   const [newStudentPassword, setNewStudentPassword] = useState('');
-  const [newStudentCourse, setNewStudentCourse] = useState('12th Science');
+  const [newStudentCourse, setNewStudentCourse] = useState('JEE');
 
   // Add Parent Modal States
   const [showAddParentModal, setShowAddParentModal] = useState(false);
@@ -151,7 +151,7 @@ export default function AdminMobileDashboard({
   const [newParentChildName, setNewParentChildName] = useState('');
   const [newParentChildEmail, setNewParentChildEmail] = useState('');
   const [newParentChildRoll, setNewParentChildRoll] = useState('');
-  const [newParentChildCourse, setNewParentChildCourse] = useState('12th Science');
+  const [newParentChildCourse, setNewParentChildCourse] = useState('JEE');
   const [selectedStudentIdForParent, setSelectedStudentIdForParent] = useState('');
 
   // Add Faculty Modal States
@@ -172,7 +172,7 @@ export default function AdminMobileDashboard({
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserPhone, setNewUserPhone] = useState('');
-  const [newUserCourse, setNewUserCourse] = useState('12th Science');
+  const [newUserCourse, setNewUserCourse] = useState('JEE');
   const [newUserBatches, setNewUserBatches] = useState([]);
   const [newUserSubjects, setNewUserSubjects] = useState([]);
   const [newUserChildName, setNewUserChildName] = useState('');
@@ -465,7 +465,7 @@ export default function AdminMobileDashboard({
       setNewParentChildName(found.name || '');
       setNewParentChildRoll(found.roll || '');
       setNewParentChildEmail(found.email || `${(found.name || 'student').toLowerCase().replace(/\s+/g, '')}@aspire.edu`);
-      setNewParentChildCourse(found.course || '12th Science');
+      setNewParentChildCourse(found.course || 'JEE');
     }
   };
 
@@ -497,7 +497,7 @@ export default function AdminMobileDashboard({
     const childName = newParentChildName.trim() || 'Student';
     const childRoll = newParentChildRoll.trim() || (students.length + 101).toString();
     const childEmail = newParentChildEmail.trim() || `${childName.toLowerCase().replace(/\s+/g, '')}@aspire.edu`;
-    const childCourse = newParentChildCourse.trim() || '12th Science';
+    const childCourse = newParentChildCourse.trim() || 'JEE';
 
     // Find matching enrolled student
     const matchedStudent = students.find(s =>
@@ -774,7 +774,7 @@ export default function AdminMobileDashboard({
           password: cleanPassword,
           roll: rollNo,
           rollNumber: `ASPIRE-2025-${rollNo}`,
-          course: newUserCourse || '12th Science',
+          course: newUserCourse || 'JEE',
           attendance: 'Present',
           score: '85%',
           status: 'Active',
@@ -810,7 +810,7 @@ export default function AdminMobileDashboard({
           password: cleanPassword,
           linkedChildName: newUserChildName || 'Student',
           linkedChildRoll: newUserChildRoll || '101',
-          linkedChildCourse: newUserCourse || '12th Science',
+          linkedChildCourse: newUserCourse || 'JEE',
           status: 'Active',
           avatar: DEFAULT_GREY_AVATAR
         };

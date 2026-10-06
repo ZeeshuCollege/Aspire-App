@@ -7,6 +7,7 @@ import {
   Save, CheckCircle2 
 } from 'lucide-react';
 import MobileDropdown from '../common/MobileDropdown';
+import { COURSE_OPTIONS } from '../admin/AdminStudyMaterialsModal';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -110,18 +111,27 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
       updatedUser.subjects = user?.subjects || user?.subject || formData.subject;
       updatedUser.employeeId = user?.employeeId || formData.employeeId;
     } else if (isParent) {
-      // Parent cannot edit linked student and course
+      const selectedCourse = formData.linkedChildClass || user?.linkedChild?.class || 'JEE';
+      updatedUser.course = selectedCourse;
       updatedUser.linkedChild = {
         ...(user?.linkedChild || {}),
         name: user?.linkedChild?.name || formData.linkedChildName,
-        class: user?.linkedChild?.class || formData.linkedChildClass
+        class: selectedCourse,
+        course: selectedCourse
       };
+      try {
+        localStorage.setItem('aspire_parent_child_course', selectedCourse);
+        localStorage.setItem('aspire_user_course', selectedCourse);
+      } catch (e) {}
     } else {
-      // Student cannot change course name and roll number
-      updatedUser.course = user?.course || formData.course;
+      const selectedCourse = formData.course || user?.course || 'JEE';
+      updatedUser.course = selectedCourse;
       updatedUser.rollNumber = user?.rollNumber || formData.rollNumber;
       if (user?.parentName) updatedUser.parentName = user.parentName;
       if (user?.parentPhone) updatedUser.parentPhone = user.parentPhone;
+      try {
+        localStorage.setItem('aspire_user_course', selectedCourse);
+      } catch (e) {}
     }
 
     if (onSaveUser) {
@@ -583,43 +593,29 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
                       />
                     </div>
 
-                    {/* Student's Class / Course - Locked */}
+                    {/* Student's Class / Course */}
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                        <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                          Student's Class / Course
-                        </label>
-                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                          <Lock size={10} /> Non-editable
-                        </span>
-                      </div>
-                      <input
-                        type="text"
-                        disabled
-                        value={formData.linkedChildClass}
-                        className="input-field"
-                        style={{ width: '100%', padding: '9px 12px', fontSize: '13px', borderRadius: '8px', border: '1px solid var(--border)', background: '#f1f5f9', color: '#64748b', cursor: 'not-allowed' }}
+                      <MobileDropdown
+                        label="Student's Class / Course"
+                        title="Select Student's Enrolled Course"
+                        value={formData.linkedChildClass || 'JEE'}
+                        onChange={(val) => setFormData(prev => ({ ...prev, linkedChildClass: val }))}
+                        options={COURSE_OPTIONS}
+                        placeholder="Select Child Course"
                       />
                     </div>
                   </>
                 ) : (
                   <>
-                    {/* Course / Stream - Locked */}
+                    {/* Course / Stream Selection */}
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                        <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                          Course / Stream
-                        </label>
-                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                          <Lock size={10} /> Non-editable
-                        </span>
-                      </div>
-                      <input
-                        type="text"
-                        disabled
-                        value={formData.course}
-                        className="input-field"
-                        style={{ width: '100%', padding: '9px 12px', fontSize: '13px', borderRadius: '8px', border: '1px solid var(--border)', background: '#f1f5f9', color: '#64748b', cursor: 'not-allowed' }}
+                      <MobileDropdown
+                        label="Course / Stream"
+                        title="Select Enrolled Course"
+                        value={formData.course || 'JEE'}
+                        onChange={(val) => setFormData(prev => ({ ...prev, course: val }))}
+                        options={COURSE_OPTIONS}
+                        placeholder="Select Course"
                       />
                     </div>
 

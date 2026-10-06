@@ -11,7 +11,9 @@ export const COURSE_OPTIONS = [
   'NEET',
   'MHT-CET',
   '9th',
-  '10th'
+  '10th',
+  '11th',
+  '12th'
 ];
 
 export const SUBJECT_OPTIONS = [
