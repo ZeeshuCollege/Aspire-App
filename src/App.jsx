@@ -14,7 +14,7 @@ import { Browser } from '@capacitor/browser';
 import { supabase } from './lib/supabaseClient';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { TopLoadingBar } from './components/common/LoadingSkeleton';
-import { sendSystemNotification, subscribeToNoticeBroadcasts } from './lib/notificationService';
+import { sendSystemNotification, subscribeToNoticeBroadcasts, fetchNoticesFromCloud } from './lib/notificationService';
 
 // Student Views
 import StudentHome from './components/student/StudentHome';
@@ -262,26 +262,72 @@ export default function App() {
     return () => window.removeEventListener('aspire:fee-alert', handleFeeAlert);
   }, []);
 
-  // Listen for live broadcast notices from Admin (same device or cross-tab/network)
+  // Listen for live broadcast notices from Admin (instant cross-device Supabase Realtime + Cloud sync)
   useEffect(() => {
+    // Helper to safely trigger notification if user is student/parent and not alerted yet
+    const notifyIfApplicable = (notice) => {
+      if (!notice) return;
+      const activeRole = localStorage.getItem('aspire_user_role') || currentRole || 'student';
+      if (activeRole === 'admin') return; // Admins don't get popup notifications for notices
+
+      const applies = isNoticeForUser(notice, currentUser, activeRole);
+      if (!applies) return;
+
+      try {
+        const alerted = JSON.parse(localStorage.getItem('aspire_alerted_notices') || '[]');
+        if (!alerted.includes(notice.id)) {
+          alerted.push(notice.id);
+          localStorage.setItem('aspire_alerted_notices', JSON.stringify(alerted.slice(-80)));
+          sendSystemNotification({
+            title: `📢 ${notice.title || 'Aspire Notice'}`,
+            message: notice.message || 'New announcement posted by Institute Admin.',
+            id: notice.id
+          });
+        }
+      } catch (e) {
+        sendSystemNotification({
+          title: `📢 ${notice.title || 'Aspire Notice'}`,
+          message: notice.message || 'New announcement posted by Institute Admin.',
+          id: notice.id
+        });
+      }
+    };
+
+    // 1. Supabase Realtime broadcast listener (instant push to other devices)
     const unsubscribe = subscribeToNoticeBroadcasts((incomingNotice) => {
       setNotices(prev => {
         if (prev.some(n => n.id === incomingNotice.id)) return prev;
         return [incomingNotice, ...prev];
       });
-
-      // Show system popup notification if this user is student/parent and matches course
-      const applies = isNoticeForUser(incomingNotice, currentUser, currentRole);
-      if (applies && currentRole !== 'admin') {
-        sendSystemNotification({
-          title: `📢 ${incomingNotice.title || 'Aspire Notice'}`,
-          message: incomingNotice.message || 'New announcement posted by Institute Admin.',
-          id: incomingNotice.id
-        });
-      }
+      notifyIfApplicable(incomingNotice);
     });
 
-    // Also sync via localStorage storage event for multi-tab
+    // 2. Fetch from Supabase Cloud on load and on interval (for offline/newly opened devices)
+    const syncCloud = async () => {
+      try {
+        const cloudNotices = await fetchNoticesFromCloud();
+        if (cloudNotices && cloudNotices.length > 0) {
+          setNotices(prev => {
+            const existingIds = new Set(prev.map(n => n.id));
+            const newOnes = cloudNotices.filter(cn => !existingIds.has(cn.id));
+            if (newOnes.length === 0) return prev;
+            newOnes.forEach(n => notifyIfApplicable(n));
+            return [...newOnes, ...prev];
+          });
+        }
+      } catch (err) {
+        console.warn('[App] syncCloud error:', err);
+      }
+    };
+
+    syncCloud();
+    const pollInterval = setInterval(syncCloud, 12000); // 12-second background sync fallback
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') syncCloud();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // 3. LocalStorage storage event for multi-tab on same machine
     const handleStorageChange = (e) => {
       if (e.key === 'aspire_notices_list' && e.newValue) {
         try {
@@ -296,6 +342,8 @@ export default function App() {
 
     return () => {
       unsubscribe();
+      clearInterval(pollInterval);
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [currentUser, currentRole]);
