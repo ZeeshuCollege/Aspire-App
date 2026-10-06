@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { mockStudyMaterials } from '../../lib/mockData';
 import { Search, FileText, Video, ChevronRight } from 'lucide-react';
 import MobileDropdown from '../common/MobileDropdown';
 

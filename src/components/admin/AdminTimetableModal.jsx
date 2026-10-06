@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  ArrowLeft, Plus, Search, Clock, 
-  User, Trash2, X, Check, SkipForward
+  Plus, Search, Clock, 
+  User, Trash2, X, Check
 } from 'lucide-react';
 import { COURSE_OPTIONS, SUBJECT_OPTIONS } from './AdminStudyMaterialsModal';
 import { getStoredTeachers } from '../../lib/userAuthStore';

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  ArrowLeft, Search, Users, CheckCircle2, X, Check, Calendar, CheckSquare, 
-  Clock, User, BookOpen, ChevronRight, Sparkles, Filter
+  Search, Users, CheckCircle2, X, Check, Calendar, 
+  Clock, User, BookOpen, ChevronRight
 } from 'lucide-react';
 import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
 import { DAYS_OF_WEEK, getSubjectsForCourse } from './AdminTimetableModal';

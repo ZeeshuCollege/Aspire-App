@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Download, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { getStoredFees, formatFeeAmount, formatFeeFraction } from '../../lib/feeService';
 
 export default function ParentFees({ childName = 'Student' }) {

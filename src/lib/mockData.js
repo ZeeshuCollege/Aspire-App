@@ -73,17 +73,6 @@ export const mockBatches = [];
 
 export const mockBatchStudents = [];
 
-export const mockStudentsList = [];
-
-export const mockTeachersList = [];
-
-export const mockAdminStats = {
-  totalStudents: 0,
-  presentToday: 0,
-  totalTeachers: 0,
-  pendingFees: '₹0'
-};
-
 export const mockNotices = [];
 
 export const mockLectureAttendance = [];

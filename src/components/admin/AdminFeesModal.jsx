@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  ArrowLeft, Search, Plus, CheckCircle2, Bell, Edit3, Check,
-  X, AlertCircle, Sparkles, Filter, IndianRupee, Send, DollarSign
+  Search, Plus, CheckCircle2, Bell, Edit3, Check,
+  X, IndianRupee, Send
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {

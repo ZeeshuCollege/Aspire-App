@@ -1,7 +1,7 @@
 import React from 'react';
-import { PlusCircle, Upload, Users } from 'lucide-react';
+import { PlusCircle, Users } from 'lucide-react';
 
-export default function TeacherDashboard({ user, onNavigate, onOpenCreateTest, onOpenUploadMaterial }) {
+export default function TeacherDashboard({ user, onNavigate, onOpenCreateTest }) {
   return (
     <div className="view-transition-enter" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '90px' }}>
       {/* Greeting Header - Sharp Architectural Alignment */}

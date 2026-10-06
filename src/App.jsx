@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { App as CapApp } from '@capacitor/app';
-import { mockUsers, mockNotices, DEFAULT_GREY_AVATAR } from './lib/mockData';
+import { mockUsers, DEFAULT_GREY_AVATAR } from './lib/mockData';
 import Header from './components/common/Header';
 import BottomNav from './components/common/BottomNav';
 import ProtectedPdfViewer from './components/common/ProtectedPdfViewer';
@@ -40,7 +40,7 @@ import AdminMobileDashboard from './components/admin/AdminMobileDashboard';
 import { useSystemNavigation } from './lib/systemNavigation';
 
 export default function App() {
-  const systemNav = useSystemNavigation();
+  useSystemNavigation();
   const [currentRole, setCurrentRole] = useState(() => {
     try {
       return localStorage.getItem('aspire_user_role') || 'admin';
@@ -806,9 +806,6 @@ export default function App() {
       {/* Universal Header */}
       <Header
         currentRole={currentRole}
-        user={currentUser}
-        onOpenLogin={() => setIsLoginOpen(true)}
-        onLogout={handleLogout}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
         unreadCount={unreadNoticesCount}
       />

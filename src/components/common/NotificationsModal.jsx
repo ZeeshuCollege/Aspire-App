@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Bell, CheckCheck, FileText, CheckCircle2, BookOpen, AlertTriangle, DollarSign, Clock } from 'lucide-react';
+import { X, Bell, CheckCheck, AlertTriangle } from 'lucide-react';
 import { useSwipeDownDismiss } from '../../lib/systemNavigation';
 
 export default function NotificationsModal({ isOpen, onClose, notices = [], onMarkAllRead, onNoticeClick }) {

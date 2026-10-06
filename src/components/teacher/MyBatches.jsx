@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { mockBatches, mockBatchStudents } from '../../lib/mockData';
 import { 
   Users, Clock, ChevronRight, ArrowLeft, Check, X, 
-  Calendar, CheckCheck, Send, CheckCircle2, Search, 
-  BookOpen, Info, UserCheck, Lock
+  Calendar, CheckCircle2, Search, BookOpen, Lock
 } from 'lucide-react';
 import StudentDetailCardModal from './StudentDetailCardModal';
 import { 

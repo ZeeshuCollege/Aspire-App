@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  CheckCircle2, XCircle, Check, X, Calendar, 
+  CheckCircle2, XCircle, Check, X, 
   Clock, BookOpen, User 
 } from 'lucide-react';
 import { getStudentTodayAttendance } from '../../lib/attendanceService';
-import MobileDropdown from '../common/MobileDropdown';
 
 export const mock30Lectures = [
   { id: 1, number: 1, subject: 'Physics', topic: 'Vectors & Kinematics', date: '01 Mar 2025', time: '10:00 AM', faculty: 'Physics Faculty', status: 'Present' },

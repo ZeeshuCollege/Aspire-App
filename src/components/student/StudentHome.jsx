@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, FileText, BookOpen, CheckCircle2, ChevronRight, Clock } from 'lucide-react';
+import { Calendar, FileText, BookOpen, ChevronRight } from 'lucide-react';
 
 export default function StudentHome({ user, onNavigate, onOpenTestPaper }) {
   const todayLecture = (() => {

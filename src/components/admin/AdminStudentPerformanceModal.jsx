@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  ArrowLeft, Search, X, TrendingUp, TrendingDown, Award, 
-  Calendar, ChevronRight, CheckCircle2, Edit3, Save, 
-  Check, Filter, User, BookOpen, AlertTriangle, RefreshCw
+  Search, X, TrendingUp, TrendingDown, Award, 
+  ChevronRight, CheckCircle2, Edit3, Save, 
+  Check, User, BookOpen, AlertTriangle
 } from 'lucide-react';
 import { mockTests, DEFAULT_GREY_AVATAR } from '../../lib/mockData';
 import { getStoredStudents, saveStoredStudents } from '../../lib/userAuthStore';

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Award, AlertTriangle } from 'lucide-react';
 import { getStoredStudents } from '../../lib/userAuthStore';
-import MobileDropdown from '../common/MobileDropdown';
 
 export default function TeacherPerformance() {
   const [tab, setTab] = useState('overview');

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Bell } from 'lucide-react';
 
-export default function Header({ currentRole, user, onOpenLogin, onLogout, onOpenNotifications, unreadCount = 0 }) {
+export default function Header({ currentRole, onOpenNotifications, unreadCount = 0 }) {
   return (
     <header style={{
       display: 'flex',

@@ -8,12 +8,12 @@ import {
 } from '../../lib/userAuthStore';
 import { getStoredFees } from '../../lib/feeService';
 import {
-  BookOpen, CheckSquare, Plus, Search,
-  Download, ChevronRight, Calendar, FileCheck, Trash2, Award,
+  BookOpen, Plus, Search,
+  Download, ChevronRight, Calendar, Trash2, Award,
   Eye, EyeOff, IndianRupee, TrendingUp
 } from 'lucide-react';
 import ScreenSlider from '../common/ScreenSlider';
-import AdminStudyMaterialsModal, { SUBJECT_OPTIONS, COURSE_OPTIONS } from './AdminStudyMaterialsModal';
+import AdminStudyMaterialsModal, { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
 import AdminTestsModal from './AdminTestsModal';
 import AdminTimetableModal from './AdminTimetableModal';
 import AdminAttendanceModal from './AdminAttendanceModal';

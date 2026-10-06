@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { DEFAULT_GREY_AVATAR } from '../../lib/mockData';
-import { createPortal } from 'react-dom';
 import { 
-  X, User, Mail, Phone, BookOpen, Heart, Users, 
-  ShieldCheck, Copy, Check, Award, Edit3, Lock,
+  X, User, Mail, Phone, BookOpen, Heart, 
+  ShieldCheck, Copy, Check, Edit3, Lock,
   Save, CheckCircle2 
 } from 'lucide-react';
 import MobileDropdown from '../common/MobileDropdown';

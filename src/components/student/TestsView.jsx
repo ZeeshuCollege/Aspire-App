@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { mockTests } from '../../lib/mockData';
 import { Calendar } from 'lucide-react';
-import MobileDropdown from '../common/MobileDropdown';
 
 export default function TestsView({ onOpenTestPaper }) {
   const [tab, setTab] = useState('upcoming');

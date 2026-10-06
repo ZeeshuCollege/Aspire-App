@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { 
-  FileText, CheckCircle2, XCircle, MinusCircle, 
-  Calendar, ArrowUpRight 
+  CheckCircle2, XCircle, MinusCircle 
 } from 'lucide-react';
-import MobileDropdown from '../common/MobileDropdown';
 
 export const mockLast10Tests = [
   {
