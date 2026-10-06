@@ -7,6 +7,7 @@ import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
 import { DAYS_OF_WEEK, getSubjectsForCourse } from './AdminTimetableModal';
 import { getStoredStudents } from '../../lib/userAuthStore';
 import { getTodayDateKey, getBatchAttendance, saveBatchAttendance } from '../../lib/attendanceService';
+import MobileDropdown from '../common/MobileDropdown';
 
 export default function AdminAttendanceModal({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('mark'); // 'mark' | 'records'
@@ -393,37 +394,36 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
           {/* Controls: Course selector & Date Picker */}
           <div style={{ padding: '12px 16px', background: 'var(--surface)', borderBottom: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {/* Course Selection Buttons */}
-            <div>
-              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Select Course
-              </div>
-              <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '2px', scrollbarWidth: 'none' }}>
-                {COURSE_OPTIONS.map(c => {
-                  const isActive = selectedCourse === c;
-                  return (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => setSelectedCourse(c)}
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: '20px',
-                        fontSize: '12px',
-                        fontWeight: isActive ? 700 : 500,
-                        whiteSpace: 'nowrap',
-                        border: isActive ? '1.5px solid var(--brand-700)' : '1px solid var(--border)',
-                        background: isActive ? 'var(--brand-800)' : 'var(--surface)',
-                        color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      {c}
-                    </button>
-                  );
-                })}
-              </div>
+            {/* Course & Day Selectors via MobileDropdown */}
+            <div style={{ display: 'grid', gridTemplateColumns: courseLectures.length > 0 ? '1.2fr 1fr' : '1fr', gap: '8px' }}>
+              <MobileDropdown
+                label="Select Course"
+                title="Choose Enrolled Course"
+                value={selectedCourse}
+                onChange={setSelectedCourse}
+                options={COURSE_OPTIONS}
+                placeholder="Choose Course..."
+                variant="compact"
+              />
+
+              {courseLectures.length > 0 && (
+                <MobileDropdown
+                  label="Day Filter"
+                  title="Filter by Lecture Day"
+                  value={selectedDayFilter}
+                  onChange={setSelectedDayFilter}
+                  options={[
+                    { value: 'All', label: 'All Days' },
+                    ...DAYS_OF_WEEK.map(d => ({
+                      value: d,
+                      label: d === selectedDayOfWeek ? `${d} (Today)` : d,
+                      badge: d === selectedDayOfWeek ? 'Today' : undefined
+                    }))
+                  ]}
+                  placeholder="All Days"
+                  variant="compact"
+                />
+              )}
             </div>
 
             {/* Date Picker Bar */}
@@ -458,34 +458,6 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
                 Day: {selectedDayOfWeek}
               </div>
             </div>
-
-            {/* Optional Day filter if timetable has lectures for multiple days */}
-            {courseLectures.length > 0 && (
-              <div style={{ display: 'flex', gap: '5px', overflowX: 'auto', paddingBottom: '2px', scrollbarWidth: 'none' }}>
-                {['All', ...DAYS_OF_WEEK].map(day => {
-                  const isDayActive = selectedDayFilter === day;
-                  return (
-                    <button
-                      key={day}
-                      type="button"
-                      onClick={() => setSelectedDayFilter(day)}
-                      style={{
-                        padding: '4px 9px',
-                        borderRadius: '12px',
-                        fontSize: '11px',
-                        fontWeight: isDayActive ? 700 : 500,
-                        border: isDayActive ? '1px solid var(--brand-700)' : '1px solid var(--border)',
-                        background: isDayActive ? 'var(--brand-700)' : 'var(--surface-alt)',
-                        color: isDayActive ? '#ffffff' : 'var(--text-secondary)',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {day === selectedDayOfWeek && day !== 'All' ? `${day} (Today)` : day}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </div>
 
           {/* ── Lectures Section ── */}
@@ -687,33 +659,15 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
             )}
           </div>
 
-          {/* Course Filter Pills */}
-          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '2px', scrollbarWidth: 'none' }}>
-            {['All', ...COURSE_OPTIONS].map(course => {
-              const isActive = recordsCourseFilter === course;
-              return (
-                <button
-                  key={course}
-                  type="button"
-                  onClick={() => setRecordsCourseFilter(course)}
-                  style={{
-                    padding: '5px 12px',
-                    borderRadius: '20px',
-                    fontSize: '11.5px',
-                    fontWeight: isActive ? 700 : 500,
-                    whiteSpace: 'nowrap',
-                    border: isActive ? '1.5px solid var(--brand-700)' : '1px solid var(--border)',
-                    background: isActive ? 'var(--brand-800)' : 'var(--surface)',
-                    color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  {course}
-                </button>
-              );
-            })}
-          </div>
+          {/* Course Filter Dropdown */}
+          <MobileDropdown
+            value={recordsCourseFilter}
+            onChange={setRecordsCourseFilter}
+            options={['All', ...COURSE_OPTIONS]}
+            title="Filter Records by Course"
+            placeholder="All Courses"
+            variant="compact"
+          />
 
           {/* Students List in Records */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

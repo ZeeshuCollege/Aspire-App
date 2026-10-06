@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { mockTests } from '../../lib/mockData';
 import { COURSE_OPTIONS, SUBJECT_OPTIONS } from './AdminStudyMaterialsModal';
+import MobileDropdown from '../common/MobileDropdown';
 
 export const DURATION_OPTIONS = [
   '45 min',
@@ -275,24 +276,16 @@ export default function AdminTestsModal({ isOpen, onClose }) {
             <Search size={15} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
           </div>
 
-          <select
-            value={selectedCourseFilter}
-            onChange={e => setSelectedCourseFilter(e.target.value)}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '8px',
-              border: '1px solid var(--border)',
-              fontSize: '12px',
-              fontWeight: 600,
-              background: 'var(--surface)',
-              color: 'var(--brand-900)'
-            }}
-          >
-            <option value="All">All Courses ({tests.length})</option>
-            {COURSE_OPTIONS.map(c => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+          <div style={{ minWidth: '150px', flex: '0 0 auto' }}>
+            <MobileDropdown
+              value={selectedCourseFilter}
+              onChange={setSelectedCourseFilter}
+              options={['All', ...COURSE_OPTIONS]}
+              title="Filter Tests by Course"
+              placeholder="All Courses"
+              variant="compact"
+            />
+          </div>
         </div>
 
         {/* List of Previously Uploaded Tests */}
@@ -694,58 +687,46 @@ export default function AdminTestsModal({ isOpen, onClose }) {
 
               {/* Target Course & Subject */}
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '10px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>Target Course *</label>
-                  <select
-                    value={newCourse}
-                    onChange={e => setNewCourse(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1.5px solid var(--brand-500)', marginTop: '4px', fontSize: '13px', background: '#f0f9ff', fontWeight: 600, color: 'var(--brand-900)', colorScheme: 'light' }}
-                  >
-                    {COURSE_OPTIONS.map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
+                <MobileDropdown
+                  label="Target Course"
+                  title="Select Target Course"
+                  value={newCourse}
+                  onChange={setNewCourse}
+                  options={COURSE_OPTIONS}
+                  required={true}
+                />
 
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>Subject *</label>
-                  <select
-                    value={newSubject}
-                    onChange={e => setNewSubject(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', background: '#ffffff', color: 'var(--brand-900)', colorScheme: 'light' }}
-                  >
-                    {SUBJECT_OPTIONS.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
+                <MobileDropdown
+                  label="Subject"
+                  title="Select Subject"
+                  value={newSubject}
+                  onChange={setNewSubject}
+                  options={SUBJECT_OPTIONS}
+                  required={true}
+                />
               </div>
 
               {/* Test Date & Duration */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>Test Date *</label>
+                  <label style={{ fontSize: '11.5px', fontWeight: 700, color: 'var(--text-secondary)' }}>Test Date *</label>
                   <input
                     type="text"
                     placeholder="e.g. 25 Sep 2026"
                     value={newDate}
                     onChange={e => setNewDate(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px' }}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px' }}
                   />
                 </div>
 
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>Duration *</label>
-                  <select
-                    value={newDuration}
-                    onChange={e => setNewDuration(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', background: '#ffffff', color: 'var(--brand-900)', colorScheme: 'light' }}
-                  >
-                    {DURATION_OPTIONS.map(d => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                </div>
+                <MobileDropdown
+                  label="Duration"
+                  title="Select Duration"
+                  value={newDuration}
+                  onChange={setNewDuration}
+                  options={DURATION_OPTIONS}
+                  required={true}
+                />
               </div>
 
               {/* Max Marks & Passing Marks */}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { mockStudyMaterials } from '../../lib/mockData';
 import { Search, FileText, Video, ChevronRight } from 'lucide-react';
+import MobileDropdown from '../common/MobileDropdown';
 
 export default function StudyMaterial({ onOpenViewer }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,30 +72,19 @@ export default function StudyMaterial({ onOpenViewer }) {
         <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)' }} />
       </div>
 
-      {/* Filter Smooth Pills */}
-      <div style={{ display: 'flex', gap: '8px' }}>
-        {filters.map(filter => (
-          <button
-            key={filter}
-            onClick={() => setSelectedFilter(filter)}
-            style={{
-              padding: '6px 16px',
-              borderRadius: '9999px',
-              border: selectedFilter === filter ? '1px solid var(--brand-900)' : '1px solid var(--border)',
-              background: selectedFilter === filter ? 'var(--brand-900)' : 'var(--surface)',
-              color: selectedFilter === filter ? '#ffffff' : 'var(--text-secondary)',
-              fontSize: '11.5px',
-              fontFamily: 'var(--font-mono)',
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: selectedFilter === filter ? '0 2px 8px rgba(10, 31, 61, 0.18)' : 'none',
-              transition: 'var(--transition-smooth)',
-              transform: selectedFilter === filter ? 'translateY(-1px)' : 'none'
-            }}
-          >
-            {filter.toUpperCase()}
-          </button>
-        ))}
+      {/* Filter Mobile Dropdown */}
+      <div>
+        <MobileDropdown
+          title="Filter by Material Type"
+          options={[
+            { value: 'All', label: 'All Formats' },
+            { value: 'PDF', label: 'PDF Documents' },
+            { value: 'Video', label: 'Video Lectures' }
+          ]}
+          value={selectedFilter}
+          onChange={val => setSelectedFilter(val)}
+          placeholder="Filter by Type"
+        />
       </div>
 
       {/* Material List */}

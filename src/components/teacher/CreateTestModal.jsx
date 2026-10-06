@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Upload, CheckCircle2 } from 'lucide-react';
+import MobileDropdown from '../common/MobileDropdown';
 
 export default function CreateTestModal({ isOpen, onClose, onCreated }) {
   const [testName, setTestName] = useState('');
@@ -78,48 +79,34 @@ export default function CreateTestModal({ isOpen, onClose, onCreated }) {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-                Subject
-              </label>
-              <select
-                value={subject}
-                onChange={e => setSubject(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-md)',
-                  fontSize: '13px',
-                  background: 'var(--surface)',
-                  color: 'var(--brand-900)',
-                  colorScheme: 'light'
-                }}
-              >
-                <option value="Physics">Physics</option>
-                <option value="Chemistry">Chemistry</option>
-                <option value="Mathematics">Mathematics</option>
-                <option value="Biology">Biology</option>
-              </select>
-            </div>
+            <MobileDropdown
+              label="Subject"
+              title="Select Subject"
+              options={[
+                { value: 'Physics', label: 'Physics' },
+                { value: 'Chemistry', label: 'Chemistry' },
+                { value: 'Mathematics', label: 'Mathematics' },
+                { value: 'Biology', label: 'Biology' }
+              ]}
+              value={subject}
+              onChange={val => setSubject(val)}
+              placeholder="Select Subject"
+            />
 
-            <div>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-                Duration
-              </label>
-              <input
-                type="text"
-                value={duration}
-                onChange={e => setDuration(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-md)',
-                  fontSize: '13px'
-                }}
-              />
-            </div>
+            <MobileDropdown
+              label="Duration"
+              title="Select Test Duration"
+              options={[
+                { value: '45 mins', label: '45 mins' },
+                { value: '1 hr', label: '1 hour' },
+                { value: '1 hr 30 min', label: '1 hr 30 min' },
+                { value: '2 hrs', label: '2 hours' },
+                { value: '3 hrs', label: '3 hours (Full Test)' }
+              ]}
+              value={duration}
+              onChange={val => setDuration(val)}
+              placeholder="Select Duration"
+            />
           </div>
 
           <div>

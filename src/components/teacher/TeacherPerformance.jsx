@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Award, AlertTriangle } from 'lucide-react';
 import { getStoredStudents } from '../../lib/userAuthStore';
+import MobileDropdown from '../common/MobileDropdown';
 
 export default function TeacherPerformance() {
   const [tab, setTab] = useState('overview');
@@ -25,17 +26,18 @@ export default function TeacherPerformance() {
         </span>
       </div>
 
-      <div className="tab-container">
-        {['overview', 'subject-wise', 'tests'].map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`tab-btn ${tab === t ? 'active' : ''}`}
-            style={{ textTransform: 'capitalize' }}
-          >
-            {t}
-          </button>
-        ))}
+      <div>
+        <MobileDropdown
+          title="Select Performance Section"
+          options={[
+            { value: 'overview', label: 'Batch Overview' },
+            { value: 'subject-wise', label: 'Subject-wise Analytics' },
+            { value: 'tests', label: 'Test Evaluations' }
+          ]}
+          value={tab}
+          onChange={val => setTab(val)}
+          placeholder="Select Section"
+        />
       </div>
 
       {/* Average Score Donut Card */}

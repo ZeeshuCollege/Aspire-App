@@ -14,6 +14,7 @@ import { Browser } from '@capacitor/browser';
 import { supabase } from './lib/supabaseClient';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { TopLoadingBar } from './components/common/LoadingSkeleton';
+import { sendSystemNotification, subscribeToNoticeBroadcasts } from './lib/notificationService';
 
 // Student Views
 import StudentHome from './components/student/StudentHome';
@@ -250,11 +251,54 @@ export default function App() {
     const handleFeeAlert = (e) => {
       if (e.detail?.notice) {
         setNotices(prev => [e.detail.notice, ...prev.filter(n => n.id !== e.detail.notice.id)]);
+        sendSystemNotification({
+          title: `🔔 ${e.detail.notice.title || 'Fee Alert'}`,
+          message: e.detail.notice.message || 'Fee account status update.',
+          id: e.detail.notice.id
+        });
       }
     };
     window.addEventListener('aspire:fee-alert', handleFeeAlert);
     return () => window.removeEventListener('aspire:fee-alert', handleFeeAlert);
   }, []);
+
+  // Listen for live broadcast notices from Admin (same device or cross-tab/network)
+  useEffect(() => {
+    const unsubscribe = subscribeToNoticeBroadcasts((incomingNotice) => {
+      setNotices(prev => {
+        if (prev.some(n => n.id === incomingNotice.id)) return prev;
+        return [incomingNotice, ...prev];
+      });
+
+      // Show system popup notification if this user is student/parent and matches course
+      const applies = isNoticeForUser(incomingNotice, currentUser, currentRole);
+      if (applies && currentRole !== 'admin') {
+        sendSystemNotification({
+          title: `📢 ${incomingNotice.title || 'Aspire Notice'}`,
+          message: incomingNotice.message || 'New announcement posted by Institute Admin.',
+          id: incomingNotice.id
+        });
+      }
+    });
+
+    // Also sync via localStorage storage event for multi-tab
+    const handleStorageChange = (e) => {
+      if (e.key === 'aspire_notices_list' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            setNotices(parsed);
+          }
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [currentUser, currentRole]);
 
   // State refs for the back button listener to prevent stale closures
   const activeTabRef = useRef(activeTab);

@@ -20,6 +20,8 @@ import AdminAttendanceModal from './AdminAttendanceModal';
 import AdminMarksModal from './AdminMarksModal';
 import AdminFeesModal from './AdminFeesModal';
 import AdminStudentPerformanceModal from './AdminStudentPerformanceModal';
+import MobileDropdown from '../common/MobileDropdown';
+import { broadcastNotice } from '../../lib/notificationService';
 
 function triggerDownload(blob, filename) {
   const url = URL.createObjectURL(blob);
@@ -256,6 +258,9 @@ export default function AdminMobileDashboard({
       propSetNotices(prev => [newNotice, ...prev]);
     }
     setNotices(prev => [newNotice, ...prev]);
+
+    // Dispatch real system notification and broadcast cross-device/cross-tab
+    broadcastNotice(newNotice);
 
     setNewNoticeTitle('');
     setNewNoticeMsg('');
@@ -1701,18 +1706,14 @@ export default function AdminMobileDashboard({
                   style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', fontFamily: 'monospace' }}
                 />
               </div>
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Course</label>
-                <select
+                <MobileDropdown
+                  label="Course"
+                  title="Select Enrolled Course"
                   value={newStudentCourse}
-                  onChange={e => setNewStudentCourse(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', background: 'var(--surface)', color: 'var(--brand-900)', colorScheme: 'light' }}
-                >
-                  {COURSE_OPTIONS.map(course => (
-                    <option key={course} value={course}>{course}</option>
-                  ))}
-                </select>
-              </div>
+                  onChange={setNewStudentCourse}
+                  options={COURSE_OPTIONS}
+                  placeholder="Select Course"
+                />
               <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
                 <button type="button" onClick={handleCloseAddModal} className="btn-secondary" style={{ flex: 1, fontSize: '13px', padding: '10px' }}>
                   Cancel
@@ -1824,22 +1825,22 @@ export default function AdminMobileDashboard({
                   )}
                 </div>
 
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                  Select Enrolled Student to Auto-Link
-                </label>
-                <select
+                <MobileDropdown
+                  label="Select Enrolled Student to Auto-Link"
+                  title="Choose Enrolled Student"
                   value={selectedStudentIdForParent}
-                  onChange={e => handleSelectStudentForParent(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid var(--brand-500)', marginTop: '4px', fontSize: '13px', background: '#f0f9ff', fontWeight: 600, color: 'var(--brand-900)' }}
-                >
-                  <option value="">-- Choose Existing Student --</option>
-                  {students.map(std => (
-                    <option key={std.id} value={std.id}>
-                      {std.name} (Roll #{std.roll} • {std.course})
-                    </option>
-                  ))}
-                  <option value="custom">+ Enter New Student Manually</option>
-                </select>
+                  onChange={handleSelectStudentForParent}
+                  options={[
+                    { value: '', label: '-- Choose Existing Student --' },
+                    ...students.map(std => ({
+                      value: std.id,
+                      label: `${std.name} (Roll #${std.roll} • ${std.course})`,
+                      badge: std.course
+                    })),
+                    { value: 'custom', label: '+ Enter New Student Manually' }
+                  ]}
+                  placeholder="-- Choose Existing Student --"
+                />
               </div>
 
               <div>
@@ -1881,18 +1882,14 @@ export default function AdminMobileDashboard({
                 />
               </div>
 
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Course / Stream</label>
-                <select
+                <MobileDropdown
+                  label="Course / Stream"
+                  title="Select Child Course"
                   value={newParentChildCourse}
-                  onChange={e => setNewParentChildCourse(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', background: 'var(--surface)', color: 'var(--brand-900)', colorScheme: 'light' }}
-                >
-                  {COURSE_OPTIONS.map(course => (
-                    <option key={course} value={course}>{course}</option>
-                  ))}
-                </select>
-              </div>
+                  onChange={setNewParentChildCourse}
+                  options={COURSE_OPTIONS}
+                  placeholder="Select Course"
+                />
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
                 <button type="button" onClick={handleCloseAddParentModal} className="btn-secondary" style={{ flex: 1, fontSize: '13px', padding: '10px' }}>
@@ -2229,94 +2226,30 @@ export default function AdminMobileDashboard({
                     />
                   </div>
 
+                  <MobileDropdown
+                    label="Notice Category"
+                    title="Select Notice Category"
+                    value={newNoticeCategory}
+                    onChange={setNewNoticeCategory}
+                    options={NOTICE_CATEGORIES}
+                    placeholder="Choose Category"
+                  />
+
+                  {/* Multi-Select Course Selection Dropdown */}
                   <div>
-                    <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>Category</span>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
-                      {NOTICE_CATEGORIES.map(cat => (
-                        <button
-                          key={cat}
-                          type="button"
-                          onClick={() => setNewNoticeCategory(cat)}
-                          style={{
-                            padding: '5px 11px',
-                            borderRadius: '20px',
-                            fontSize: '11px',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease',
-                            border: newNoticeCategory === cat ? '2px solid var(--brand-600)' : '1.5px solid var(--border)',
-                            background: newNoticeCategory === cat ? 'var(--brand-50)' : 'var(--surface)',
-                            color: newNoticeCategory === cat ? 'var(--brand-700)' : 'var(--text-secondary)',
-                          }}
-                        >
-                          {newNoticeCategory === cat ? '✓ ' : ''}{cat}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Multi-Select Course Selection Category */}
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                        Target Course (Multi-Select) *
-                      </span>
-                      <span style={{ fontSize: '10.5px', color: 'var(--brand-700)', fontWeight: 700 }}>
-                        {newNoticeCourses.includes('All Courses')
-                          ? '🌐 All Students'
-                          : `🎯 ${newNoticeCourses.length} Course${newNoticeCourses.length > 1 ? 's' : ''} Selected`}
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {/* All Courses option */}
-                      <button
-                        type="button"
-                        onClick={handleToggleAllCourses}
-                        style={{
-                          padding: '5px 11px',
-                          borderRadius: '20px',
-                          fontSize: '11px',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          transition: 'all 0.15s ease',
-                          border: newNoticeCourses.includes('All Courses') ? '2px solid var(--brand-600)' : '1.5px solid var(--border)',
-                          background: newNoticeCourses.includes('All Courses') ? 'var(--brand-50)' : 'var(--surface)',
-                          color: newNoticeCourses.includes('All Courses') ? 'var(--brand-700)' : 'var(--text-secondary)',
-                        }}
-                      >
-                        {newNoticeCourses.includes('All Courses') ? '✓ ' : ''}🌐 All Courses
-                      </button>
-
-                      {/* Individual Course options */}
-                      {COURSE_OPTIONS.map(course => {
-                        const isSelected = !newNoticeCourses.includes('All Courses') && newNoticeCourses.includes(course);
-                        return (
-                          <button
-                            key={course}
-                            type="button"
-                            onClick={() => handleToggleCourse(course)}
-                            style={{
-                              padding: '5px 11px',
-                              borderRadius: '20px',
-                              fontSize: '11px',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              transition: 'all 0.15s ease',
-                              border: isSelected ? '2px solid var(--brand-600)' : '1.5px solid var(--border)',
-                              background: isSelected ? 'var(--brand-50)' : 'var(--surface)',
-                              color: isSelected ? 'var(--brand-700)' : 'var(--text-secondary)',
-                            }}
-                          >
-                            {isSelected ? '✓ ' : ''}{course}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <p style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '5px', marginBottom: 0, lineHeight: 1.4 }}>
-                      {newNoticeCourses.includes('All Courses')
-                        ? '📢 Notice will be delivered to students across all courses.'
-                        : `🎯 Notice will ONLY be delivered to students enrolled in: ${newNoticeCourses.join(', ')}.`}
+                    <MobileDropdown
+                      label="Target Courses (Multi-Select)"
+                      title="Select Target Courses"
+                      value={newNoticeCourses}
+                      onChange={setNewNoticeCourses}
+                      options={['All Courses', ...COURSE_OPTIONS]}
+                      isMulti={true}
+                      placeholder="Select Target Courses..."
+                    />
+                    <p style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '4px', marginBottom: 0, lineHeight: 1.4 }}>
+                      {newNoticeCourses.includes('All Courses') || newNoticeCourses.length === 0
+                        ? '📢 Notice will be delivered to students and parents across all courses.'
+                        : `🎯 Notice will ONLY be delivered to students & parents enrolled in: ${newNoticeCourses.join(', ')}.`}
                     </p>
                   </div>
 
@@ -2636,46 +2569,27 @@ export default function AdminMobileDashboard({
               </div>
 
               {newUserRole === 'student' && (
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Enrolled Course</label>
-                  <select
-                    value={newUserCourse}
-                    onChange={e => setNewUserCourse(e.target.value)}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', background: 'var(--surface)', color: 'var(--brand-900)', colorScheme: 'light' }}
-                  >
-                    {COURSE_OPTIONS.map(course => (
-                      <option key={course} value={course}>{course}</option>
-                    ))}
-                  </select>
-                </div>
+                <MobileDropdown
+                  label="Enrolled Course"
+                  title="Select Student Course"
+                  value={newUserCourse}
+                  onChange={setNewUserCourse}
+                  options={COURSE_OPTIONS}
+                  placeholder="Select Course"
+                />
               )}
 
               {newUserRole === 'teacher' && (
                 <>
-                  <div>
-                    <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Assigned Batches</label>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
-                      {BATCH_OPTIONS.map(b => (
-                        <button
-                          key={b}
-                          type="button"
-                          onClick={() => toggleUserBatch(b)}
-                          style={{
-                            padding: '4px 10px',
-                            borderRadius: '16px',
-                            fontSize: '11.5px',
-                            fontWeight: 600,
-                            border: newUserBatches.includes(b) ? '2px solid var(--brand-600)' : '1px solid var(--border)',
-                            background: newUserBatches.includes(b) ? 'var(--brand-50)' : 'transparent',
-                            color: newUserBatches.includes(b) ? 'var(--brand-700)' : 'var(--text-secondary)',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          {newUserBatches.includes(b) ? '✓ ' : ''}{b}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <MobileDropdown
+                    label="Assigned Batches (Multi-Select)"
+                    title="Select Faculty Batches"
+                    value={newUserBatches}
+                    onChange={setNewUserBatches}
+                    options={BATCH_OPTIONS}
+                    isMulti={true}
+                    placeholder="Select Batches..."
+                  />
                   <div>
                     <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Subjects Taught</label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>

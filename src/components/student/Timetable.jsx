@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { mockSchedule } from '../../lib/mockData';
 import { Clock, UserCheck, Calendar as CalendarIcon, CheckCircle2 } from 'lucide-react';
 import AttendanceView from './AttendanceView';
+import MobileDropdown from '../common/MobileDropdown';
 
 export default function Timetable({ initialSubTab = 'schedule' }) {
   const [subTab, setSubTab] = useState(initialSubTab);
@@ -64,32 +65,23 @@ export default function Timetable({ initialSubTab = 'schedule' }) {
             </span>
           </div>
 
-          {/* Horizontal Day Selector Smooth Pills */}
-          <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-            {days.map(day => (
-              <button
-                key={day}
-                onClick={() => setSelectedDay(day)}
-                style={{
-                  padding: '8px 15px',
-                  borderRadius: '10px',
-                  border: selectedDay === day ? '1px solid var(--brand-900)' : '1px solid var(--border)',
-                  background: selectedDay === day ? 'var(--brand-900)' : 'var(--surface)',
-                  color: selectedDay === day ? '#ffffff' : 'var(--text-secondary)',
-                  boxShadow: selectedDay === day ? '0 4px 12px rgba(10, 31, 61, 0.2)' : 'none',
-                  fontSize: '12px',
-                  fontFamily: 'var(--font-mono)',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  transition: 'var(--transition-smooth)',
-                  transform: selectedDay === day ? 'translateY(-1px)' : 'none'
-                }}
-              >
-                {day.toUpperCase()}
-              </button>
-            ))}
-          </div>
+          {/* Day Selector Mobile Dropdown */}
+          <MobileDropdown
+            label="Day of Week"
+            title="Select Day of the Week"
+            options={[
+              { value: 'Mon', label: 'Monday' },
+              { value: 'Tue', label: 'Tuesday' },
+              { value: 'Wed', label: 'Wednesday' },
+              { value: 'Thu', label: 'Thursday' },
+              { value: 'Fri', label: 'Friday' },
+              { value: 'Sat', label: 'Saturday' },
+              { value: 'Sun', label: 'Sunday' }
+            ]}
+            value={selectedDay}
+            onChange={val => setSelectedDay(val)}
+            placeholder="Select Day"
+          />
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>

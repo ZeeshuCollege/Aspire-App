@@ -4,6 +4,7 @@ import {
   Clock, BookOpen, User 
 } from 'lucide-react';
 import { getStudentTodayAttendance } from '../../lib/attendanceService';
+import MobileDropdown from '../common/MobileDropdown';
 
 export const mock30Lectures = [
   { id: 1, number: 1, subject: 'Physics', topic: 'Vectors & Kinematics', date: '01 Mar 2025', time: '10:00 AM', faculty: 'Physics Faculty', status: 'Present' },
@@ -157,34 +158,19 @@ export default function AttendanceCalendar() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div style={{ display: 'flex', gap: '8px' }}>
-        {[
-          { id: 'all', label: `All (${mock30Lectures.length})` },
-          { id: 'present', label: `Present (${presentCount})` },
-          { id: 'absent', label: `Absent (${absentCount})` }
-        ].map(t => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setFilter(t.id)}
-            style={{
-              padding: '6px 16px',
-              borderRadius: '9999px',
-              fontSize: '11.5px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              border: filter === t.id ? '1px solid var(--brand-900)' : '1px solid var(--border)',
-              background: filter === t.id ? 'var(--brand-900)' : 'var(--surface)',
-              color: filter === t.id ? '#ffffff' : 'var(--text-secondary)',
-              boxShadow: filter === t.id ? '0 2px 8px rgba(10, 31, 61, 0.18)' : 'none',
-              transition: 'var(--transition-smooth)',
-              transform: filter === t.id ? 'translateY(-1px)' : 'none'
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
+      {/* Filter Mobile Dropdown */}
+      <div>
+        <MobileDropdown
+          title="Filter Lectures by Attendance"
+          options={[
+            { value: 'all', label: `All Lectures (${mock30Lectures.length})` },
+            { value: 'present', label: `Present (${presentCount})` },
+            { value: 'absent', label: `Absent (${absentCount})` }
+          ]}
+          value={filter}
+          onChange={val => setFilter(val)}
+          placeholder="Filter Attendance"
+        />
       </div>
 
       {/* 30 Lecture Blocks Card */}

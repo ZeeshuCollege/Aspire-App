@@ -4,6 +4,7 @@ import {
   ExternalLink, Copy, Check, Trash2, Layers, ChevronRight, ArrowLeft
 } from 'lucide-react';
 import { mockStudyMaterials } from '../../lib/mockData';
+import MobileDropdown from '../common/MobileDropdown';
 
 export const COURSE_OPTIONS = [
   'JEE',
@@ -297,24 +298,16 @@ export default function AdminStudyMaterialsModal({ isOpen, onClose }) {
             <Search size={15} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
           </div>
 
-          <select
-            value={selectedCourseFilter}
-            onChange={e => setSelectedCourseFilter(e.target.value)}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '8px',
-              border: '1px solid var(--border)',
-              fontSize: '12px',
-              fontWeight: 600,
-              background: 'var(--surface)',
-              color: 'var(--brand-900)'
-            }}
-          >
-            <option value="All">All Courses ({materials.length})</option>
-            {COURSE_OPTIONS.map(c => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+          <div style={{ minWidth: '150px', flex: '0 0 auto' }}>
+            <MobileDropdown
+              value={selectedCourseFilter}
+              onChange={setSelectedCourseFilter}
+              options={['All', ...COURSE_OPTIONS]}
+              title="Filter Materials by Course"
+              placeholder="All Courses"
+              variant="compact"
+            />
+          </div>
         </div>
 
         {/* List of Previously Uploaded Items */}
@@ -707,45 +700,37 @@ export default function AdminStudyMaterialsModal({ isOpen, onClose }) {
 
               {/* Subject & Format Dropdowns */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>Subject *</label>
-                  <select
-                    value={newSubject}
-                    onChange={e => setNewSubject(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', background: '#ffffff', color: 'var(--brand-900)', colorScheme: 'light' }}
-                  >
-                    {SUBJECT_OPTIONS.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
+                <MobileDropdown
+                  label="Subject"
+                  title="Select Subject"
+                  value={newSubject}
+                  onChange={setNewSubject}
+                  options={SUBJECT_OPTIONS}
+                  required={true}
+                />
 
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>Material Format *</label>
-                  <select
-                    value={newType}
-                    onChange={e => setNewType(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '4px', fontSize: '13px', background: '#ffffff', color: 'var(--brand-900)', colorScheme: 'light' }}
-                  >
-                    <option value="PDF">PDF Document (Notes / DPP)</option>
-                    <option value="Video">Video Lecture (YouTube)</option>
-                  </select>
-                </div>
+                <MobileDropdown
+                  label="Material Format"
+                  title="Select Material Format"
+                  value={newType}
+                  onChange={setNewType}
+                  options={[
+                    { value: 'PDF', label: 'PDF Document (Notes / DPP)' },
+                    { value: 'Video', label: 'Video Lecture (YouTube)' }
+                  ]}
+                  required={true}
+                />
               </div>
 
               {/* Course to which uploaded - Named Dropdown */}
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)' }}>Course to which Uploaded *</label>
-                <select
-                  value={newCourse}
-                  onChange={e => setNewCourse(e.target.value)}
-                  style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '1.5px solid var(--brand-500)', marginTop: '4px', fontSize: '13px', background: '#f0f9ff', fontWeight: 600, color: 'var(--brand-900)', colorScheme: 'light' }}
-                >
-                  {COURSE_OPTIONS.map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
+              <MobileDropdown
+                label="Course to which Uploaded"
+                title="Select Target Course"
+                value={newCourse}
+                onChange={setNewCourse}
+                options={COURSE_OPTIONS}
+                required={true}
+              />
 
               {/* Chapter / Topic */}
               <div>

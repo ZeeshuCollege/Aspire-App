@@ -17,6 +17,7 @@ import {
 } from '../../lib/feeService';
 import { getStoredStudents } from '../../lib/userAuthStore';
 import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
+import MobileDropdown from '../common/MobileDropdown';
 
 const FILTER_OPTIONS = [
   { id: 'All', label: 'All' },
@@ -367,40 +368,15 @@ export default function AdminFeesModal({ isOpen, onClose }) {
           )}
         </div>
 
-        {/* Filter Buttons like All, 9th, JEE, NEET, etc. */}
-        <div style={{
-          display: 'flex',
-          gap: '6px',
-          overflowX: 'auto',
-          paddingBottom: '2px',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none'
-        }}>
-          {FILTER_OPTIONS.map((f) => {
-            const isActive = selectedFilter === f.id;
-            return (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setSelectedFilter(f.id)}
-                style={{
-                  padding: '5px 12px',
-                  borderRadius: '20px',
-                  fontSize: '11.5px',
-                  fontWeight: isActive ? 700 : 500,
-                  border: isActive ? '1.5px solid var(--brand-700)' : '1px solid var(--border)',
-                  background: isActive ? 'var(--brand-800)' : 'var(--surface)',
-                  color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                {f.label}
-              </button>
-            );
-          })}
+        {/* Filter Dropdown */}
+        <div style={{ marginTop: '2px' }}>
+          <MobileDropdown
+            title="Filter by Course / Standard"
+            options={FILTER_OPTIONS.map(f => ({ value: f.id, label: f.label === 'All' ? 'All Courses' : f.label }))}
+            value={selectedFilter}
+            onChange={val => setSelectedFilter(val)}
+            placeholder="Filter by Course"
+          />
         </div>
       </div>
 
@@ -956,29 +932,14 @@ export default function AdminFeesModal({ isOpen, onClose }) {
                 />
               </div>
 
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                  Course / Standard *
-                </label>
-                <select
-                  value={addStudentCourse}
-                  onChange={(e) => setAddStudentCourse(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '9px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border)',
-                    fontSize: '13px',
-                    background: 'var(--surface)',
-                    color: '#0f172a',
-                    colorScheme: 'light'
-                  }}
-                >
-                  {COURSE_OPTIONS.map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
+              <MobileDropdown
+                label="Course / Standard *"
+                title="Select Course / Standard"
+                options={COURSE_OPTIONS.map(c => ({ value: c, label: c }))}
+                value={addStudentCourse}
+                onChange={val => setAddStudentCourse(val)}
+                placeholder="Select Course"
+              />
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>

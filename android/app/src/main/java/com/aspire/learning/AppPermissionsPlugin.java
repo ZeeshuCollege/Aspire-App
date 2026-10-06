@@ -100,4 +100,88 @@ public class AppPermissionsPlugin extends Plugin {
         ret.put("status", "granted");
         call.resolve(ret);
     }
+
+    private static final String NOTIF_CHANNEL_ID = "aspire_notifications_channel";
+    private static final String NOTIF_CHANNEL_NAME = "Aspire Notices & Announcements";
+
+    @PluginMethod
+    public void showSystemNotification(PluginCall call) {
+        String title = call.getString("title", "Aspire Learning Centre");
+        String message = call.getString("message", "");
+        if (message == null || message.trim().isEmpty()) {
+            message = call.getString("body", "You have a new announcement from Aspire Learning Centre.");
+        }
+        int notifId = (int) (System.currentTimeMillis() & 0x7FFFFFFF);
+
+        android.content.Context context = getContext();
+        if (context == null) {
+            call.reject("Android context is null");
+            return;
+        }
+
+        try {
+            android.app.NotificationManager notificationManager = 
+                (android.app.NotificationManager) context.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                android.app.NotificationChannel channel = new android.app.NotificationChannel(
+                    NOTIF_CHANNEL_ID,
+                    NOTIF_CHANNEL_NAME,
+                    android.app.NotificationManager.IMPORTANCE_HIGH
+                );
+                channel.setDescription("Critical notifications, notices and alerts from Aspire Learning Centre");
+                channel.enableVibration(true);
+                channel.setVibrationPattern(new long[]{0, 250, 150, 250});
+                channel.enableLights(true);
+                channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+                if (notificationManager != null) {
+                    notificationManager.createNotificationChannel(channel);
+                }
+            }
+
+            android.content.Intent intent = new android.content.Intent(context, MainActivity.class);
+            intent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP | android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            intent.putExtra("from_notification", true);
+            intent.putExtra("notice_id", call.getString("id", ""));
+
+            int pendingFlags = android.app.PendingIntent.FLAG_UPDATE_CURRENT;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                pendingFlags |= android.app.PendingIntent.FLAG_IMMUTABLE;
+            }
+            android.app.PendingIntent pendingIntent = android.app.PendingIntent.getActivity(context, notifId, intent, pendingFlags);
+
+            int iconRes = context.getApplicationInfo().icon;
+            if (iconRes == 0) {
+                iconRes = android.R.drawable.ic_dialog_info;
+            }
+
+            androidx.core.app.NotificationCompat.Builder builder = new androidx.core.app.NotificationCompat.Builder(context, NOTIF_CHANNEL_ID)
+                .setSmallIcon(iconRes)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setStyle(new androidx.core.app.NotificationCompat.BigTextStyle().bigText(message))
+                .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
+                .setDefaults(androidx.core.app.NotificationCompat.DEFAULT_ALL)
+                .setVibrate(new long[]{0, 250, 150, 250})
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent);
+
+            if (Build.VERSION.SDK_INT >= 33) {
+                int status = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS);
+                if (status != PackageManager.PERMISSION_GRANTED) {
+                    call.reject("POST_NOTIFICATIONS permission not granted");
+                    return;
+                }
+            }
+
+            androidx.core.app.NotificationManagerCompat.from(context).notify(notifId, builder.build());
+
+            JSObject ret = new JSObject();
+            ret.put("success", true);
+            ret.put("id", notifId);
+            call.resolve(ret);
+        } catch (Exception e) {
+            call.reject("Failed to display system notification: " + e.getMessage(), e);
+        }
+    }
 }

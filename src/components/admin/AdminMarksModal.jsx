@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { getStoredStudents, saveStoredStudents } from '../../lib/userAuthStore';
 import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
+import MobileDropdown from '../common/MobileDropdown';
 
 export default function AdminMarksModal({ isOpen, onClose }) {
   const [tests, setTests] = useState([]);
@@ -428,38 +429,22 @@ export default function AdminMarksModal({ isOpen, onClose }) {
             </span>
           </div>
 
-          <div style={{ width: '100%' }}>
-            <select
-              value={selectedTestId || ''}
-              onChange={e => setSelectedTestId(e.target.value)}
-              className="input-field"
-              style={{
-                width: '100%',
-                padding: '8px 10px',
-                borderRadius: '8px',
-                fontSize: '12.5px',
-                fontWeight: 600,
-                border: '1.5px solid var(--border)',
-                textOverflow: 'ellipsis',
-                background: 'var(--surface)',
-                color: activeTest ? 'var(--brand-900)' : 'var(--text-muted)',
-                colorScheme: 'light'
-              }}
-            >
-              {tests.length === 0 ? (
-                <option value="">No Paper Selected</option>
-              ) : (
-                <>
-                  <option value="">No Paper Selected</option>
-                  {tests.map(t => (
-                    <option key={t.id} value={t.id}>
-                      {t.title} • {t.course}
-                    </option>
-                  ))}
-                </>
-              )}
-            </select>
-          </div>
+          <MobileDropdown
+            value={selectedTestId || ''}
+            onChange={setSelectedTestId}
+            options={[
+              { value: '', label: 'No Paper Selected' },
+              ...tests.map(t => ({
+                value: t.id,
+                label: `${t.title} (${t.course})`,
+                badge: t.course,
+                description: `${t.subject} • Max Marks: ${t.maxMarks || 100}`
+              }))
+            ]}
+            title="Select Test to Grade"
+            placeholder="Select Test Assessment..."
+            variant="compact"
+          />
 
           {/* Test Parameters Bar */}
           <div style={{
@@ -568,29 +553,17 @@ export default function AdminMarksModal({ isOpen, onClose }) {
           </div>
 
           {/* Course Filter Dropdown */}
-          <select
-            value={selectedCourseFilter}
-            onChange={e => setSelectedCourseFilter(e.target.value)}
-            disabled={!activeTest}
-            style={{
-              padding: '7px 8px',
-              borderRadius: '8px',
-              border: '1px solid var(--border)',
-              fontSize: '11.5px',
-              fontWeight: 600,
-              background: 'var(--surface)',
-              color: 'var(--brand-900)',
-              colorScheme: 'light',
-              width: '110px',
-              flexShrink: 0,
-              opacity: activeTest ? 1 : 0.6
-            }}
-          >
-            <option value="All">All Courses</option>
-            {COURSE_OPTIONS.map(c => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+          <div style={{ width: '130px', flexShrink: 0 }}>
+            <MobileDropdown
+              value={selectedCourseFilter}
+              onChange={setSelectedCourseFilter}
+              disabled={!activeTest}
+              options={['All', ...COURSE_OPTIONS]}
+              title="Filter Students by Course"
+              placeholder="All Courses"
+              variant="compact"
+            />
+          </div>
         </div>
 
         {/* Students Marks Upload List */}

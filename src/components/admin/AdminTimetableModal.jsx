@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { COURSE_OPTIONS, SUBJECT_OPTIONS } from './AdminStudyMaterialsModal';
 import { getStoredTeachers } from '../../lib/userAuthStore';
+import MobileDropdown from '../common/MobileDropdown';
 
 export const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -275,6 +276,46 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
     });
   };
 
+  const handleTimeSlotChange = (index, slotStr) => {
+    try {
+      const [fromPart, tillPart] = slotStr.split(' - ');
+      const [fromTime, fromPeriod] = fromPart.trim().split(' ');
+      const [fromHour, fromMinute] = fromTime.split(':');
+      const [tillTime, tillPeriod] = tillPart.trim().split(' ');
+      const [tillHour, tillMinute] = tillTime.split(':');
+
+      setWeekData(prev => {
+        const currentDay = activeAddDay || 'Mon';
+        const dayData = (prev && prev[currentDay]) ? { ...prev[currentDay] } : { lectureCount: 2, lectures: [] };
+        const currentLecs = Array.isArray(dayData.lectures) ? [...dayData.lectures] : [];
+        
+        while (currentLecs.length <= index) {
+          currentLecs.push(createLectureSlot(selectedAddCourse, currentLecs.length));
+        }
+        
+        currentLecs[index] = {
+          ...(currentLecs[index] || createLectureSlot(selectedAddCourse, index)),
+          fromHour,
+          fromMinute,
+          fromPeriod,
+          tillHour,
+          tillMinute,
+          tillPeriod
+        };
+
+        return {
+          ...prev,
+          [currentDay]: {
+            ...dayData,
+            lectures: currentLecs
+          }
+        };
+      });
+    } catch (err) {
+      console.warn('Error parsing time slot:', err);
+    }
+  };
+
   const commitWeeklyTimetable = (completedWeekData) => {
     const newLecsToAdd = [];
     const configuredDays = [];
@@ -489,88 +530,27 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
           )}
         </div>
 
-        {/* Course Filter Pills */}
-        <div>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Class / Course
-          </div>
-          <div
-            className="no-scrollbar"
-            style={{
-              display: 'flex',
-              gap: '6px',
-              overflowX: 'auto',
-              paddingBottom: '4px',
-              paddingRight: '16px',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none'
-            }}
-          >
-            {['All', ...COURSE_OPTIONS].map(course => (
-              <button
-                key={course}
-                type="button"
-                onClick={() => setSelectedCourse(course)}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: '999px',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  cursor: 'pointer',
-                  border: selectedCourse === course ? '1px solid #0ea5e9' : '1px solid var(--border)',
-                  background: selectedCourse === course ? '#e0f2fe' : 'var(--surface)',
-                  color: selectedCourse === course ? '#0284c7' : 'var(--text-secondary)',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                {course}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Class / Course & Day Selectors via MobileDropdown */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <MobileDropdown
+            label="Class / Course"
+            title="Filter by Course"
+            value={selectedCourse}
+            onChange={setSelectedCourse}
+            options={['All', ...COURSE_OPTIONS]}
+            placeholder="All Courses"
+            variant="compact"
+          />
 
-        {/* Day Filter Pills */}
-        <div>
-          <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Day of Week
-          </div>
-          <div
-            className="no-scrollbar"
-            style={{
-              display: 'flex',
-              gap: '6px',
-              overflowX: 'auto',
-              paddingBottom: '4px',
-              paddingRight: '16px',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none'
-            }}
-          >
-            {['All', ...DAYS_OF_WEEK].map(day => (
-              <button
-                key={day}
-                type="button"
-                onClick={() => setSelectedDay(day)}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: '999px',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  cursor: 'pointer',
-                  border: selectedDay === day ? '1px solid #8b5cf6' : '1px solid var(--border)',
-                  background: selectedDay === day ? '#f5f3ff' : 'var(--surface)',
-                  color: selectedDay === day ? '#7c3aed' : 'var(--text-secondary)',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                {day}
-              </button>
-            ))}
-          </div>
+          <MobileDropdown
+            label="Day of Week"
+            title="Filter by Day"
+            value={selectedDay}
+            onChange={setSelectedDay}
+            options={['All', ...DAYS_OF_WEEK]}
+            placeholder="All Days"
+            variant="compact"
+          />
         </div>
       </div>
 
@@ -865,30 +845,14 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
               }}
             >
               {/* 1. Course Selection Dropdown */}
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                  Target Course / Class *
-                </label>
-                <select
-                  value={selectedAddCourse}
-                  onChange={e => handleCourseChange(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '10px',
-                    border: '1.5px solid var(--border)',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    background: 'var(--surface)',
-                    color: 'var(--brand-900)',
-                    colorScheme: 'light'
-                  }}
-                >
-                  {COURSE_OPTIONS.map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
+              <MobileDropdown
+                label="Target Course / Class *"
+                title="Select Target Course"
+                options={COURSE_OPTIONS.map(c => ({ value: c, label: c }))}
+                value={selectedAddCourse}
+                onChange={val => handleCourseChange(val)}
+                placeholder="Select Course"
+              />
 
               {/* 2. Days of Week in a Row (Mon, Tue, ... Sun) */}
               <div>
@@ -984,27 +948,18 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                     Number of lectures to schedule
                   </span>
                 </div>
-                <select
-                  value={currentDayState.lectureCount || 2}
-                  onChange={e => handleLectureCountChange(Number(e.target.value))}
-                  style={{
-                    padding: '7px 12px',
-                    borderRadius: '8px',
-                    border: '1.5px solid #0ea5e9',
-                    fontSize: '13px',
-                    fontWeight: 800,
-                    background: 'var(--surface)',
-                    color: '#0284c7',
-                    colorScheme: 'light',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                    <option key={num} value={num}>
-                      {num} {num === 1 ? 'Lecture' : 'Lectures'}
-                    </option>
-                  ))}
-                </select>
+                <div style={{ minWidth: '130px' }}>
+                  <MobileDropdown
+                    title="Number of Lectures"
+                    options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => ({
+                      value: num,
+                      label: `${num} ${num === 1 ? 'Lecture' : 'Lectures'}`
+                    }))}
+                    value={currentDayState.lectureCount || 2}
+                    onChange={val => handleLectureCountChange(Number(val))}
+                    placeholder="Select"
+                  />
+                </div>
               </div>
 
               {/* 4. Cards based on number of lectures */}
@@ -1045,154 +1000,37 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
                     </div>
 
                     {/* Subject dropdown */}
-                    <div>
-                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '3px', display: 'block' }}>
-                        Subject *
-                      </label>
-                      <select
-                        value={lec.subject || availableSubjectsForAdd[0] || ''}
-                        onChange={e => handleLectureFieldChange(idx, 'subject', e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '8px 10px',
-                          borderRadius: '8px',
-                          border: '1px solid var(--border)',
-                          fontSize: '13px',
-                          background: 'var(--surface)',
-                          color: 'var(--text-primary)',
-                          colorScheme: 'light'
-                        }}
-                      >
-                        {availableSubjectsForAdd.map(sub => (
-                          <option key={sub} value={sub}>{sub}</option>
-                        ))}
-                      </select>
-                    </div>
+                    <MobileDropdown
+                      label="Subject *"
+                      title={`Select Subject (Lecture #${idx + 1})`}
+                      options={availableSubjectsForAdd.map(sub => ({ value: sub, label: sub }))}
+                      value={lec.subject || availableSubjectsForAdd[0] || ''}
+                      onChange={val => handleLectureFieldChange(idx, 'subject', val)}
+                      placeholder="Select Subject"
+                    />
 
                     {/* Teacher / Faculty dropdown */}
-                    <div>
-                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '3px', display: 'block' }}>
-                        Teacher / Faculty *
-                      </label>
-                      <select
-                        value={lec.faculty || facultyOptionsList[0] || ''}
-                        onChange={e => handleLectureFieldChange(idx, 'faculty', e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '8px 10px',
-                          borderRadius: '8px',
-                          border: '1px solid var(--border)',
-                          fontSize: '13px',
-                          background: 'var(--surface)',
-                          color: 'var(--text-primary)',
-                          colorScheme: 'light'
-                        }}
-                      >
-                        {facultyOptionsList.map(fac => (
-                          <option key={fac} value={fac}>{fac}</option>
-                        ))}
-                      </select>
-                    </div>
+                    <MobileDropdown
+                      label="Teacher / Faculty *"
+                      title={`Select Faculty (Lecture #${idx + 1})`}
+                      options={facultyOptionsList.map(fac => ({ value: fac, label: fac }))}
+                      value={lec.faculty || facultyOptionsList[0] || ''}
+                      onChange={val => handleLectureFieldChange(idx, 'faculty', val)}
+                      placeholder="Select Faculty"
+                    />
 
-                    {/* Time Selection (From this to this) */}
-                    <div>
-                      <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>
-                        Timing Selection (From - To) *
-                      </label>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                        {/* FROM */}
-                        <div style={{
-                          background: 'var(--surface-alt)',
-                          padding: '7px 8px',
-                          borderRadius: '8px',
-                          border: '1px solid var(--border)'
-                        }}>
-                          <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
-                            From
-                          </span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                            <select
-                              value={lec.fromHour}
-                              onChange={e => handleLectureFieldChange(idx, 'fromHour', e.target.value)}
-                              style={{ padding: '4px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, background: 'var(--surface)', color: '#0f172a', colorScheme: 'light' }}
-                            >
-                              {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
-                            </select>
-                            <span style={{ fontWeight: 800, color: 'var(--text-muted)' }}>:</span>
-                            <select
-                              value={lec.fromMinute}
-                              onChange={e => handleLectureFieldChange(idx, 'fromMinute', e.target.value)}
-                              style={{ padding: '4px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, background: 'var(--surface)', color: '#0f172a', colorScheme: 'light' }}
-                            >
-                              {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
-                            </select>
-                            <select
-                              value={lec.fromPeriod}
-                              onChange={e => handleLectureFieldChange(idx, 'fromPeriod', e.target.value)}
-                              style={{
-                                padding: '4px 6px',
-                                borderRadius: '6px',
-                                border: '1px solid var(--border)',
-                                fontSize: '11px',
-                                fontWeight: 800,
-                                background: lec.fromPeriod === 'AM' ? '#e0f2fe' : '#fef3c7',
-                                color: lec.fromPeriod === 'AM' ? '#0369a1' : '#b45309',
-                                colorScheme: 'light'
-                              }}
-                            >
-                              <option value="AM">AM</option>
-                              <option value="PM">PM</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        {/* TILL */}
-                        <div style={{
-                          background: 'var(--surface-alt)',
-                          padding: '7px 8px',
-                          borderRadius: '8px',
-                          border: '1px solid var(--border)'
-                        }}>
-                          <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
-                            To
-                          </span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                            <select
-                              value={lec.tillHour}
-                              onChange={e => handleLectureFieldChange(idx, 'tillHour', e.target.value)}
-                              style={{ padding: '4px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, background: 'var(--surface)', color: '#0f172a', colorScheme: 'light' }}
-                            >
-                              {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
-                            </select>
-                            <span style={{ fontWeight: 800, color: 'var(--text-muted)' }}>:</span>
-                            <select
-                              value={lec.tillMinute}
-                              onChange={e => handleLectureFieldChange(idx, 'tillMinute', e.target.value)}
-                              style={{ padding: '4px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px', fontWeight: 700, background: 'var(--surface)', color: '#0f172a', colorScheme: 'light' }}
-                            >
-                              {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
-                            </select>
-                            <select
-                              value={lec.tillPeriod}
-                              onChange={e => handleLectureFieldChange(idx, 'tillPeriod', e.target.value)}
-                              style={{
-                                padding: '4px 6px',
-                                borderRadius: '6px',
-                                border: '1px solid var(--border)',
-                                fontSize: '11px',
-                                fontWeight: 800,
-                                background: lec.tillPeriod === 'AM' ? '#e0f2fe' : '#fef3c7',
-                                color: lec.tillPeriod === 'AM' ? '#0369a1' : '#b45309',
-                                colorScheme: 'light'
-                              }}
-                            >
-                              <option value="AM">AM</option>
-                              <option value="PM">PM</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    {/* Time Slot Selection */}
+                    <MobileDropdown
+                      label="Timing Selection (From - To) *"
+                      title={`Select Time Slot (Lecture #${idx + 1})`}
+                      options={DEFAULT_SLOTS.map(slot => {
+                        const val = `${slot.fromHour}:${slot.fromMinute} ${slot.fromPeriod} - ${slot.tillHour}:${slot.tillMinute} ${slot.tillPeriod}`;
+                        return { value: val, label: val };
+                      })}
+                      value={`${lec.fromHour}:${lec.fromMinute} ${lec.fromPeriod} - ${lec.tillHour}:${lec.tillMinute} ${lec.tillPeriod}`}
+                      onChange={val => handleTimeSlotChange(idx, val)}
+                      placeholder="Select Timing"
+                    />
                   </div>
                 ))}
               </div>

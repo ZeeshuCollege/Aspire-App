@@ -11,6 +11,7 @@ import {
   getBatchAttendance, 
   saveBatchAttendance 
 } from '../../lib/attendanceService';
+import MobileDropdown from '../common/MobileDropdown';
 
 export default function MyBatches({ onAttendanceSubmit }) {
   const [selectedBatch, setSelectedBatch] = useState(null);
@@ -447,34 +448,19 @@ export default function MyBatches({ onAttendanceSubmit }) {
             )}
           </div>
 
-          {/* Filter Tabs (All, Present, Absent) */}
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {[
-              { id: 'All', label: `All (${studentsAttendance.length})` },
-              { id: 'Present', label: `Present (${presentCount})` },
-              { id: 'Absent', label: `Absent (${absentCount})` }
-            ].map(f => (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setAttendanceFilter(f.id)}
-                style={{
-                  padding: '6px 16px',
-                  borderRadius: '9999px',
-                  fontSize: '11.5px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  border: attendanceFilter === f.id ? '1px solid var(--brand-900)' : '1px solid var(--border)',
-                  background: attendanceFilter === f.id ? 'var(--brand-900)' : 'var(--surface)',
-                  color: attendanceFilter === f.id ? '#ffffff' : 'var(--text-secondary)',
-                  boxShadow: attendanceFilter === f.id ? '0 2px 8px rgba(10, 31, 61, 0.18)' : 'none',
-                  transition: 'var(--transition-smooth)',
-                  transform: attendanceFilter === f.id ? 'translateY(-1px)' : 'none'
-                }}
-              >
-                {f.label}
-              </button>
-            ))}
+          {/* Attendance Filter Mobile Dropdown */}
+          <div>
+            <MobileDropdown
+              title="Filter by Attendance Status"
+              options={[
+                { value: 'All', label: `All Students (${studentsAttendance.length})` },
+                { value: 'Present', label: `Present Students (${presentCount})` },
+                { value: 'Absent', label: `Absent Students (${absentCount})` }
+              ]}
+              value={attendanceFilter}
+              onChange={val => setAttendanceFilter(val)}
+              placeholder="Filter Students"
+            />
           </div>
 
           {/* Student Roll Call List */}

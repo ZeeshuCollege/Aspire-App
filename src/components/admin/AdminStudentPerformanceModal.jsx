@@ -7,6 +7,7 @@ import {
 import { mockTests, DEFAULT_GREY_AVATAR } from '../../lib/mockData';
 import { getStoredStudents, saveStoredStudents } from '../../lib/userAuthStore';
 import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
+import MobileDropdown from '../common/MobileDropdown';
 
 // Seed default students if student list is empty on fresh device
 const INITIAL_DEMO_STUDENTS = [
@@ -634,70 +635,24 @@ export default function AdminStudentPerformanceModal({ isOpen, onClose, onOpenMa
               )}
             </div>
 
-            {/* Filter Buttons for Course Wise Selection */}
+            {/* Filter Dropdown for Course Wise Selection */}
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Filter by Course
-                </span>
-                <span style={{ fontSize: '11px', color: 'var(--brand-700)', fontWeight: 600 }}>
-                  {filteredStudents.length} {filteredStudents.length === 1 ? 'Student' : 'Students'}
-                </span>
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '8px',
-                  overflowX: 'auto',
-                  paddingBottom: '4px',
-                  scrollbarWidth: 'none',
-                  msOverflowStyle: 'none'
-                }}
-              >
-                {availableCourses.map((course) => {
-                  const isActive = selectedCourseFilter === course;
+              <MobileDropdown
+                label={`Filter by Course (${filteredStudents.length} ${filteredStudents.length === 1 ? 'Student' : 'Students'})`}
+                title="Filter by Course"
+                options={availableCourses.map((course) => {
                   const count = course === 'All'
                     ? students.length
                     : students.filter(s => s.course === course).length;
-
-                  return (
-                    <button
-                      key={course}
-                      onClick={() => setSelectedCourseFilter(course)}
-                      style={{
-                        padding: '6px 12px',
-                        borderRadius: '20px',
-                        fontSize: '11.5px',
-                        fontWeight: 700,
-                        whiteSpace: 'nowrap',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        transition: 'all 0.18s ease',
-                        background: isActive ? 'var(--brand-900)' : 'var(--surface)',
-                        color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                        border: isActive ? '1px solid var(--brand-900)' : '1px solid var(--border)',
-                        boxShadow: isActive ? '0 2px 6px rgba(10, 31, 61, 0.2)' : 'none'
-                      }}
-                    >
-                      <span>{course}</span>
-                      <span
-                        style={{
-                          fontSize: '10px',
-                          padding: '1px 6px',
-                          borderRadius: '999px',
-                          background: isActive ? 'rgba(255, 255, 255, 0.2)' : 'var(--surface-alt)',
-                          color: isActive ? '#ffffff' : 'var(--text-muted)',
-                          fontFamily: 'var(--font-mono)'
-                        }}
-                      >
-                        {count}
-                      </span>
-                    </button>
-                  );
+                  return {
+                    value: course,
+                    label: `${course === 'All' ? 'All Courses' : course} (${count})`
+                  };
                 })}
-              </div>
+                value={selectedCourseFilter}
+                onChange={val => setSelectedCourseFilter(val)}
+                placeholder="Filter by Course"
+              />
             </div>
 
             {/* Student Cards List */}

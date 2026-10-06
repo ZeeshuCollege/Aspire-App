@@ -3,6 +3,7 @@ import {
   FileText, CheckCircle2, XCircle, MinusCircle, 
   Calendar, ArrowUpRight 
 } from 'lucide-react';
+import MobileDropdown from '../common/MobileDropdown';
 
 export const mockLast10Tests = [
   {
@@ -265,38 +266,23 @@ export default function ParentPerformance({ onOpenTestPaper }) {
         </div>
       </div>
 
-      {/* Subject Filter Tabs */}
-      <div style={{ display: 'flex', gap: '8px' }}>
-        {['All', 'Physics', 'Chemistry', 'Mathematics'].map(subj => {
-          const count = subj === 'All' 
-            ? mockLast10Tests.length 
-            : mockLast10Tests.filter(t => t.subject === subj).length;
-
-          const isActive = subjectFilter === subj;
-
-          return (
-            <button
-              key={subj}
-              type="button"
-              onClick={() => setSubjectFilter(subj)}
-              style={{
-                padding: '6px 16px',
-                borderRadius: '9999px',
-                fontSize: '11.5px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                border: isActive ? '1px solid var(--brand-900)' : '1px solid var(--border)',
-                background: isActive ? 'var(--brand-900)' : 'var(--surface)',
-                color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                boxShadow: isActive ? '0 2px 8px rgba(10, 31, 61, 0.18)' : 'none',
-                transition: 'var(--transition-smooth)',
-                transform: isActive ? 'translateY(-1px)' : 'none'
-              }}
-            >
-              {subj} ({count})
-            </button>
-          );
-        })}
+      {/* Subject Filter Mobile Dropdown */}
+      <div>
+        <MobileDropdown
+          title="Filter by Subject"
+          options={['All', 'Physics', 'Chemistry', 'Mathematics'].map(subj => {
+            const count = subj === 'All' 
+              ? mockLast10Tests.length 
+              : mockLast10Tests.filter(t => t.subject === subj).length;
+            return {
+              value: subj,
+              label: `${subj === 'All' ? 'All Subjects' : subj} (${count})`
+            };
+          })}
+          value={subjectFilter}
+          onChange={val => setSubjectFilter(val)}
+          placeholder="Filter by Subject"
+        />
       </div>
 
       {/* Last 10 Test Result Cards with Breakdown */}

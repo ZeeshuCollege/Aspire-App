@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { mockTests } from '../../lib/mockData';
 import { Calendar } from 'lucide-react';
+import MobileDropdown from '../common/MobileDropdown';
 
 export default function TestsView({ onOpenTestPaper }) {
   const [tab, setTab] = useState('upcoming');
@@ -34,20 +35,18 @@ export default function TestsView({ onOpenTestPaper }) {
         </span>
       </div>
 
-      {/* Segmented Tabs: Upcoming vs Completed */}
-      <div className="tab-container">
-        <button
-          onClick={() => setTab('upcoming')}
-          className={`tab-btn ${tab === 'upcoming' ? 'active' : ''}`}
-        >
-          Scheduled Tests
-        </button>
-        <button
-          onClick={() => setTab('completed')}
-          className={`tab-btn ${tab === 'completed' ? 'active' : ''}`}
-        >
-          Evaluated Marks
-        </button>
+      {/* Assessment View Dropdown */}
+      <div>
+        <MobileDropdown
+          title="Select Assessment View"
+          options={[
+            { value: 'upcoming', label: 'Scheduled Tests' },
+            { value: 'completed', label: 'Evaluated Marks' }
+          ]}
+          value={tab}
+          onChange={val => setTab(val)}
+          placeholder="Select View"
+        />
       </div>
 
       {/* Test List */}

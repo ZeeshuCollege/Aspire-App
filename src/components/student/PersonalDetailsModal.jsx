@@ -6,6 +6,9 @@ import {
   ShieldCheck, Copy, Check, Award, Edit3, Lock,
   Save, CheckCircle2 
 } from 'lucide-react';
+import MobileDropdown from '../common/MobileDropdown';
+
+const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser }) {
   const [isClosing, setIsClosing] = useState(false);
@@ -503,22 +506,14 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
                 </div>
 
                 {/* Blood Group */}
-                <div>
-                  <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                    Blood Group
-                  </label>
-                  <select
-                    value={formData.bloodGroup || ''}
-                    onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
-                    className="input-field"
-                    style={{ width: '100%', padding: '9px 12px', fontSize: '13px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--brand-900)', colorScheme: 'light' }}
-                  >
-                    <option value="">Select your blood group</option>
-                    {BLOOD_GROUPS.map(bg => (
-                      <option key={bg} value={bg}>{bg}</option>
-                    ))}
-                  </select>
-                </div>
+                <MobileDropdown
+                  label="Blood Group"
+                  title="Select Blood Group"
+                  options={BLOOD_GROUPS.map(bg => ({ value: bg, label: bg }))}
+                  value={formData.bloodGroup || ''}
+                  onChange={val => setFormData({ ...formData, bloodGroup: val })}
+                  placeholder="Select Blood Group"
+                />
               </div>
 
               {/* Role-Specific Fields */}
