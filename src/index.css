@@ -321,6 +321,7 @@ option {
   transition: transform 0.26s var(--ease-smooth), box-shadow 0.26s var(--ease-smooth), border-color 0.26s var(--ease-smooth);
   overflow: hidden;
   position: relative;
+  flex-shrink: 0;
 }
 
 .card:hover {

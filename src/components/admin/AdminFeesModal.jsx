@@ -507,6 +507,7 @@ export default function AdminFeesModal({ isOpen, onClose }) {
         }}>
           {/* Informational Hero Card */}
           <div style={{
+            flexShrink: 0,
             background: 'linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%)',
             border: '1.5px solid #bfdbfe',
             borderRadius: '14px',
@@ -539,7 +540,7 @@ export default function AdminFeesModal({ isOpen, onClose }) {
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 2px', marginTop: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 2px', marginTop: '4px', flexShrink: 0 }}>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Institute Courses ({availableCoursesList.length})
             </span>
@@ -550,7 +551,7 @@ export default function AdminFeesModal({ isOpen, onClose }) {
                 background: 'var(--brand-900)',
                 color: '#ffffff',
                 border: 'none',
-                padding: '5px 12px',
+                padding: '6px 14px',
                 borderRadius: '8px',
                 fontSize: '11.5px',
                 fontWeight: 700,
@@ -576,43 +577,48 @@ export default function AdminFeesModal({ isOpen, onClose }) {
                 key={courseName}
                 className="card"
                 style={{
+                  flexShrink: 0,
+                  minHeight: 'auto',
+                  overflow: 'visible',
                   padding: '14px 16px',
                   borderRadius: '12px',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '10px',
+                  gap: '12px',
                   border: isSaved ? '1.5px solid #22c55e' : '1px solid var(--border)',
                   background: isSaved ? '#f0fdf4' : 'var(--surface)',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.03)'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
                     <div style={{
-                      width: '32px',
-                      height: '32px',
+                      width: '34px',
+                      height: '34px',
                       borderRadius: '8px',
                       background: '#f1f5f9',
                       color: 'var(--brand-900)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontWeight: 800
+                      fontWeight: 800,
+                      flexShrink: 0
                     }}>
-                      <BookOpen size={16} />
+                      <BookOpen size={17} />
                     </div>
-                    <div>
-                      <h5 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <h5 style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--brand-900)', margin: 0, wordBreak: 'break-word', lineHeight: 1.3 }}>
                         {courseName}
                       </h5>
-                      <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
                         Default: ₹{Number(currentFee).toLocaleString('en-IN')} ({formatFeeAmount(currentFee)})
                       </span>
                     </div>
                   </div>
                   {isSaved && (
-                    <span style={{ fontSize: '10.5px', color: '#16a34a', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px' }}>
-                      <CheckCircle size={13} /> Saved
+                    <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                      <CheckCircle size={14} /> Saved
                     </span>
                   )}
                 </div>
@@ -678,7 +684,7 @@ export default function AdminFeesModal({ isOpen, onClose }) {
                 </div>
 
                 {/* Quick Presets */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {[20000, 25000, 35000, 40000, 50000, 60000].map((preset) => (
                     <button
                       key={preset}
@@ -688,12 +694,12 @@ export default function AdminFeesModal({ isOpen, onClose }) {
                         handleUpdateSingleCourseFee(courseName, preset);
                       }}
                       style={{
-                        padding: '3px 8px',
+                        padding: '4px 9px',
                         borderRadius: '6px',
                         border: Number(currentFee) === preset ? '1.5px solid var(--brand-700)' : '1px solid var(--border)',
                         background: Number(currentFee) === preset ? 'var(--brand-50)' : 'var(--surface-alt)',
                         color: Number(currentFee) === preset ? 'var(--brand-900)' : 'var(--text-secondary)',
-                        fontSize: '10.5px',
+                        fontSize: '11px',
                         fontWeight: 600,
                         cursor: 'pointer'
                       }}
@@ -707,7 +713,14 @@ export default function AdminFeesModal({ isOpen, onClose }) {
           })}
 
           {/* Add Custom Course Fee Card */}
-          <div className="card" style={{ padding: '16px', borderRadius: '12px', background: 'var(--surface)' }}>
+          <div className="card" style={{
+            flexShrink: 0,
+            minHeight: 'auto',
+            overflow: 'visible',
+            padding: '16px',
+            borderRadius: '12px',
+            background: 'var(--surface)'
+          }}>
             <h5 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--brand-900)', margin: '0 0 10px 0' }}>
               Add Default Fee for Another Course
             </h5>
@@ -862,7 +875,7 @@ export default function AdminFeesModal({ isOpen, onClose }) {
         flexDirection: 'column',
         gap: '10px'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 2px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 2px', flexShrink: 0 }}>
           <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Enrolled Students ({filteredStudents.length})
           </span>
@@ -873,6 +886,7 @@ export default function AdminFeesModal({ isOpen, onClose }) {
 
         {filteredStudents.length === 0 ? (
           <div style={{
+            flexShrink: 0,
             background: 'var(--surface)',
             border: '1px dashed var(--border)',
             borderRadius: '12px',
@@ -912,6 +926,9 @@ export default function AdminFeesModal({ isOpen, onClose }) {
                 onClick={() => handleOpenCard(student)}
                 className="card"
                 style={{
+                  flexShrink: 0,
+                  minHeight: 'auto',
+                  overflow: 'visible',
                   padding: '12px 14px',
                   background: 'var(--surface)',
                   border: isFull ? '1.5px solid #86efac' : '1px solid var(--border)',
