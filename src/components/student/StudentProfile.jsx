@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Lock, HelpCircle, LogOut, ChevronRight, ShieldCheck, FileText, Trash2 } from 'lucide-react';
 import PersonalDetailsModal from './PersonalDetailsModal';
 import ManagePasswordModal from './ManagePasswordModal';
@@ -10,6 +10,34 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
   const [isManagePasswordOpen, setIsManagePasswordOpen] = useState(false);
   const [isChangeAvatarOpen, setIsChangeAvatarOpen] = useState(false);
   const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
+
+  // Intercept back button for profile submodals
+  useEffect(() => {
+    const handleProfileBack = (e) => {
+      if (isDeleteAccountOpen) {
+        setIsDeleteAccountOpen(false);
+        e.detail?.markHandled?.();
+        return;
+      }
+      if (isChangeAvatarOpen) {
+        setIsChangeAvatarOpen(false);
+        e.detail?.markHandled?.();
+        return;
+      }
+      if (isManagePasswordOpen) {
+        setIsManagePasswordOpen(false);
+        e.detail?.markHandled?.();
+        return;
+      }
+      if (isDetailsOpen) {
+        setIsDetailsOpen(false);
+        e.detail?.markHandled?.();
+        return;
+      }
+    };
+    window.addEventListener('app:back', handleProfileBack);
+    return () => window.removeEventListener('app:back', handleProfileBack);
+  }, [isDeleteAccountOpen, isChangeAvatarOpen, isManagePasswordOpen, isDetailsOpen]);
 
   const isTeacher = user?.role === 'teacher';
   const isParent = user?.role === 'parent';

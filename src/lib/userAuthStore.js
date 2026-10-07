@@ -44,6 +44,12 @@ const saveUserMap = (map) => {
   try { localStorage.setItem(USERS_KEY, JSON.stringify(map)); } catch {}
 };
 
+export const getUserPassword = (email) => {
+  if (!email) return '';
+  const creds = getCredMap();
+  return creds[email.trim().toLowerCase()] || '';
+};
+
 // ----- Security Sanitizer -----
 // Strips executable tags and control characters (#13 Sanitize before storing)
 const sanitizeText = (str) => {

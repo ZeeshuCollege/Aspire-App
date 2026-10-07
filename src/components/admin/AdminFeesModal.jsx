@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Search, Plus, CheckCircle2, Bell, Edit3, Check,
-  X, IndianRupee, Send
+  X, IndianRupee, Send, ArrowLeft, Sparkles, AlertCircle,
+  Settings, Sliders, FileText, CheckCircle, Save, BookOpen, Layers
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -13,7 +14,11 @@ import {
   sendFeeNotificationAlert,
   formatFeeAmount,
   formatFeeFraction,
-  fetchFeesFromSupabase
+  fetchFeesFromSupabase,
+  getCourseDefaultFees,
+  saveCourseDefaultFees,
+  updateCourseDefaultFee,
+  getDefaultFeeForCourse
 } from '../../lib/feeService';
 import { getStoredStudents } from '../../lib/userAuthStore';
 import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
@@ -39,7 +44,7 @@ export default function AdminFeesModal({ isOpen, onClose }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addStudentName, setAddStudentName] = useState('');
   const [addStudentCourse, setAddStudentCourse] = useState('JEE');
-  const [addTotalFee, setAddTotalFee] = useState('');
+  const [addTotalFee, setAddTotalFee] = useState(() => getDefaultFeeForCourse('JEE').toString());
   const [addPaidFee, setAddPaidFee] = useState('');
   const [addRemarks, setAddRemarks] = useState('');
 
@@ -49,6 +54,85 @@ export default function AdminFeesModal({ isOpen, onClose }) {
   const [editTotalFee, setEditTotalFee] = useState('');
   const [toastMessage, setToastMessage] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
+
+  // Sub-Tab Navigation: 'ledger' | 'management'
+  const [activeSubTab, setActiveSubTab] = useState('ledger');
+
+  // Course Default Fees States
+  const [courseFees, setCourseFees] = useState(getCourseDefaultFees);
+  const [editingCourseFees, setEditingCourseFees] = useState({});
+  const [savedCourseName, setSavedCourseName] = useState(null);
+  const [newCustomCourseName, setNewCustomCourseName] = useState('');
+  const [newCustomCourseFee, setNewCustomCourseFee] = useState('');
+
+  // Reload course fees when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const fees = getCourseDefaultFees();
+      setCourseFees(fees);
+      setEditingCourseFees({ ...fees });
+    }
+  }, [isOpen]);
+
+  // Available courses list
+  const availableCoursesList = useMemo(() => {
+    const list = [
+      'JEE (Mains + Adv)',
+      'NEET',
+      'MHT-CET',
+      '12th Science',
+      '11th Science',
+      'Std 10th',
+      'Std 9th'
+    ];
+    try {
+      const saved = localStorage.getItem('aspire_courses_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          parsed.forEach(c => {
+            const name = c.name || c;
+            if (name && !list.includes(name)) list.push(name);
+          });
+        }
+      }
+    } catch {}
+
+    Object.keys(courseFees).forEach(c => {
+      if (c && !list.includes(c)) list.push(c);
+    });
+
+    return list;
+  }, [courseFees]);
+
+  const handleUpdateSingleCourseFee = (courseName, newAmount) => {
+    const num = Math.max(0, Number(newAmount) || 0);
+    const updated = updateCourseDefaultFee(courseName, num);
+    setCourseFees({ ...updated });
+    setEditingCourseFees(prev => ({ ...prev, [courseName]: num }));
+    setSavedCourseName(courseName);
+    setTimeout(() => setSavedCourseName(null), 2500);
+    showToast(`✓ Default total fee for "${courseName}" set to ₹${num.toLocaleString('en-IN')}`);
+  };
+
+  const handleSaveAllCourseFees = () => {
+    const toSave = { ...courseFees, ...editingCourseFees };
+    saveCourseDefaultFees(toSave);
+    setCourseFees(toSave);
+    showToast('✓ All course default fees updated and saved successfully!');
+  };
+
+  const handleAddCustomCourseFee = (e) => {
+    e.preventDefault();
+    if (!newCustomCourseName.trim()) {
+      showToast('⚠️ Please enter a course name');
+      return;
+    }
+    const fee = Math.max(0, Number(newCustomCourseFee) || 0);
+    handleUpdateSingleCourseFee(newCustomCourseName.trim(), fee);
+    setNewCustomCourseName('');
+    setNewCustomCourseFee('');
+  };
 
   // Load fees on open (Initial cache + Live Supabase Backend Query)
   useEffect(() => {
@@ -78,6 +162,7 @@ export default function AdminFeesModal({ isOpen, onClose }) {
   };
 
   const handleBack = () => {
+    if (isClosing) return;
     setIsClosing(true);
     setTimeout(() => {
       onClose();
@@ -86,6 +171,33 @@ export default function AdminFeesModal({ isOpen, onClose }) {
       setIsEditing(false);
     }, 280);
   };
+
+  // Intercept back button for nested sheets and sub-tabs
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleFeesBack = (e) => {
+      if (selectedStudent) {
+        setSelectedStudent(null);
+        setIsEditing(false);
+        e.detail?.markHandled?.();
+        return;
+      }
+      if (showAddModal) {
+        setShowAddModal(false);
+        e.detail?.markHandled?.();
+        return;
+      }
+      if (activeSubTab !== 'ledger') {
+        setActiveSubTab('ledger');
+        e.detail?.markHandled?.();
+        return;
+      }
+      handleBack();
+      e.detail?.markHandled?.();
+    };
+    window.addEventListener('app:back', handleFeesBack);
+    return () => window.removeEventListener('app:back', handleFeesBack);
+  }, [isOpen, selectedStudent, showAddModal, activeSubTab, isClosing]);
 
   // Filter & Search Logic
   const filteredStudents = useMemo(() => {
@@ -287,6 +399,71 @@ export default function AdminFeesModal({ isOpen, onClose }) {
         </div>
       </div>
 
+      {/* ── Sub-Tab Segmented Control (Student Ledger vs Management) ── */}
+      <div style={{
+        background: 'var(--surface)',
+        padding: '10px 14px 8px',
+        borderBottom: '1px solid var(--border)',
+        flexShrink: 0
+      }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '6px',
+          background: 'var(--surface-alt)',
+          padding: '4px',
+          borderRadius: '12px',
+          border: '1px solid var(--border)'
+        }}>
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('ledger')}
+            style={{
+              padding: '9px 12px',
+              borderRadius: '9px',
+              border: 'none',
+              background: activeSubTab === 'ledger' ? 'var(--surface)' : 'transparent',
+              color: activeSubTab === 'ledger' ? 'var(--brand-900)' : 'var(--text-secondary)',
+              fontWeight: activeSubTab === 'ledger' ? 800 : 600,
+              fontSize: '12.5px',
+              cursor: 'pointer',
+              boxShadow: activeSubTab === 'ledger' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <FileText size={15} color={activeSubTab === 'ledger' ? 'var(--brand-700)' : 'var(--text-muted)'} />
+            <span>Student Ledger ({feesList.length})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('management')}
+            style={{
+              padding: '9px 12px',
+              borderRadius: '9px',
+              border: 'none',
+              background: activeSubTab === 'management' ? 'var(--surface)' : 'transparent',
+              color: activeSubTab === 'management' ? 'var(--brand-900)' : 'var(--text-secondary)',
+              fontWeight: activeSubTab === 'management' ? 800 : 600,
+              fontSize: '12.5px',
+              cursor: 'pointer',
+              boxShadow: activeSubTab === 'management' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <Settings size={15} color={activeSubTab === 'management' ? '#2563eb' : 'var(--text-muted)'} />
+            <span>Management</span>
+          </button>
+        </div>
+      </div>
+
       {/* ── Toast Notification Banner ── */}
       {toastMessage && (
         <div style={{
@@ -313,17 +490,310 @@ export default function AdminFeesModal({ isOpen, onClose }) {
         </div>
       )}
 
-      {/* ── Controls Section: Search Bar & Filter Buttons ── */}
-      <div style={{
-        background: 'var(--surface)',
-        borderBottom: '1px solid var(--border)',
-        padding: '12px 14px 10px 14px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '10px',
-        flexShrink: 0
-      }}>
-        {/* Simple Search Bar to Search Student with Name */}
+      {/* ══════════════════════════════════════════════════════════════════════
+          VIEW 1: MANAGEMENT (Course Default Fees Configuration)
+      ══════════════════════════════════════════════════════════════════════ */}
+      {activeSubTab === 'management' && (
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '14px',
+          paddingBottom: 'calc(30px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)))',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
+        }}>
+          {/* Informational Hero Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%)',
+            border: '1.5px solid #bfdbfe',
+            borderRadius: '14px',
+            padding: '16px',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '12px',
+            boxShadow: '0 2px 6px rgba(37, 99, 235, 0.04)'
+          }}>
+            <div style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '10px',
+              background: '#dbeafe',
+              color: '#1d4ed8',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Sliders size={20} />
+            </div>
+            <div>
+              <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: '0 0 4px 0' }}>
+                Course Default Fees Setup
+              </h4>
+              <p style={{ fontSize: '11.5px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45 }}>
+                Set the default total fees for each course. When enrolling a new student into a course, their total fees will automatically default to this configured value.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 2px', marginTop: '4px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Institute Courses ({availableCoursesList.length})
+            </span>
+            <button
+              type="button"
+              onClick={handleSaveAllCourseFees}
+              style={{
+                background: 'var(--brand-900)',
+                color: '#ffffff',
+                border: 'none',
+                padding: '5px 12px',
+                borderRadius: '8px',
+                fontSize: '11.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            >
+              <Save size={13} /> Save All
+            </button>
+          </div>
+
+          {/* List of Course Fee Cards */}
+          {availableCoursesList.map((courseName) => {
+            const currentFee = editingCourseFees[courseName] !== undefined
+              ? editingCourseFees[courseName]
+              : getDefaultFeeForCourse(courseName);
+            const isSaved = savedCourseName === courseName;
+
+            return (
+              <div
+                key={courseName}
+                className="card"
+                style={{
+                  padding: '14px 16px',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  border: isSaved ? '1.5px solid #22c55e' : '1px solid var(--border)',
+                  background: isSaved ? '#f0fdf4' : 'var(--surface)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      background: '#f1f5f9',
+                      color: 'var(--brand-900)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 800
+                    }}>
+                      <BookOpen size={16} />
+                    </div>
+                    <div>
+                      <h5 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>
+                        {courseName}
+                      </h5>
+                      <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                        Default: ₹{Number(currentFee).toLocaleString('en-IN')} ({formatFeeAmount(currentFee)})
+                      </span>
+                    </div>
+                  </div>
+                  {isSaved && (
+                    <span style={{ fontSize: '10.5px', color: '#16a34a', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                      <CheckCircle size={13} /> Saved
+                    </span>
+                  )}
+                </div>
+
+                {/* Input and Save Button */}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <div style={{
+                    flex: 1,
+                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    background: 'var(--surface-alt)',
+                    borderRadius: '8px',
+                    border: '1.5px solid var(--border)',
+                    padding: '0 10px'
+                  }}>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)' }}>₹</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="500"
+                      value={currentFee}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEditingCourseFees(prev => ({ ...prev, [courseName]: val }));
+                      }}
+                      placeholder="e.g. 50000"
+                      style={{
+                        width: '100%',
+                        background: 'transparent',
+                        border: 'none',
+                        padding: '8px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: 'var(--text-primary)',
+                        outline: 'none',
+                        fontFamily: 'var(--font-mono)'
+                      }}
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateSingleCourseFee(courseName, currentFee)}
+                    style={{
+                      background: 'var(--brand-800)',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '8px 14px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <Save size={13} />
+                    <span>Set Fee</span>
+                  </button>
+                </div>
+
+                {/* Quick Presets */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                  {[20000, 25000, 35000, 40000, 50000, 60000].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => {
+                        setEditingCourseFees(prev => ({ ...prev, [courseName]: preset }));
+                        handleUpdateSingleCourseFee(courseName, preset);
+                      }}
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        border: Number(currentFee) === preset ? '1.5px solid var(--brand-700)' : '1px solid var(--border)',
+                        background: Number(currentFee) === preset ? 'var(--brand-50)' : 'var(--surface-alt)',
+                        color: Number(currentFee) === preset ? 'var(--brand-900)' : 'var(--text-secondary)',
+                        fontSize: '10.5px',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ₹{formatFeeAmount(preset)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Add Custom Course Fee Card */}
+          <div className="card" style={{ padding: '16px', borderRadius: '12px', background: 'var(--surface)' }}>
+            <h5 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--brand-900)', margin: '0 0 10px 0' }}>
+              Add Default Fee for Another Course
+            </h5>
+            <form onSubmit={handleAddCustomCourseFee} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <input
+                type="text"
+                placeholder="Course Name (e.g. Foundation 8th)"
+                value={newCustomCourseName}
+                onChange={e => setNewCustomCourseName(e.target.value)}
+                style={{
+                  padding: '9px 12px',
+                  borderRadius: '8px',
+                  border: '1.5px solid var(--border)',
+                  fontSize: '12.5px',
+                  background: 'var(--surface-alt)',
+                  color: 'var(--text-primary)'
+                }}
+              />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: 'var(--surface-alt)',
+                  borderRadius: '8px',
+                  border: '1.5px solid var(--border)',
+                  padding: '0 10px'
+                }}>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)' }}>₹</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="500"
+                    placeholder="Total Fee (e.g. 25000)"
+                    value={newCustomCourseFee}
+                    onChange={e => setNewCustomCourseFee(e.target.value)}
+                    style={{
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      padding: '8px',
+                      fontSize: '12.5px',
+                      fontWeight: 600,
+                      outline: 'none',
+                      fontFamily: 'var(--font-mono)'
+                    }}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  style={{
+                    background: 'var(--accent)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 14px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <Plus size={14} /> Add
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          VIEW 2: STUDENT LEDGER (Active when activeSubTab === 'ledger')
+      ══════════════════════════════════════════════════════════════════════ */}
+      {activeSubTab === 'ledger' && (
+        <>
+          {/* ── Controls Section: Search Bar & Filter Buttons ── */}
+          <div style={{
+            background: 'var(--surface)',
+            borderBottom: '1px solid var(--border)',
+            padding: '12px 14px 10px 14px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+            flexShrink: 0
+          }}>
+            {/* Simple Search Bar to Search Student with Name */}
         <div style={{
           position: 'relative',
           display: 'flex',
@@ -570,6 +1040,8 @@ export default function AdminFeesModal({ isOpen, onClose }) {
           <span>Add Fee Details</span>
         </button>
       </div>
+    </>
+  )}
 
       {/* ── Student Fee Details Sheet (When Card is Opened) ── */}
       {selectedStudent && (
@@ -937,7 +1409,10 @@ export default function AdminFeesModal({ isOpen, onClose }) {
                 title="Select Course / Standard"
                 options={COURSE_OPTIONS.map(c => ({ value: c, label: c }))}
                 value={addStudentCourse}
-                onChange={val => setAddStudentCourse(val)}
+                onChange={val => {
+                  setAddStudentCourse(val);
+                  setAddTotalFee(getDefaultFeeForCourse(val).toString());
+                }}
                 placeholder="Select Course"
               />
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Calendar, CheckCircle2, XCircle, Clock, Search, UserCheck, Award } from 'lucide-react';
 import { mockLectureAttendance } from '../../lib/mockData';
@@ -13,6 +13,7 @@ export default function FullAttendanceReportModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const handleClose = () => {
+    if (isClosing) return;
     setIsClosing(true);
     setTimeout(() => {
       onClose();
@@ -20,6 +21,22 @@ export default function FullAttendanceReportModal({ isOpen, onClose }) {
       setSelectedLecture(null);
     }, 380);
   };
+
+  // Intercept back button for detail popup and modal close
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleReportBack = (e) => {
+      if (selectedLecture) {
+        setSelectedLecture(null);
+        e.detail?.markHandled?.();
+        return;
+      }
+      handleClose();
+      e.detail?.markHandled?.();
+    };
+    window.addEventListener('app:back', handleReportBack);
+    return () => window.removeEventListener('app:back', handleReportBack);
+  }, [isOpen, selectedLecture, isClosing]);
 
   const lectures = mockLectureAttendance;
   const totalLectures = lectures.length;

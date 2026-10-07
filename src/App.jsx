@@ -397,6 +397,7 @@ export default function App() {
   }, [currentUser, currentRole]);
 
   // State refs for the back button listener to prevent stale closures
+  // State refs for the back button listener to prevent stale closures
   const activeTabRef = useRef(activeTab);
   const isLoginOpenRef = useRef(isLoginOpen);
   const isCreateTestOpenRef = useRef(isCreateTestOpen);
@@ -405,6 +406,9 @@ export default function App() {
   const pdfViewerDataRef = useRef(pdfViewerData);
   const showOpeningScreenRef = useRef(showOpeningScreen);
   const isLoggedInRef = useRef(isLoggedIn);
+  const lastBackHandledTimeRef = useRef(0);
+  const lastExitTapTimeRef = useRef(0);
+  const [backToastMessage, setBackToastMessage] = useState('');
 
   useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
   useEffect(() => { isLoginOpenRef.current = isLoginOpen; }, [isLoginOpen]);
@@ -435,7 +439,14 @@ export default function App() {
   // Unified Android hardware & swipe-gesture back navigation
   useEffect(() => {
     const handleBackNavigation = () => {
-      // 1. Give sub-modals or nested views (e.g. admin panels, batch details) priority to close
+      const now = Date.now();
+      // 1. Throttle rapid duplicate events (e.g. Capacitor backButton + WebView popstate within 380ms)
+      if (now - lastBackHandledTimeRef.current < 380) {
+        return;
+      }
+      lastBackHandledTimeRef.current = now;
+
+      // 2. Give child modals, sheets, or drill-downs first priority to close
       let handledByChild = false;
       const event = new CustomEvent('app:back', {
         cancelable: true,
@@ -444,48 +455,85 @@ export default function App() {
         }
       });
       window.dispatchEvent(event);
-      if (handledByChild) return;
+      if (handledByChild) {
+        lastExitTapTimeRef.current = 0;
+        return;
+      }
 
+      // 3. Global in-app modals / overlays
       if (isPermissionsOpenRef.current) {
         setIsPermissionsOpen(false);
+        lastExitTapTimeRef.current = 0;
         return;
       }
       if (pdfViewerDataRef.current) {
         setPdfViewerData(null);
+        lastExitTapTimeRef.current = 0;
         return;
       }
       if (isNotificationsOpenRef.current) {
         setIsNotificationsOpen(false);
+        lastExitTapTimeRef.current = 0;
         return;
       }
       if (isCreateTestOpenRef.current) {
         setIsCreateTestOpen(false);
+        lastExitTapTimeRef.current = 0;
         return;
       }
       if (isLoginOpenRef.current) {
         setIsLoginOpen(false);
+        lastExitTapTimeRef.current = 0;
         return;
       }
 
-      // If on opening screen and not logged in, back exits app
-      if (showOpeningScreenRef.current && !isLoggedInRef.current) {
-        try {
-          CapApp.exitApp();
-        } catch (err) {}
-        return;
+      // 4. Welcome / Opening screen
+      if (showOpeningScreenRef.current) {
+        if (isLoggedInRef.current) {
+          setShowOpeningScreen(false);
+          setActiveTab('home');
+          lastExitTapTimeRef.current = 0;
+          return;
+        } else {
+          if (now - lastExitTapTimeRef.current < 2000) {
+            try {
+              CapApp.exitApp();
+            } catch (err) {}
+          } else {
+            lastExitTapTimeRef.current = now;
+            setBackToastMessage('Press back again to exit');
+            setTimeout(() => setBackToastMessage(''), 2000);
+          }
+          return;
+        }
       }
 
-      // 3. If currently on any other page/tab, navigate to 'home' first!
+      // 5. CRITICAL REQUIREMENT:
+      // If currently on ANY other page or tab in ANY portal (Student, Teacher, Parent, Admin),
+      // hitting back MUST ALWAYS navigate to 'home' first!
+      // The screen immediately before closing the whole app will always be the home screen!
       if (activeTabRef.current !== 'home') {
         setActiveTab('home');
+        try {
+          window.history.replaceState({ tab: 'home' }, '');
+        } catch (err) {}
+        // Reset exit timer so arriving at home never immediately closes the app
+        lastExitTapTimeRef.current = 0;
         return;
       }
 
-      // 4. Only when already on 'home' does the full app exit/back trigger
-      try {
-        CapApp.exitApp();
-      } catch (err) {
-        // In web browser environment
+      // 6. User is ALREADY ON 'home' screen:
+      // Safe exit only after pressing back a second time within 2 seconds
+      if (now - lastExitTapTimeRef.current < 2000) {
+        try {
+          CapApp.exitApp();
+        } catch (err) {
+          // Web browser fallback
+        }
+      } else {
+        lastExitTapTimeRef.current = now;
+        setBackToastMessage('Press back again to exit');
+        setTimeout(() => setBackToastMessage(''), 2000);
       }
     };
 
@@ -916,6 +964,37 @@ export default function App() {
           onOpenLogin={() => setIsLoginOpen(true)}
           onProceed={() => setShowOpeningScreen(false)}
         />
+      )}
+
+      {/* Back to Exit Toast Banner */}
+      {backToastMessage && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '88px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(15, 23, 42, 0.94)',
+            color: '#ffffff',
+            padding: '9px 18px',
+            borderRadius: '9999px',
+            fontSize: '12.5px',
+            fontWeight: 700,
+            zIndex: 99999,
+            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.28)',
+            pointerEvents: 'none',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '7px',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            letterSpacing: '0.01em',
+            animation: 'fadeIn 0.18s ease-out',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          <span>{backToastMessage}</span>
+        </div>
       )}
     </div>
   );

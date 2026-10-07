@@ -45,6 +45,81 @@ export function formatFeeFraction(paid, total) {
   return `${formatFeeAmount(paid)}/${formatFeeAmount(total)}`;
 }
 
+export const COURSE_DEFAULT_FEES_STORAGE_KEY = 'aspire_course_default_fees_v1';
+
+export const INITIAL_COURSE_DEFAULT_FEES = {
+  'JEE (Mains + Adv)': 60000,
+  'JEE': 60000,
+  'NEET': 50000,
+  'MHT-CET': 35000,
+  '12th Science': 40000,
+  '11th Science': 35000,
+  'Std 10th': 25000,
+  '10th': 25000,
+  'Std 9th': 20000,
+  '9th': 20000
+};
+
+/**
+ * Retrieve saved default course fees with fallback to initial defaults
+ */
+export function getCourseDefaultFees() {
+  try {
+    const raw = localStorage.getItem(COURSE_DEFAULT_FEES_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return { ...INITIAL_COURSE_DEFAULT_FEES, ...parsed };
+      }
+    }
+  } catch (e) {}
+  return { ...INITIAL_COURSE_DEFAULT_FEES };
+}
+
+/**
+ * Save updated default fees per course
+ */
+export function saveCourseDefaultFees(feesMap) {
+  try {
+    localStorage.setItem(COURSE_DEFAULT_FEES_STORAGE_KEY, JSON.stringify(feesMap));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('aspire:course-fees-updated', { detail: feesMap }));
+    }
+  } catch (e) {}
+}
+
+/**
+ * Update a specific course default fee
+ */
+export function updateCourseDefaultFee(courseName, amount) {
+  const current = getCourseDefaultFees();
+  current[courseName] = Math.max(0, Number(amount) || 0);
+  saveCourseDefaultFees(current);
+  return current;
+}
+
+/**
+ * Resolve the default fee for a course with intelligent name matching
+ */
+export function getDefaultFeeForCourse(courseName) {
+  if (!courseName) return 25000;
+  const feesMap = getCourseDefaultFees();
+
+  if (feesMap[courseName] !== undefined) {
+    return Number(feesMap[courseName]) || 0;
+  }
+
+  const clean = courseName.toLowerCase().trim();
+  for (const [key, val] of Object.entries(feesMap)) {
+    const kClean = key.toLowerCase().trim();
+    if (clean === kClean || clean.includes(kClean) || kClean.includes(clean)) {
+      return Number(val) || 0;
+    }
+  }
+
+  return 25000;
+}
+
 /**
  * Default Seed Records
  */
@@ -405,4 +480,71 @@ export function sendFeeNotificationAlert(student) {
   }
 
   return notice;
+}
+
+/**
+ * Automatically create or update student fee ledger entry when enrolled
+ * Connects directly to the Fees section and Supabase backend.
+ */
+export function createOrUpdateStudentFeeRecord(studentData) {
+  if (!studentData || !studentData.name) return null;
+  const currentFees = getStoredFees();
+
+  const total = studentData.totalFee !== undefined && Number(studentData.totalFee) > 0
+    ? Number(studentData.totalFee)
+    : getDefaultFeeForCourse(studentData.course);
+
+  const rawPaid = Number(studentData.paidFee) || 0;
+  const paid = Math.min(total, Math.max(0, rawPaid));
+  const isFull = (paid >= total && total > 0) || Boolean(studentData.isFullyPaid);
+
+  const existingIdx = currentFees.findIndex(f => 
+    (studentData.id && f.id === studentData.id) || 
+    (studentData.roll && (f.roll === studentData.roll || f.rollNumber === studentData.roll)) ||
+    f.name.toLowerCase().trim() === studentData.name.toLowerCase().trim()
+  );
+
+  let newOrUpdatedRecord;
+  let updatedList;
+
+  if (existingIdx >= 0) {
+    newOrUpdatedRecord = {
+      ...currentFees[existingIdx],
+      name: studentData.name.trim(),
+      roll: studentData.roll || studentData.rollNumber || currentFees[existingIdx].roll || '—',
+      rollNumber: studentData.rollNumber || studentData.roll || currentFees[existingIdx].rollNumber || '—',
+      course: studentData.course || currentFees[existingIdx].course || 'JEE',
+      totalFee: total,
+      paidFee: paid,
+      isFullyPaid: isFull,
+      lastPaymentDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      remarks: studentData.remarks || currentFees[existingIdx].remarks || 'Student Enrollment'
+    };
+    updatedList = [...currentFees];
+    updatedList[existingIdx] = newOrUpdatedRecord;
+  } else {
+    newOrUpdatedRecord = {
+      id: studentData.id || `fee-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      name: studentData.name.trim(),
+      roll: studentData.roll || studentData.rollNumber || '—',
+      rollNumber: studentData.rollNumber || studentData.roll || '—',
+      course: studentData.course || 'JEE',
+      totalFee: total,
+      paidFee: paid,
+      isFullyPaid: isFull,
+      lastPaymentDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      remarks: studentData.remarks || 'New Student Enrollment'
+    };
+    updatedList = [newOrUpdatedRecord, ...currentFees];
+  }
+
+  saveStoredFees(updatedList);
+  syncFeeToSupabaseBackend(newOrUpdatedRecord);
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('aspire:fee-alert', { detail: { record: newOrUpdatedRecord } }));
+    window.dispatchEvent(new Event('storage'));
+  }
+
+  return newOrUpdatedRecord;
 }

@@ -1,94 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { mockNotices as initialNotices, DEFAULT_GREY_AVATAR } from '../../lib/mockData';
 import {
-  getStoredStudents, saveStoredStudents,
-  getStoredTeachers, saveStoredTeachers,
+  getStoredStudents, saveStoredStudents, deleteStoredStudent,
+  getStoredTeachers, saveStoredTeachers, deleteStoredTeacher,
   getStoredParents, saveStoredParents, deleteStoredParent,
   addRegisteredUser
 } from '../../lib/userAuthStore';
-import { getStoredFees } from '../../lib/feeService';
+import { getStoredFees, getDefaultFeeForCourse, createOrUpdateStudentFeeRecord } from '../../lib/feeService';
 import {
   BookOpen, Plus, Search,
   Download, ChevronRight, Calendar, Trash2, Award,
-  Eye, EyeOff, IndianRupee, TrendingUp
+  Eye, EyeOff, IndianRupee, TrendingUp,
+  Users, GraduationCap, Bell, UserX, CheckSquare
 } from 'lucide-react';
 import ScreenSlider from '../common/ScreenSlider';
 import AdminStudyMaterialsModal, { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
 import AdminTestsModal from './AdminTestsModal';
+import AdminStudyAndTestMaterialModal from './AdminStudyAndTestMaterialModal';
 import AdminTimetableModal from './AdminTimetableModal';
 import AdminAttendanceModal from './AdminAttendanceModal';
 import AdminMarksModal from './AdminMarksModal';
 import AdminFeesModal from './AdminFeesModal';
 import AdminStudentPerformanceModal from './AdminStudentPerformanceModal';
+import AdminUserDetailsModal from './AdminUserDetailsModal';
+import AdminCourseDetailsModal from './AdminCourseDetailsModal';
+import AdminExportModal from './AdminExportModal';
 import MobileDropdown from '../common/MobileDropdown';
 import { broadcastNotice } from '../../lib/notificationService';
-
-function triggerDownload(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-function generateSimplePDF(title, sections) {
-  let streamContent = `BT /F1 15 Tf 50 780 Td (${title.replace(/[()\\]/g, '')}) Tj ET\n`;
-  let y = 750;
-  streamContent += `BT /F1 10 Tf 50 ${y} Td (Generated: ${new Date().toLocaleDateString('en-IN')}) Tj ET\n`;
-  y -= 25;
-
-  sections.forEach(sec => {
-    if (y < 60) return;
-    streamContent += `BT /F1 12 Tf 50 ${y} Td (${sec.title.replace(/[()\\]/g, '')}) Tj ET\n`;
-    y -= 16;
-    (sec.lines || []).slice(0, 10).forEach(line => {
-      if (y < 50) return;
-      const cleanLine = String(line || '').replace(/[()\\]/g, '');
-      streamContent += `BT /F1 9 Tf 50 ${y} Td (${cleanLine}) Tj ET\n`;
-      y -= 13;
-    });
-    y -= 10;
-  });
-
-  const streamLength = streamContent.length;
-  const pdfData = `%PDF-1.4
-1 0 obj
-<< /Type /Catalog /Pages 2 0 R >>
-endobj
-2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 1 >>
-endobj
-3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
-endobj
-4 0 obj
-<< /Length ${streamLength} >>
-stream
-${streamContent}
-endstream
-endobj
-5 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
-endobj
-xref
-0 6
-0000000000 65535 f 
-0000000010 00000 n 
-0000000060 00000 n 
-0000000117 00000 n 
-0000000226 00000 n 
-0000000295 00000 n 
-trailer
-<< /Size 6 /Root 1 0 R >>
-startxref
-368
-%%EOF`;
-
-  return new Blob([pdfData], { type: 'application/pdf' });
-}
 
 export default function AdminMobileDashboard({
   activeTab,
@@ -109,6 +47,10 @@ export default function AdminMobileDashboard({
   const [showTeachersModal, setShowTeachersModal] = useState(false);
   const [showAbsentModal, setShowAbsentModal] = useState(false);
   const [selectedAbsentStudent, setSelectedAbsentStudent] = useState(null);
+  const [selectedDetailUser, setSelectedDetailUser] = useState(null); // { type: 'student' | 'parent' | 'teacher', data }
+  const [showStudyAndTestModal, setShowStudyAndTestModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFormat, setExportFormat] = useState('pdf');
   const [showNoticesModal, setShowNoticesModal] = useState(false);
   const [showMaterialsModal, setShowMaterialsModal] = useState(false);
   const [showTestsModal, setShowTestsModal] = useState(false);
@@ -138,6 +80,12 @@ export default function AdminMobileDashboard({
   const [newStudentEmail, setNewStudentEmail] = useState('');
   const [newStudentPassword, setNewStudentPassword] = useState('');
   const [newStudentCourse, setNewStudentCourse] = useState('JEE');
+  const [newStudentTotalFee, setNewStudentTotalFee] = useState(() => getDefaultFeeForCourse('JEE'));
+  const [newStudentPaidFee, setNewStudentPaidFee] = useState('');
+
+  useEffect(() => {
+    setNewStudentTotalFee(getDefaultFeeForCourse(newStudentCourse));
+  }, [newStudentCourse]);
 
   // Add Parent Modal States
   const [showAddParentModal, setShowAddParentModal] = useState(false);
@@ -177,12 +125,20 @@ export default function AdminMobileDashboard({
   const [newUserSubjects, setNewUserSubjects] = useState([]);
   const [newUserChildName, setNewUserChildName] = useState('');
   const [newUserChildRoll, setNewUserChildRoll] = useState('');
+  const [newUserTotalFee, setNewUserTotalFee] = useState(() => getDefaultFeeForCourse('JEE'));
+  const [newUserPaidFee, setNewUserPaidFee] = useState('');
   const [isSubmittingUser, setIsSubmittingUser] = useState(false);
+
+  useEffect(() => {
+    setNewUserTotalFee(getDefaultFeeForCourse(newUserCourse));
+  }, [newUserCourse]);
 
   // Add Course Modal States
   const [showAddCourseModal, setShowAddCourseModal] = useState(false);
   const [isCourseModalClosing, setIsCourseModalClosing] = useState(false);
-  const [courses, setCourses] = useState([
+  const [selectedCourse, setSelectedCourse] = useState(null);
+
+  const INITIAL_COURSES = [
     { id: 'c-1', name: 'Std 9th', code: 'STD-9', subjects: ['English (9th)', 'Maths (9th)', 'Science (9th)'], faculty: ['Science Faculty'] },
     { id: 'c-2', name: 'Std 10th', code: 'STD-10', subjects: ['English (10th)', 'Maths (10th)', 'Science (10th)'], faculty: ['Science Faculty'] },
     { id: 'c-3', name: '11th Science', code: 'SCI-11', subjects: ['English (11th)', 'Geography (11th)', 'History (11th)'], faculty: ['Faculty'] },
@@ -190,7 +146,25 @@ export default function AdminMobileDashboard({
     { id: 'c-5', name: 'NEET', code: 'NEET', subjects: ['Physics (NEET)', 'Chemistry (NEET)', 'Biology (NEET)'], faculty: ['Physics Faculty', 'Biology Faculty'] },
     { id: 'c-6', name: 'JEE (Mains + Adv)', code: 'JEE', subjects: ['Physics (JEE)', 'Chemistry (JEE)', 'Maths (JEE)'], faculty: ['Physics Faculty', 'Mathematics Faculty'] },
     { id: 'c-7', name: 'MHT-CET', code: 'MHT-CET', subjects: ['Physics (JEE)', 'Chemistry (JEE)', 'Maths (JEE)'], faculty: ['Physics Faculty'] }
-  ]);
+  ];
+
+  const [courses, setCourses] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aspire_courses_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return INITIAL_COURSES;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('aspire_courses_list', JSON.stringify(courses));
+    } catch {}
+  }, [courses]);
+
   const [newCourseName, setNewCourseName] = useState('');
   const [newCourseSubjects, setNewCourseSubjects] = useState([]);
   const [newCourseFaculty, setNewCourseFaculty] = useState([]);
@@ -277,157 +251,8 @@ export default function AdminMobileDashboard({
   };
 
   const handleExport = (format) => {
-    try {
-      const currentStudents = getStoredStudents() || [];
-      const currentTeachers = getStoredTeachers() || [];
-      const currentFees = getStoredFees() || [];
-
-      let timetableList = [];
-      try {
-        timetableList = JSON.parse(localStorage.getItem('aspire_admin_timetable') || '[]');
-      } catch (e) {}
-
-      let testsList = [];
-      try {
-        testsList = JSON.parse(localStorage.getItem('aspire_tests_list') || '[]');
-      } catch (e) {}
-
-      let studyMaterials = [];
-      try {
-        studyMaterials = JSON.parse(localStorage.getItem('aspire_study_materials') || '[]');
-      } catch (e) {}
-
-      const timestamp = new Date().toISOString().split('T')[0];
-
-      if (format === 'csv') {
-        let csvContent = '\uFEFF';
-        csvContent += 'ASPIRE LEARNING CENTRE - COMPLETE INSTITUTE DATA REPORT\n';
-        csvContent += `Generated On: ${new Date().toLocaleString()}\n\n`;
-
-        csvContent += '=== STUDENTS ===\n';
-        csvContent += 'ID,Name,Email,Course,Roll Number,Phone\n';
-        currentStudents.forEach(s => {
-          csvContent += `"${s.id || ''}","${s.name || ''}","${s.email || ''}","${s.course || ''}","${s.roll || s.rollNumber || ''}","${s.phone || ''}"\n`;
-        });
-
-        csvContent += '\n=== FACULTY / TEACHERS ===\n';
-        csvContent += 'ID,Name,Email,Subject,Phone\n';
-        currentTeachers.forEach(t => {
-          csvContent += `"${t.id || ''}","${t.name || ''}","${t.email || ''}","${t.subject || ''}","${t.phone || ''}"\n`;
-        });
-
-        csvContent += '\n=== FEES DETAILS ===\n';
-        csvContent += 'Student ID,Name,Course,Total Fee (Rs),Paid Fee (Rs),Pending Fee (Rs),Status\n';
-        currentFees.forEach(f => {
-          const rem = Math.max(0, (f.totalFee || 0) - (f.paidFee || 0));
-          csvContent += `"${f.id || ''}","${f.name || ''}","${f.course || ''}","${f.totalFee || 0}","${f.paidFee || 0}","${rem}","${f.isFullyPaid ? 'Full Paid' : 'Pending'}"\n`;
-        });
-
-        csvContent += '\n=== TIMETABLE ===\n';
-        csvContent += 'Course,Day,Time,Subject,Faculty\n';
-        timetableList.forEach(l => {
-          csvContent += `"${l.course || ''}","${l.day || ''}","${l.time || ''}","${l.subject || ''}","${l.faculty || ''}"\n`;
-        });
-
-        csvContent += '\n=== TESTS & EXAMS ===\n';
-        csvContent += 'Title,Course,Subject,Total Marks,Date\n';
-        testsList.forEach(t => {
-          csvContent += `"${t.title || ''}","${t.course || ''}","${t.subject || ''}","${t.totalMarks || ''}","${t.date || ''}"\n`;
-        });
-
-        csvContent += '\n=== STUDY MATERIALS ===\n';
-        csvContent += 'Title,Course,Subject,Type,File Size\n';
-        studyMaterials.forEach(m => {
-          csvContent += `"${m.title || ''}","${m.course || ''}","${m.subject || ''}","${m.type || ''}","${m.fileSize || ''}"\n`;
-        });
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        triggerDownload(blob, `Aspire_Institute_Data_${timestamp}.csv`);
-        setExportFeedback('✓ CSV downloaded successfully!');
-      } else if (format === 'xlsx') {
-        let excelContent = `
-          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-          <head>
-            <meta http-equiv="content-type" content="text/plain; charset=UTF-8"/>
-            <style>
-              table { border-collapse: collapse; width: 100%; margin-bottom: 20px; font-family: Arial, sans-serif; font-size: 12px; }
-              th { background-color: #0284c7; color: #ffffff; border: 1px solid #cbd5e1; padding: 6px 10px; font-weight: bold; }
-              td { border: 1px solid #cbd5e1; padding: 5px 8px; }
-              .hdr { background-color: #0a1f3d; color: #ffffff; font-size: 14px; font-weight: bold; }
-            </style>
-          </head>
-          <body>
-            <h2>Aspire Learning Centre - Full Institute Report</h2>
-            <p>Generated on: ${new Date().toLocaleString()}</p>
-            <table border="1">
-              <tr class="hdr"><td colspan="5">STUDENTS ENROLLED (${currentStudents.length})</td></tr>
-              <tr><th>Name</th><th>Email</th><th>Course</th><th>Roll No</th><th>Phone</th></tr>
-              ${currentStudents.map(s => `<tr><td>${s.name || ''}</td><td>${s.email || ''}</td><td>${s.course || ''}</td><td>${s.roll || s.rollNumber || ''}</td><td>${s.phone || ''}</td></tr>`).join('')}
-            </table>
-            <table border="1">
-              <tr class="hdr"><td colspan="4">FACULTY MEMBERS (${currentTeachers.length})</td></tr>
-              <tr><th>Name</th><th>Email</th><th>Subject</th><th>Phone</th></tr>
-              ${currentTeachers.map(t => `<tr><td>${t.name || ''}</td><td>${t.email || ''}</td><td>${t.subject || ''}</td><td>${t.phone || ''}</td></tr>`).join('')}
-            </table>
-            <table border="1">
-              <tr class="hdr"><td colspan="6">FEES MANAGEMENT (${currentFees.length})</td></tr>
-              <tr><th>Student Name</th><th>Course</th><th>Total Fee (Rs)</th><th>Paid Fee (Rs)</th><th>Pending Fee (Rs)</th><th>Status</th></tr>
-              ${currentFees.map(f => {
-                const rem = Math.max(0, (f.totalFee || 0) - (f.paidFee || 0));
-                return `<tr><td>${f.name || ''}</td><td>${f.course || ''}</td><td>${f.totalFee || 0}</td><td>${f.paidFee || 0}</td><td>${rem}</td><td>${f.isFullyPaid ? 'Full Paid' : 'Pending'}</td></tr>`;
-              }).join('')}
-            </table>
-            <table border="1">
-              <tr class="hdr"><td colspan="5">TIMETABLE LECTURES (${timetableList.length})</td></tr>
-              <tr><th>Course</th><th>Day</th><th>Time</th><th>Subject</th><th>Faculty</th></tr>
-              ${timetableList.map(l => `<tr><td>${l.course || ''}</td><td>${l.day || ''}</td><td>${l.time || ''}</td><td>${l.subject || ''}</td><td>${l.faculty || ''}</td></tr>`).join('')}
-            </table>
-            <table border="1">
-              <tr class="hdr"><td colspan="4">TESTS & EXAMS (${testsList.length})</td></tr>
-              <tr><th>Title</th><th>Course</th><th>Subject</th><th>Date</th></tr>
-              ${testsList.map(t => `<tr><td>${t.title || ''}</td><td>${t.course || ''}</td><td>${t.subject || ''}</td><td>${t.date || ''}</td></tr>`).join('')}
-            </table>
-          </body>
-          </html>
-        `;
-        const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-        triggerDownload(blob, `Aspire_Institute_Data_${timestamp}.xlsx`);
-        setExportFeedback('✓ Excel (.xlsx) downloaded successfully!');
-      } else if (format === 'pdf') {
-        const sections = [
-          {
-            title: `Students Enrolled (${currentStudents.length})`,
-            lines: currentStudents.map(s => `${s.name || 'Student'} | ${s.course || 'JEE'} | Roll: ${s.roll || s.rollNumber || 'N/A'}`)
-          },
-          {
-            title: `Faculty Members (${currentTeachers.length})`,
-            lines: currentTeachers.map(t => `${t.name || 'Faculty'} | ${t.subject || 'All Subjects'} | ${t.email || ''}`)
-          },
-          {
-            title: `Fees Summary (${currentFees.length})`,
-            lines: currentFees.map(f => `${f.name}: Paid Rs ${f.paidFee || 0} / ${f.totalFee || 0} (${f.isFullyPaid ? 'Full Paid' : 'Pending'})`)
-          },
-          {
-            title: `Timetable Schedule (${timetableList.length})`,
-            lines: timetableList.map(l => `${l.course} | ${l.day} ${l.time} | ${l.subject} (${l.faculty})`)
-          },
-          {
-            title: `Tests & Papers (${testsList.length})`,
-            lines: testsList.map(t => `${t.title || 'Test'} | ${t.course} | ${t.subject || ''} | ${t.date || ''}`)
-          }
-        ];
-
-        const pdfBlob = generateSimplePDF('ASPIRE LEARNING CENTRE - INSTITUTE REPORT', sections);
-        triggerDownload(pdfBlob, `Aspire_Institute_Data_${timestamp}.pdf`);
-        setExportFeedback('✓ PDF (.pdf) downloaded successfully!');
-      }
-
-      setTimeout(() => setExportFeedback(''), 4000);
-    } catch (err) {
-      console.error('Export error:', err);
-      setExportFeedback('⚠️ Export failed. Please try again.');
-      setTimeout(() => setExportFeedback(''), 4000);
-    }
+    setExportFormat(format || 'pdf');
+    setShowExportModal(true);
   };
 
   const closeModal = (key, setter) => {
@@ -602,6 +427,48 @@ export default function AdminMobileDashboard({
     setTimeout(() => setExportFeedback(''), 2500);
   };
 
+  const handleDeleteStudent = (studentId) => {
+    const updated = deleteStoredStudent(studentId);
+    setStudents(updated);
+    setExportFeedback('Student removed.');
+    setTimeout(() => setExportFeedback(''), 2500);
+  };
+
+  const handleDeleteTeacher = (teacherId) => {
+    const updated = deleteStoredTeacher(teacherId);
+    setTeachers(updated);
+    setExportFeedback('Faculty removed.');
+    setTimeout(() => setExportFeedback(''), 2500);
+  };
+
+  const handleDeleteUserFromModal = (type, data) => {
+    if (type === 'student') {
+      handleDeleteStudent(data.id);
+    } else if (type === 'teacher' || type === 'faculty') {
+      handleDeleteTeacher(data.id);
+    } else if (type === 'parent') {
+      handleDeleteParent(data.id);
+    }
+    setSelectedDetailUser(null);
+  };
+
+  const handleSwitchDetailUser = (newType, newData) => {
+    if (newType === 'student') {
+      const found = students.find(s => s.id === newData.id || (s.roll && s.roll === newData.roll) || s.name === newData.name);
+      setSelectedDetailUser({ type: 'student', data: found || newData });
+    } else if (newType === 'parent') {
+      const found = parents.find(p => p.id === newData.id || p.name === newData.name || (p.phone && p.phone === newData.phone));
+      setSelectedDetailUser({ type: 'parent', data: found || newData });
+    } else {
+      setSelectedDetailUser({ type: newType, data: newData });
+    }
+  };
+
+  const handleOpenPerformanceFromModal = (studentData) => {
+    setSelectedDetailUser(null);
+    setShowPerformanceModal(true);
+  };
+
   const handleCloseAddFacultyModal = () => {
     setIsFacultyModalClosing(true);
     setTimeout(() => {
@@ -636,9 +503,43 @@ export default function AdminMobileDashboard({
     handleCloseAddCourseModal();
   };
 
+  const handleSaveCourse = (updatedCourse) => {
+    setCourses(prev => prev.map(c => c.id === updatedCourse.id ? updatedCourse : c));
+    setSelectedCourse(updatedCourse);
+    setExportFeedback(`Course "${updatedCourse.name}" updated.`);
+    setTimeout(() => setExportFeedback(''), 2500);
+  };
+
+  const handleDeleteCourse = (courseId) => {
+    setCourses(prev => prev.filter(c => c.id !== courseId));
+    setSelectedCourse(null);
+    setExportFeedback('Course deleted.');
+    setTimeout(() => setExportFeedback(''), 2500);
+  };
+
   // Intercept back action to close open admin bottom-sheets/modals
   useEffect(() => {
     const handleAdminBack = (e) => {
+      if (selectedCourse) {
+        setSelectedCourse(null);
+        e.detail?.markHandled();
+        return;
+      }
+      if (showExportModal) {
+        setShowExportModal(false);
+        e.detail?.markHandled();
+        return;
+      }
+      if (selectedDetailUser) {
+        setSelectedDetailUser(null);
+        e.detail?.markHandled();
+        return;
+      }
+      if (showStudyAndTestModal) {
+        setShowStudyAndTestModal(false);
+        e.detail?.markHandled();
+        return;
+      }
       if (selectedAbsentStudent) {
         setSelectedAbsentStudent(null);
         e.detail?.markHandled();
@@ -656,6 +557,21 @@ export default function AdminMobileDashboard({
       }
       if (showAbsentModal) {
         setShowAbsentModal(false);
+        e.detail?.markHandled();
+        return;
+      }
+      if (showFeesModal) {
+        setShowFeesModal(false);
+        e.detail?.markHandled();
+        return;
+      }
+      if (showPerformanceModal) {
+        setShowPerformanceModal(false);
+        e.detail?.markHandled();
+        return;
+      }
+      if (showTimetableModal) {
+        setShowTimetableModal(false);
         e.detail?.markHandled();
         return;
       }
@@ -719,10 +635,11 @@ export default function AdminMobileDashboard({
     window.addEventListener('app:back', handleAdminBack);
     return () => window.removeEventListener('app:back', handleAdminBack);
   }, [
-    selectedAbsentStudent, showAddNoticeForm, showNoticesModal,
+    selectedCourse, showExportModal, selectedDetailUser, showStudyAndTestModal, selectedAbsentStudent, showAddNoticeForm, showNoticesModal,
     showAbsentModal, showTeachersModal, showStudentsModal,
     showAddUserModal, showAddModal, showAddParentModal, showAddFacultyModal, showAddCourseModal,
-    showMaterialsModal, showTestsModal, showTimetableModal, showAttendanceModal, showMarksModal
+    showMaterialsModal, showTestsModal, showTimetableModal, showAttendanceModal, showMarksModal,
+    showFeesModal, showPerformanceModal
   ]);
 
   const handleCloseAddUserModal = () => {
@@ -785,6 +702,19 @@ export default function AdminMobileDashboard({
         const updated = [newStd, ...students];
         setStudents(updated);
         saveStoredStudents(updated);
+
+        // Store and connect fees in Fees section
+        const totalNum = Number(newUserTotalFee) > 0 ? Number(newUserTotalFee) : getDefaultFeeForCourse(newUserCourse || 'JEE');
+        const paidNum = Math.max(0, Number(newUserPaidFee) || 0);
+        createOrUpdateStudentFeeRecord({
+          id: newStd.id,
+          name: cleanName,
+          roll: rollNo,
+          course: newUserCourse || 'JEE',
+          totalFee: totalNum,
+          paidFee: paidNum,
+          remarks: 'Universal User Registration'
+        });
       } else if (newUserRole === 'teacher') {
         const newT = {
           id: res?.id || `t-${Date.now()}`,
@@ -833,6 +763,7 @@ export default function AdminMobileDashboard({
       setNewUserSubjects([]);
       setNewUserChildName('');
       setNewUserChildRoll('');
+      setNewUserPaidFee('');
       handleCloseAddUserModal();
     } catch (err) {
       alert('Error saving user: ' + err.message);
@@ -923,9 +854,24 @@ export default function AdminMobileDashboard({
       bloodGroup: ''
     });
 
+    // Store and connect fees in Fees section
+    const actualTotal = Number(newStudentTotalFee) > 0 ? Number(newStudentTotalFee) : getDefaultFeeForCourse(newStudentCourse);
+    const actualPaid = Math.max(0, Number(newStudentPaidFee) || 0);
+
+    createOrUpdateStudentFeeRecord({
+      id: newStd.id,
+      name: trimmedName,
+      roll: rollNo,
+      course: newStudentCourse,
+      totalFee: actualTotal,
+      paidFee: actualPaid,
+      remarks: 'Student Enrollment'
+    });
+
     setNewStudentName('');
     setNewStudentEmail('');
     setNewStudentPassword('');
+    setNewStudentPaidFee('');
     handleCloseAddModal();
 
     // Confirm to admin exactly what was saved
@@ -968,75 +914,27 @@ export default function AdminMobileDashboard({
             </div>
           )}
 
-          {/* 4 KPI Cards  (2-col grid, clickable where applicable) */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-
-            {/* Total Students — clickable */}
-            <div
-              className="card"
-              style={{ padding: '14px', cursor: 'pointer', transition: 'transform 0.15s', activeOpacity: 0.8 }}
-              onClick={() => setShowStudentsModal(true)}
-            >
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Total Students</span>
-              <h3 style={{ fontSize: '24px', fontWeight: 800, color: '#2563eb', margin: '4px 0 2px 0' }}>{students.length}</h3>
-              <span style={{ fontSize: '10px', color: 'var(--success)' }}>Tap to view list</span>
-            </div>
-
-            {/* Total Teachers — clickable */}
-            <div
-              className="card"
-              style={{ padding: '14px', cursor: 'pointer' }}
-              onClick={() => setShowTeachersModal(true)}
-            >
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Total Teachers</span>
-              <h3 style={{ fontSize: '24px', fontWeight: 800, color: '#8b5cf6', margin: '4px 0 2px 0' }}>{teachers.length}</h3>
-              <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>Tap to view list</span>
-            </div>
-
-            {/* Notices — clickable */}
-            <div
-              className="card"
-              style={{ padding: '14px', cursor: 'pointer' }}
-              onClick={() => setShowNoticesModal(true)}
-            >
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Notices</span>
-              <h3 style={{ fontSize: '24px', fontWeight: 800, color: '#f59e0b', margin: '4px 0 2px 0' }}>{notices.length}</h3>
-              <span style={{ fontSize: '10px', color: 'var(--accent-500)' }}>Tap to manage</span>
-            </div>
-
-            {/* Absent Today — clickable */}
-            <div
-              className="card"
-              style={{ padding: '14px', cursor: 'pointer' }}
-              onClick={() => setShowAbsentModal(true)}
-            >
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Absent Today</span>
-              <h3 style={{ fontSize: '24px', fontWeight: 800, color: '#ef4444', margin: '4px 0 2px 0' }}>{absentStudents.length}</h3>
-              <span style={{ fontSize: '10px', color: '#ef4444' }}>Tap to view</span>
-            </div>
-
-          </div>
-
-          {/* Academic Quick Actions: Study Materials, Tests, Timetable & Attendance */}
+          {/* Quick Actions: Students, Teachers, Notices, Absent, Academics & Governance */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Academic Quick Actions
+                Quick Actions
               </span>
               <span style={{ fontSize: '10px', color: 'var(--brand-700)', fontWeight: 600 }}>
                 Administration Hub
               </span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              {/* Study Materials Button */}
+
+              {/* Students Button */}
               <div
                 className="card"
-                onClick={() => setShowMaterialsModal(true)}
+                onClick={() => setShowStudentsModal(true)}
                 style={{
                   padding: '14px',
                   cursor: 'pointer',
-                  background: 'linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%)',
-                  border: '1.5px solid #bae6fd',
+                  background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 100%)',
+                  border: '1.5px solid #bfdbfe',
                   borderRadius: '12px',
                   display: 'flex',
                   flexDirection: 'column',
@@ -1045,27 +943,116 @@ export default function AdminMobileDashboard({
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <BookOpen size={19} />
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#dbeafe', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Users size={19} />
                   </div>
-                  <span className="badge badge-info" style={{ fontSize: '10px', padding: '2px 7px' }}>
-                    Files
+                  <span style={{
+                    fontSize: '10px',
+                    padding: '2px 7px',
+                    borderRadius: '999px',
+                    fontWeight: 700,
+                    background: '#dbeafe',
+                    color: '#1d4ed8'
+                  }}>
+                    {students.length} Total
                   </span>
                 </div>
                 <div>
                   <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: '4px 0 2px 0' }}>
-                    Study Materials
+                    Students
                   </h4>
                   <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                    Notes, DPPs & Videos
+                    Profiles, Batch & Details
                   </span>
                 </div>
               </div>
 
-              {/* Tests & Papers Button */}
+              {/* Teachers Button */}
               <div
                 className="card"
-                onClick={() => setShowTestsModal(true)}
+                onClick={() => setShowTeachersModal(true)}
+                style={{
+                  padding: '14px',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #f5f3ff 0%, #ffffff 100%)',
+                  border: '1.5px solid #ddd6fe',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  transition: 'transform 0.15s ease'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#ede9fe', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <GraduationCap size={19} />
+                  </div>
+                  <span style={{
+                    fontSize: '10px',
+                    padding: '2px 7px',
+                    borderRadius: '999px',
+                    fontWeight: 700,
+                    background: '#ede9fe',
+                    color: '#6d28d9'
+                  }}>
+                    {teachers.length} Faculty
+                  </span>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: '4px 0 2px 0' }}>
+                    Teachers
+                  </h4>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    Staff & Subject Incharge
+                  </span>
+                </div>
+              </div>
+
+              {/* Notices Button */}
+              <div
+                className="card"
+                onClick={() => setShowNoticesModal(true)}
+                style={{
+                  padding: '14px',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #fffbeb 0%, #ffffff 100%)',
+                  border: '1.5px solid #fde68a',
+                  borderRadius: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  transition: 'transform 0.15s ease'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Bell size={19} />
+                  </div>
+                  <span style={{
+                    fontSize: '10px',
+                    padding: '2px 7px',
+                    borderRadius: '999px',
+                    fontWeight: 700,
+                    background: '#fef3c7',
+                    color: '#b45309'
+                  }}>
+                    {notices.length} Active
+                  </span>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: '4px 0 2px 0' }}>
+                    Notices
+                  </h4>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    Broadcast Announcements
+                  </span>
+                </div>
+              </div>
+
+              {/* Absent Button */}
+              <div
+                className="card"
+                onClick={() => setShowAbsentModal(true)}
                 style={{
                   padding: '14px',
                   cursor: 'pointer',
@@ -1079,20 +1066,81 @@ export default function AdminMobileDashboard({
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#fee2e2', color: '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <FileCheck size={19} />
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <UserX size={19} />
                   </div>
-                  <span className="badge badge-danger" style={{ fontSize: '10px', padding: '2px 7px' }}>
-                    Exams
+                  <span style={{
+                    fontSize: '10px',
+                    padding: '2px 7px',
+                    borderRadius: '999px',
+                    fontWeight: 700,
+                    background: '#fee2e2',
+                    color: '#b91c1c'
+                  }}>
+                    {absentStudents.length} Today
                   </span>
                 </div>
                 <div>
                   <h4 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--brand-900)', margin: '4px 0 2px 0' }}>
-                    Tests & Papers
+                    Absent
                   </h4>
                   <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                    Papers & Solutions
+                    Today's Absentee List
                   </span>
+                </div>
+              </div>
+              {/* Unified Study and Test Material Button */}
+              <div
+                className="card"
+                onClick={() => setShowStudyAndTestModal(true)}
+                style={{
+                  gridColumn: '1 / -1',
+                  padding: '14px 16px',
+                  cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #f0fdf4 0%, #f0f9ff 60%, #ffffff 100%)',
+                  border: '1.5px solid #7dd3fc',
+                  borderRadius: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                  transition: 'transform 0.15s ease',
+                  boxShadow: '0 2px 6px rgba(2, 132, 199, 0.05)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                  <div style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #0284c7 0%, #0d9488 100%)',
+                    color: '#ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 10px rgba(2, 132, 199, 0.2)',
+                    flexShrink: 0
+                  }}>
+                    <BookOpen size={20} />
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>
+                        Study and Test Material
+                      </h4>
+                      <span className="badge badge-info" style={{ fontSize: '9.5px', padding: '1px 6px' }}>
+                        3 in 1
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>
+                      Study Material • Question Paper • Solutions
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#0284c7', fontWeight: 700, fontSize: '12px', flexShrink: 0 }}>
+                  <span>Open</span>
+                  <ChevronRight size={18} />
                 </div>
               </div>
 
@@ -1377,7 +1425,20 @@ export default function AdminMobileDashboard({
             {students
               .filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.roll.includes(searchTerm))
               .map(std => (
-                <div key={std.id} className="card" style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                <div
+                  key={std.id}
+                  className="card"
+                  onClick={() => setSelectedDetailUser({ type: 'student', data: std })}
+                  style={{
+                    padding: '14px 16px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '12px',
+                    cursor: 'pointer',
+                    transition: 'transform 0.1s ease, box-shadow 0.15s ease'
+                  }}
+                >
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{std.name}</h5>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Roll #{std.roll} • {std.course}</span>
@@ -1391,7 +1452,10 @@ export default function AdminMobileDashboard({
                       </div>
                     )}
                   </div>
-                  <span className="badge badge-success" style={{ flexShrink: 0 }}>{std.status}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                    <span className="badge badge-success">{std.status}</span>
+                    <ChevronRight size={16} color="var(--text-muted)" />
+                  </div>
                 </div>
               ))}
           </div>
@@ -1444,7 +1508,19 @@ export default function AdminMobileDashboard({
                 p.phone.includes(parentSearchTerm)
               )
               .map(p => (
-                <div key={p.id} className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div
+                  key={p.id}
+                  className="card"
+                  onClick={() => setSelectedDetailUser({ type: 'parent', data: p })}
+                  style={{
+                    padding: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    cursor: 'pointer',
+                    transition: 'transform 0.1s ease, box-shadow 0.15s ease'
+                  }}
+                >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>{p.name}</h4>
@@ -1453,7 +1529,10 @@ export default function AdminMobileDashboard({
                         {p.email && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>✉️ {p.email}</span>}
                       </div>
                     </div>
-                    <span className="badge badge-success" style={{ flexShrink: 0 }}>{p.status}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                      <span className="badge badge-success">{p.status}</span>
+                      <ChevronRight size={16} color="var(--text-muted)" />
+                    </div>
                   </div>
 
                   {/* Linked Child Info Box */}
@@ -1557,13 +1636,29 @@ export default function AdminMobileDashboard({
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {teachers.map(t => (
-              <div key={t.id} className="card" style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+              <div
+                key={t.id}
+                className="card"
+                onClick={() => setSelectedDetailUser({ type: 'teacher', data: t })}
+                style={{
+                  padding: '14px 16px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: '12px',
+                  cursor: 'pointer',
+                  transition: 'transform 0.1s ease, box-shadow 0.15s ease'
+                }}
+              >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h5 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>{t.name}</h5>
                   <span style={{ fontSize: '11px', color: 'var(--accent-500)', fontWeight: 600 }}>{t.subject}</span>
                   <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', marginBottom: 0 }}>Batches: {t.batches}</p>
                 </div>
-                <span className="badge badge-success" style={{ flexShrink: 0 }}>{t.status}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                  <span className="badge badge-success">{t.status}</span>
+                  <ChevronRight size={16} color="var(--text-muted)" />
+                </div>
               </div>
             ))}
           </div>
@@ -1586,15 +1681,37 @@ export default function AdminMobileDashboard({
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {courses.map(c => (
-              <div key={c.id} className="card" style={{ padding: '16px' }}>
+              <div
+                key={c.id}
+                className="card"
+                onClick={() => setSelectedCourse(c)}
+                style={{
+                  padding: '16px',
+                  cursor: 'pointer',
+                  transition: 'transform 0.1s ease, box-shadow 0.15s ease'
+                }}
+              >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
                   <span className="badge badge-accent">{c.code}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-600)', fontSize: '11.5px', fontWeight: 700 }}>
+                    <span>Details & Edit</span>
+                    <ChevronRight size={15} />
+                  </div>
                 </div>
-                <h4 style={{ fontSize: '15px', fontWeight: 700 }}>{c.name}</h4>
-                <p style={{ fontSize: '11px', color: 'var(--accent-500)', fontWeight: 600, marginTop: '5px' }}>
-                  Subjects: {c.subjects.join(', ')}
-                </p>
-                <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--brand-900)', margin: '2px 0 6px 0' }}>{c.name}</h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
+                  {c.subjects.slice(0, 3).map((sub, idx) => (
+                    <span key={idx} style={{ fontSize: '10.5px', background: '#f1f5f9', color: 'var(--brand-800)', padding: '2px 7px', borderRadius: '6px', fontWeight: 600 }}>
+                      {sub}
+                    </span>
+                  ))}
+                  {c.subjects.length > 3 && (
+                    <span style={{ fontSize: '10.5px', background: '#f8fafc', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: '6px', fontWeight: 600 }}>
+                      +{c.subjects.length - 3} more
+                    </span>
+                  )}
+                </div>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>
                   Faculty: {c.faculty.join(', ')}
                 </p>
               </div>
@@ -1714,6 +1831,67 @@ export default function AdminMobileDashboard({
                   options={COURSE_OPTIONS}
                   placeholder="Select Course"
                 />
+
+              {/* Fee Section (Total Fee & Fees Paid) */}
+              <div style={{
+                background: '#f8fafc',
+                border: '1.5px solid #e2e8f0',
+                borderRadius: '12px',
+                padding: '12px 14px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--brand-900)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Fee Details (Connected to Fees)
+                  </span>
+                  <span style={{ fontSize: '10px', background: '#dbeafe', color: '#1e40af', padding: '1px 6px', borderRadius: '6px', fontWeight: 700 }}>
+                    Course Default
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                      Total Course Fee (₹)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={newStudentTotalFee}
+                      onChange={e => setNewStudentTotalFee(e.target.value)}
+                      placeholder="Total Fee"
+                      style={{ width: '100%', padding: '9px 10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '3px', fontSize: '12.5px', background: '#ffffff', fontWeight: 700 }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                      Fees Paid (₹)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={newStudentPaidFee}
+                      onChange={e => setNewStudentPaidFee(e.target.value)}
+                      placeholder="e.g. 10000"
+                      style={{ width: '100%', padding: '9px 10px', borderRadius: '8px', border: '1.5px solid #93c5fd', marginTop: '3px', fontSize: '12.5px', background: '#ffffff', fontWeight: 700 }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', paddingTop: '6px', borderTop: '1px solid #e2e8f0' }}>
+                  <span>Remaining Balance:</span>
+                  <strong style={{
+                    color: Math.max(0, (Number(newStudentTotalFee) || 0) - (Number(newStudentPaidFee) || 0)) === 0 ? 'var(--success)' : '#ea580c',
+                    fontFamily: 'var(--font-mono)'
+                  }}>
+                    ₹{Math.max(0, (Number(newStudentTotalFee) || 0) - (Number(newStudentPaidFee) || 0)).toLocaleString('en-IN')}
+                  </strong>
+                </div>
+              </div>
+
               <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
                 <button type="button" onClick={handleCloseAddModal} className="btn-secondary" style={{ flex: 1, fontSize: '13px', padding: '10px' }}>
                   Cancel
@@ -2122,7 +2300,19 @@ export default function AdminMobileDashboard({
             </div>
             <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {students.map(s => (
-                <div key={s.id} className="card" style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                <div
+                  key={s.id}
+                  className="card"
+                  onClick={() => setSelectedDetailUser({ type: 'student', data: s })}
+                  style={{
+                    padding: '12px 16px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{s.name}</h5>
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Roll #{s.roll} • {s.course}</span>
@@ -2132,7 +2322,10 @@ export default function AdminMobileDashboard({
                       </div>
                     )}
                   </div>
-                  <span className="badge badge-success" style={{ flexShrink: 0 }}>{s.status}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                    <span className="badge badge-success">{s.status}</span>
+                    <ChevronRight size={16} color="var(--text-muted)" />
+                  </div>
                 </div>
               ))}
             </div>
@@ -2153,10 +2346,28 @@ export default function AdminMobileDashboard({
             </div>
             <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {teachers.map(t => (
-                <div key={t.id} className="card" style={{ padding: '12px 14px' }}>
-                  <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>{t.name}</h5>
-                  <span style={{ fontSize: '11px', color: 'var(--accent-500)', fontWeight: 600 }}>{t.subject}</span>
-                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Batches: {t.batches}</p>
+                <div
+                  key={t.id}
+                  className="card"
+                  onClick={() => setSelectedDetailUser({ type: 'teacher', data: t })}
+                  style={{
+                    padding: '12px 14px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{t.name}</h5>
+                    <span style={{ fontSize: '11px', color: 'var(--accent-500)', fontWeight: 600 }}>{t.subject}</span>
+                    <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', marginBottom: 0 }}>Batches: {t.batches}</p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                    <span className="badge badge-success">{t.status}</span>
+                    <ChevronRight size={16} color="var(--text-muted)" />
+                  </div>
                 </div>
               ))}
             </div>
@@ -2424,16 +2635,15 @@ export default function AdminMobileDashboard({
         </div>
       )}
 
-      {/* ── Study Materials Modal ── */}
-      <AdminStudyMaterialsModal
-        isOpen={showMaterialsModal}
-        onClose={() => setShowMaterialsModal(false)}
-      />
-
-      {/* ── Tests & Exams Modal ── */}
-      <AdminTestsModal
-        isOpen={showTestsModal}
-        onClose={() => setShowTestsModal(false)}
+      {/* ── Unified Study and Test Material Modal (Study Material, Question Paper, Solutions) ── */}
+      <AdminStudyAndTestMaterialModal
+        isOpen={showStudyAndTestModal || showMaterialsModal || showTestsModal}
+        initialSubCategory={showTestsModal ? 'question_paper' : 'study_material'}
+        onClose={() => {
+          setShowStudyAndTestModal(false);
+          setShowMaterialsModal(false);
+          setShowTestsModal(false);
+        }}
       />
 
       {/* ── Timetable Modal ── */}
@@ -2468,6 +2678,43 @@ export default function AdminMobileDashboard({
           setShowPerformanceModal(false);
           setShowMarksModal(true);
         }}
+      />
+
+      {/* ── User Profile Details Modal (Student / Parent / Teacher) ── */}
+      <AdminUserDetailsModal
+        isOpen={Boolean(selectedDetailUser)}
+        onClose={() => setSelectedDetailUser(null)}
+        userType={selectedDetailUser?.type}
+        userData={selectedDetailUser?.data}
+        onDeleteUser={handleDeleteUserFromModal}
+        onSwitchUser={handleSwitchDetailUser}
+        onOpenPerformance={handleOpenPerformanceFromModal}
+      />
+
+      {/* ── Course Details & Edit Modal ── */}
+      <AdminCourseDetailsModal
+        isOpen={Boolean(selectedCourse)}
+        onClose={() => setSelectedCourse(null)}
+        course={selectedCourse}
+        onSaveCourse={handleSaveCourse}
+        onDeleteCourse={handleDeleteCourse}
+        availableFaculty={teachers.map(t => t.name)}
+        enrolledStudentsCount={
+          selectedCourse
+            ? students.filter(s =>
+                s.course === selectedCourse.name ||
+                s.course === selectedCourse.code ||
+                (s.course && selectedCourse.name.toLowerCase().includes(s.course.toLowerCase()))
+              ).length
+            : 0
+        }
+      />
+
+      {/* ── Institute Data Export Modal ── */}
+      <AdminExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        initialFormat={exportFormat}
       />
       {/* ── Add Universal User Modal (Student, Teacher, Parent, Admin) ── */}
       {showAddUserModal && (
@@ -2569,14 +2816,76 @@ export default function AdminMobileDashboard({
               </div>
 
               {newUserRole === 'student' && (
-                <MobileDropdown
-                  label="Enrolled Course"
-                  title="Select Student Course"
-                  value={newUserCourse}
-                  onChange={setNewUserCourse}
-                  options={COURSE_OPTIONS}
-                  placeholder="Select Course"
-                />
+                <>
+                  <MobileDropdown
+                    label="Enrolled Course"
+                    title="Select Student Course"
+                    value={newUserCourse}
+                    onChange={setNewUserCourse}
+                    options={COURSE_OPTIONS}
+                    placeholder="Select Course"
+                  />
+
+                  {/* Fee Section (Total Fee & Fees Paid) */}
+                  <div style={{
+                    background: '#f8fafc',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '12px',
+                    padding: '12px 14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--brand-900)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        Fee Details (Connected to Fees)
+                      </span>
+                      <span style={{ fontSize: '10px', background: '#dbeafe', color: '#1e40af', padding: '1px 6px', borderRadius: '6px', fontWeight: 700 }}>
+                        Course Default
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                      <div>
+                        <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                          Total Course Fee (₹)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={newUserTotalFee}
+                          onChange={e => setNewUserTotalFee(e.target.value)}
+                          placeholder="Total Fee"
+                          style={{ width: '100%', padding: '9px 10px', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '3px', fontSize: '12.5px', background: '#ffffff', fontWeight: 700 }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                          Fees Paid (₹)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={newUserPaidFee}
+                          onChange={e => setNewUserPaidFee(e.target.value)}
+                          placeholder="e.g. 10000"
+                          style={{ width: '100%', padding: '9px 10px', borderRadius: '8px', border: '1.5px solid #93c5fd', marginTop: '3px', fontSize: '12.5px', background: '#ffffff', fontWeight: 700 }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', paddingTop: '6px', borderTop: '1px solid #e2e8f0' }}>
+                      <span>Remaining Balance:</span>
+                      <strong style={{
+                        color: Math.max(0, (Number(newUserTotalFee) || 0) - (Number(newUserPaidFee) || 0)) === 0 ? 'var(--success)' : '#ea580c',
+                        fontFamily: 'var(--font-mono)'
+                      }}>
+                        ₹{Math.max(0, (Number(newUserTotalFee) || 0) - (Number(newUserPaidFee) || 0)).toLocaleString('en-IN')}
+                      </strong>
+                    </div>
+                  </div>
+                </>
               )}
 
               {newUserRole === 'teacher' && (

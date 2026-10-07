@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Download } from 'lucide-react';
 import { getStoredFees, formatFeeAmount, formatFeeFraction } from '../../lib/feeService';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { downloadBlobFile } from '../../lib/exportDataService';
 
 export default function ParentFees({ childName = 'Student' }) {
   const [feeRecord, setFeeRecord] = useState(null);
@@ -32,6 +35,47 @@ export default function ParentFees({ childName = 'Student' }) {
   const pending = Math.max(0, total - paid);
   const isFull = feeRecord ? (feeRecord.isFullyPaid || (paid >= total && total > 0)) : false;
   const paidPct = total > 0 ? Math.min(100, Math.max(0, Math.round((paid / total) * 100))) : 0;
+
+  const handleDownloadReceipt = async () => {
+    try {
+      const doc = new jsPDF();
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, 210, 35, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.text('ASPIRE LEARNING CENTRE', 14, 18);
+      doc.setFontSize(10);
+      doc.setTextColor(203, 213, 225);
+      doc.text('FEE PAYMENT OFFICIAL RECEIPT', 14, 27);
+
+      doc.setTextColor(15, 23, 42);
+      doc.setFontSize(11);
+      doc.text(`Receipt No: ASP-2025-089`, 14, 45);
+      doc.text(`Date: ${feeRecord?.lastPaymentDate || '15 Sep 2026'}`, 14, 52);
+      doc.text(`Student Name: ${childName}`, 14, 59);
+      doc.text(`Course: ${feeRecord?.course || 'Academic Year 2025-26'}`, 14, 66);
+
+      autoTable(doc, {
+        startY: 75,
+        head: [['Particulars', 'Total Amount', 'Paid Amount', 'Status']],
+        body: [
+          [
+            'Tuition & Course Fee',
+            `Rs. ${total.toLocaleString('en-IN')}`,
+            `Rs. ${paid.toLocaleString('en-IN')}`,
+            isFull ? 'PAID IN FULL' : `BALANCE: Rs. ${pending.toLocaleString('en-IN')}`
+          ]
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [15, 23, 42] }
+      });
+
+      const blob = doc.output('blob');
+      await downloadBlobFile(blob, `Aspire Learning Centre Data - Receipt ${childName}.pdf`);
+    } catch (e) {
+      console.error('Receipt download error:', e);
+    }
+  };
 
   return (
     <div className="view-transition-enter" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', paddingBottom: '90px' }}>
@@ -107,7 +151,7 @@ export default function ParentFees({ childName = 'Student' }) {
         <div className="card" style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'var(--success-tint)', border: '1px solid #a7f3d0', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <CheckCircle size={18} />
+              <CheckCircle2 size={18} />
             </div>
             <div>
               <h5 style={{ fontSize: '13px', fontWeight: 800, margin: 0, color: 'var(--brand-900)' }}>Receipt #ASP-2025-089</h5>
@@ -116,7 +160,11 @@ export default function ParentFees({ childName = 'Student' }) {
               </span>
             </div>
           </div>
-          <button style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', padding: '7px 9px', borderRadius: '8px', cursor: 'pointer', color: 'var(--brand-900)', transition: 'var(--transition-smooth)' }} title="Download Receipt">
+          <button
+            onClick={handleDownloadReceipt}
+            style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', padding: '7px 9px', borderRadius: '8px', cursor: 'pointer', color: 'var(--brand-900)', transition: 'var(--transition-smooth)' }}
+            title="Download Receipt"
+          >
             <Download size={15} />
           </button>
         </div>
