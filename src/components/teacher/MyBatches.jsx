@@ -12,6 +12,7 @@ import {
   saveBatchAttendance 
 } from '../../lib/attendanceService';
 import MobileDropdown from '../common/MobileDropdown';
+import { useDataSync } from '../../lib/syncEvents';
 
 export default function MyBatches({ onAttendanceSubmit }) {
   const [selectedBatch, setSelectedBatch] = useState(null);
@@ -65,6 +66,12 @@ export default function MyBatches({ onAttendanceSubmit }) {
       console.warn('Error loading batch attendance:', err);
     }
   };
+
+  useDataSync(['attendance', 'students'], () => {
+    if (selectedBatch) {
+      handleSelectBatch(selectedBatch);
+    }
+  });
 
   // Toggle student present / absent (disabled when locked)
   const handleToggleAttendance = (id) => {

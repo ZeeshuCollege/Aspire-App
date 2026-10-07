@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Calendar } from 'lucide-react';
 import MobileDropdown from '../common/MobileDropdown';
+import { useDataSync } from '../../lib/syncEvents';
 
 export default function TestsView({ onOpenTestPaper }) {
   const [tab, setTab] = useState('upcoming');
 
-  const [testsList] = useState(() => {
+  const [testsList, setTestsList] = useState(() => {
     try {
       const saved = localStorage.getItem('aspire_tests_list');
       if (saved) {
@@ -14,6 +15,18 @@ export default function TestsView({ onOpenTestPaper }) {
       }
     } catch (e) {}
     return [];
+  });
+
+  useDataSync(['tests', 'marks'], () => {
+    try {
+      const saved = localStorage.getItem('aspire_tests_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setTestsList(parsed);
+      } else {
+        setTestsList([]);
+      }
+    } catch (e) {}
   });
 
   const tests = testsList.filter(t => (t.status || 'Upcoming').toLowerCase() === tab);

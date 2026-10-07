@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { mockStudyMaterials } from '../../lib/mockData';
 import MobileDropdown from '../common/MobileDropdown';
+import { broadcastDataChange, useDataSync } from '../../lib/syncEvents';
 
 export const COURSE_OPTIONS = [
   'JEE',
@@ -62,8 +63,19 @@ export default function AdminStudyMaterialsModal({ isOpen, onClose }) {
   useEffect(() => {
     try {
       localStorage.setItem('aspire_study_materials', JSON.stringify(materials));
+      broadcastDataChange('materials', { count: materials.length });
     } catch (e) {}
   }, [materials]);
+
+  useDataSync(['materials'], () => {
+    try {
+      const saved = localStorage.getItem('aspire_study_materials');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setMaterials(parsed);
+      }
+    } catch (e) {}
+  });
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourseFilter, setSelectedCourseFilter] = useState('All');

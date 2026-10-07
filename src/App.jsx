@@ -16,6 +16,7 @@ import { supabase } from './lib/supabaseClient';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { TopLoadingBar } from './components/common/LoadingSkeleton';
 import { sendSystemNotification, subscribeToNoticeBroadcasts, fetchNoticesFromCloud } from './lib/notificationService';
+import { useDataSync } from './lib/syncEvents';
 
 // Student Views
 import StudentHome from './components/student/StudentHome';
@@ -108,6 +109,22 @@ export default function App() {
       localStorage.setItem('aspire_notices_list', JSON.stringify(notices));
     } catch (e) {}
   }, [notices]);
+
+  useDataSync(['notices'], () => {
+    try {
+      const saved = localStorage.getItem('aspire_notices_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const filtered = parsed.filter(n => n && !String(n.id).startsWith('n-'));
+          setNotices(filtered.map(n => ({
+            ...n,
+            courses: n.courses || n.targetCourses || ['All Courses']
+          })));
+        }
+      }
+    } catch (e) {}
+  });
 
   const [pdfViewerData, setPdfViewerData] = useState(null);
 

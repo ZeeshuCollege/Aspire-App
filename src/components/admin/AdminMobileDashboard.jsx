@@ -27,6 +27,7 @@ import AdminCourseDetailsModal from './AdminCourseDetailsModal';
 import AdminExportModal from './AdminExportModal';
 import MobileDropdown from '../common/MobileDropdown';
 import { broadcastNotice } from '../../lib/notificationService';
+import { broadcastDataChange, useDataSync } from '../../lib/syncEvents';
 
 export default function AdminMobileDashboard({
   activeTab,
@@ -162,8 +163,22 @@ export default function AdminMobileDashboard({
   useEffect(() => {
     try {
       localStorage.setItem('aspire_courses_list', JSON.stringify(courses));
+      broadcastDataChange('courses', { count: courses.length });
     } catch {}
   }, [courses]);
+
+  useDataSync(['students', 'teachers', 'parents', 'courses', 'notices'], () => {
+    setStudents(getStoredStudents());
+    setTeachers(getStoredTeachers());
+    setParents(getStoredParents());
+    try {
+      const saved = localStorage.getItem('aspire_courses_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) setCourses(parsed);
+      }
+    } catch {}
+  });
 
   const [newCourseName, setNewCourseName] = useState('');
   const [newCourseSubjects, setNewCourseSubjects] = useState([]);
@@ -235,6 +250,7 @@ export default function AdminMobileDashboard({
 
     // Dispatch real system notification and broadcast cross-device/cross-tab
     broadcastNotice(newNotice);
+    broadcastDataChange('notices', { notice: newNotice });
 
     setNewNoticeTitle('');
     setNewNoticeMsg('');
@@ -248,6 +264,7 @@ export default function AdminMobileDashboard({
       propSetNotices(prev => prev.filter(n => n.id !== noticeId));
     }
     setNotices(prev => prev.filter(n => n.id !== noticeId));
+    broadcastDataChange('notices', { deletedNoticeId: noticeId });
   };
 
   const handleExport = (format) => {

@@ -3,6 +3,7 @@ import { mockSchedule } from '../../lib/mockData';
 import { Clock, UserCheck, Calendar as CalendarIcon, CheckCircle2 } from 'lucide-react';
 import AttendanceView from './AttendanceView';
 import MobileDropdown from '../common/MobileDropdown';
+import { useDataSync } from '../../lib/syncEvents';
 
 export default function Timetable({ initialSubTab = 'schedule' }) {
   const [subTab, setSubTab] = useState(initialSubTab);
@@ -15,6 +16,13 @@ export default function Timetable({ initialSubTab = 'schedule' }) {
       if (raw) return JSON.parse(raw);
     } catch (e) {}
     return [];
+  });
+
+  useDataSync(['timetable'], () => {
+    try {
+      const raw = localStorage.getItem('aspire_admin_timetable');
+      setAdminTimetable(raw ? JSON.parse(raw) : []);
+    } catch (e) {}
   });
 
   useEffect(() => {

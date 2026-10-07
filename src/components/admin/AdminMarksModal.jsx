@@ -5,6 +5,7 @@ import {
 import { getStoredStudents, saveStoredStudents } from '../../lib/userAuthStore';
 import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
 import MobileDropdown from '../common/MobileDropdown';
+import { broadcastDataChange, useDataSync } from '../../lib/syncEvents';
 
 export default function AdminMarksModal({ isOpen, onClose }) {
   const [tests, setTests] = useState([]);
@@ -33,6 +34,19 @@ export default function AdminMarksModal({ isOpen, onClose }) {
     setTests([]);
     setSelectedTestId('');
   }, [isOpen]);
+
+  useDataSync(['tests'], () => {
+    try {
+      const saved = localStorage.getItem('aspire_tests_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setTests(parsed);
+          if (!selectedTestId && parsed.length > 0) setSelectedTestId(parsed[0].id);
+        }
+      }
+    } catch (e) {}
+  });
 
   // Selected test or null when no paper is selected
   const activeTest = useMemo(() => {
@@ -299,6 +313,13 @@ export default function AdminMarksModal({ isOpen, onClose }) {
           date: testDate
         }
       }));
+
+      broadcastDataChange('marks', {
+        testId: selectedTestId,
+        testTitle: activeTest.title,
+        marks: studentMarks
+      });
+      broadcastDataChange('tests', { updatedTestId: selectedTestId });
 
       setSuccessToast(`✓ Marks successfully uploaded & published for "${activeTest.title}"!`);
       setTimeout(() => setSuccessToast(''), 3500);

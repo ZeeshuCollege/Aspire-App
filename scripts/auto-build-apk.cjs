@@ -31,16 +31,15 @@ function buildApk() {
     const gradlewCmd = process.platform === 'win32' ? '.\\gradlew.bat assembleDebug' : './gradlew assembleDebug';
     runCommand(gradlewCmd, androidDir);
 
-    // 4. Copy APK to convenient root locations
+    // 4. Copy APK to convenient root location
     if (fs.existsSync(apkSource)) {
       fs.copyFileSync(apkSource, rootApk);
       fs.copyFileSync(apkSource, rootDebugApk);
-      
-      const publicDir = path.join(rootDir, 'public');
-      if (!fs.existsSync(publicDir)) {
-        fs.mkdirSync(publicDir, { recursive: true });
+
+      // Clean up any stale APK from public/dist assets to ensure tiny APK size
+      if (fs.existsSync(publicApk)) {
+        try { fs.unlinkSync(publicApk); } catch (e) {}
       }
-      fs.copyFileSync(apkSource, publicApk);
 
       const stats = fs.statSync(rootApk);
       const sizeMb = (stats.size / (1024 * 1024)).toFixed(2);

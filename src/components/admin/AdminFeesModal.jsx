@@ -23,6 +23,7 @@ import {
 import { getStoredStudents } from '../../lib/userAuthStore';
 import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
 import MobileDropdown from '../common/MobileDropdown';
+import { useDataSync } from '../../lib/syncEvents';
 
 const FILTER_OPTIONS = [
   { id: 'All', label: 'All' },
@@ -153,6 +154,12 @@ export default function AdminFeesModal({ isOpen, onClose }) {
         setIsSyncing(false);
       });
   }, [isOpen]);
+
+  useDataSync(['fees', 'courses', 'students'], () => {
+    setFeesList(getStoredFees());
+    const fees = getCourseDefaultFees();
+    setCourseFees(fees);
+  });
 
   const showToast = (msg) => {
     setToastMessage(msg);

@@ -8,6 +8,7 @@ import { DAYS_OF_WEEK, getSubjectsForCourse } from './AdminTimetableModal';
 import { getStoredStudents } from '../../lib/userAuthStore';
 import { getTodayDateKey, getBatchAttendance, saveBatchAttendance } from '../../lib/attendanceService';
 import MobileDropdown from '../common/MobileDropdown';
+import { useDataSync } from '../../lib/syncEvents';
 
 export default function AdminAttendanceModal({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('mark'); // 'mark' | 'records'
@@ -47,6 +48,18 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
       }
     } catch (e) {}
   }, [isOpen]);
+
+  useDataSync(['students', 'timetable'], () => {
+    const stored = getStoredStudents();
+    setStudents(Array.isArray(stored) ? stored : []);
+    try {
+      const saved = localStorage.getItem('aspire_admin_timetable');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setTimetable(parsed);
+      }
+    } catch (e) {}
+  });
 
   // Students belonging to selected course for marking
   const courseStudents = useMemo(() => {

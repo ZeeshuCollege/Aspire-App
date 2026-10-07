@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { broadcastDataChange } from './syncEvents';
 
 /**
  * SQL Schema for Supabase SQL Editor:
@@ -203,6 +204,12 @@ export const saveBatchAttendance = async ({
       records: recordsToSave
     }
   }));
+  broadcastDataChange('attendance', {
+    batchId,
+    batchName,
+    date: dateStr,
+    records: recordsToSave
+  });
 
   return recordsToSave;
 };
@@ -267,6 +274,12 @@ export const updateAttendanceByAdmin = async ({
         updatedBy: 'admin'
       }
     }));
+    broadcastDataChange('attendance', {
+      studentId,
+      newStatus,
+      date: dateStr,
+      updatedBy: 'admin'
+    });
   }
 
   return updatedRecord;

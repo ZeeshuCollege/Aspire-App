@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import MobileDropdown from '../common/MobileDropdown';
 import { mockStudyMaterials } from '../../lib/mockData';
+import { broadcastDataChange, useDataSync } from '../../lib/syncEvents';
 
 export const COURSE_OPTIONS = [
   'JEE',
@@ -98,6 +99,7 @@ export default function AdminStudyAndTestMaterialModal({ isOpen, onClose, initia
   useEffect(() => {
     try {
       localStorage.setItem('aspire_study_materials', JSON.stringify(studyMaterials));
+      broadcastDataChange('materials', { count: studyMaterials.length });
     } catch (e) {}
   }, [studyMaterials]);
 
@@ -116,8 +118,29 @@ export default function AdminStudyAndTestMaterialModal({ isOpen, onClose, initia
   useEffect(() => {
     try {
       localStorage.setItem('aspire_tests_list', JSON.stringify(questionPapers));
+      broadcastDataChange('tests', { count: questionPapers.length });
     } catch (e) {}
   }, [questionPapers]);
+
+  useDataSync(['materials'], () => {
+    try {
+      const saved = localStorage.getItem('aspire_study_materials');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setStudyMaterials(parsed);
+      }
+    } catch (e) {}
+  });
+
+  useDataSync(['tests'], () => {
+    try {
+      const saved = localStorage.getItem('aspire_tests_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setQuestionPapers(parsed);
+      }
+    } catch (e) {}
+  });
 
   // ── 3. Solutions State (Synced with aspire_solutions_list) ──
   const [solutions, setSolutions] = useState(() => {

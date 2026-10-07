@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import MobileDropdown from '../common/MobileDropdown';
 import { getStudentTodayAttendance } from '../../lib/attendanceService';
+import { useDataSync } from '../../lib/syncEvents';
 
 export const mock30Lectures = [
   { id: 1, number: 1, subject: 'Physics', topic: 'Vectors & Kinematics', date: '01 Mar 2025', time: '10:00 AM', faculty: 'Physics Faculty', status: 'Present' },
@@ -68,10 +69,28 @@ export default function AttendanceCalendar() {
     };
 
     checkTodayRecord();
-    const handleUpdate = () => checkTodayRecord();
-    window.addEventListener('aspire:attendance-updated', handleUpdate);
-    return () => window.removeEventListener('aspire:attendance-updated', handleUpdate);
   }, []);
+
+  useDataSync(['attendance'], () => {
+    const todayRecord = getStudentTodayAttendance('1');
+    if (todayRecord) {
+      const todayItem = {
+        id: 999,
+        number: 31,
+        subject: todayRecord.subject || 'Physics',
+        topic: "Today's Lecture (Live)",
+        date: 'Today',
+        time: todayRecord.time || '10:00 AM',
+        faculty: todayRecord.teacher_name || 'Department Faculty',
+        status: todayRecord.status
+      };
+      setAllLectures(prev => {
+        const withoutToday = prev.filter(l => l.id !== 999);
+        return [...withoutToday, todayItem];
+      });
+      setSelectedLecture(todayItem);
+    }
+  });
 
   const presentCount = allLectures.filter(l => l.status === 'Present').length;
   const absentCount = allLectures.length - presentCount;

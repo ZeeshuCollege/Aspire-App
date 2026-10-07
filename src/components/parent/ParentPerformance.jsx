@@ -4,6 +4,7 @@ import {
   Calendar, FileText, ArrowUpRight
 } from 'lucide-react';
 import MobileDropdown from '../common/MobileDropdown';
+import { useDataSync } from '../../lib/syncEvents';
 
 export const mockLast10Tests = [
   {
@@ -188,14 +189,48 @@ export const mockLast10Tests = [
   }
 ];
 
+const getCombinedTests = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('aspire_tests_list') || '[]');
+    const completed = saved.filter(t => (t.status || '').toLowerCase() === 'completed');
+    if (completed.length > 0) {
+      const mapped = completed.map((t, idx) => ({
+        id: t.id || `live-${idx}`,
+        testNumber: 10 + idx + 1,
+        title: t.title || t.code || 'Assessment Paper',
+        subject: t.subject || 'Physics',
+        chapter: t.chapter || 'Latest Assessment',
+        date: t.date || 'Recent',
+        score: t.score || 88,
+        maxMarks: t.maxMarks || 100,
+        rank: 1,
+        classAverage: 72,
+        correct: 22,
+        incorrect: 2,
+        unattempted: 1,
+        grade: 'A',
+        status: 'Passed',
+        paperUrl: t.fileUrl || 'mock_physics_test_01.pdf'
+      }));
+      return [...mapped, ...mockLast10Tests];
+    }
+  } catch (e) {}
+  return mockLast10Tests;
+};
+
 export default function ParentPerformance({ onOpenTestPaper }) {
   const [subjectFilter, setSubjectFilter] = useState('All');
+  const [testsList, setTestsList] = useState(getCombinedTests);
 
-  const totalTests = mockLast10Tests.length;
-  const avgScore = Math.round(mockLast10Tests.reduce((acc, t) => acc + t.score, 0) / totalTests);
-  const bestRank = Math.min(...mockLast10Tests.map(t => t.rank));
+  useDataSync(['tests', 'marks'], () => {
+    setTestsList(getCombinedTests());
+  });
 
-  const filteredTests = mockLast10Tests.filter(t => {
+  const totalTests = testsList.length;
+  const avgScore = totalTests > 0 ? Math.round(testsList.reduce((acc, t) => acc + (t.score || 0), 0) / totalTests) : 0;
+  const bestRank = testsList.length > 0 ? Math.min(...testsList.map(t => t.rank || 1)) : 1;
+
+  const filteredTests = testsList.filter(t => {
     if (subjectFilter === 'All') return true;
     return t.subject === subjectFilter;
   });

@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar, FileText, BookOpen, ChevronRight, Clock, CheckCircle2 } from 'lucide-react';
+import { useDataSync } from '../../lib/syncEvents';
 
 export default function StudentHome({ user, onNavigate, onOpenTestPaper }) {
-  const todayLecture = (() => {
+  const loadTodayLecture = () => {
     try {
       const timetable = JSON.parse(localStorage.getItem('aspire_admin_timetable') || '[]');
       if (Array.isArray(timetable) && timetable.length > 0) {
@@ -10,7 +11,13 @@ export default function StudentHome({ user, onNavigate, onOpenTestPaper }) {
       }
     } catch (e) {}
     return null;
-  })();
+  };
+
+  const [todayLecture, setTodayLecture] = useState(loadTodayLecture);
+
+  useDataSync(['timetable'], () => {
+    setTodayLecture(loadTodayLecture());
+  });
 
   return (
     <div className="view-transition-enter" style={{

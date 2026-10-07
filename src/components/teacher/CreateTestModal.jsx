@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Upload, CheckCircle2 } from 'lucide-react';
 import MobileDropdown from '../common/MobileDropdown';
+import { broadcastDataChange } from '../../lib/syncEvents';
 
 export default function CreateTestModal({ isOpen, onClose, onCreated }) {
   const [testName, setTestName] = useState('');
@@ -27,17 +28,28 @@ export default function CreateTestModal({ isOpen, onClose, onCreated }) {
     e.preventDefault();
     if (!testName) return;
 
+    const newTest = {
+      id: `t-${Date.now()}`,
+      code: testName,
+      title: testName,
+      subject,
+      chapter,
+      date,
+      duration,
+      maxMarks: 100,
+      status: 'Upcoming'
+    };
+
+    try {
+      const saved = localStorage.getItem('aspire_tests_list');
+      const list = saved ? JSON.parse(saved) : [];
+      list.push(newTest);
+      localStorage.setItem('aspire_tests_list', JSON.stringify(list));
+      broadcastDataChange('tests', { test: newTest });
+    } catch (err) {}
+
     if (onCreated) {
-      onCreated({
-        id: `t-${Date.now()}`,
-        code: testName,
-        subject,
-        chapter,
-        date,
-        duration,
-        maxMarks: 100,
-        status: 'Upcoming'
-      });
+      onCreated(newTest);
     }
     handleClose();
   };

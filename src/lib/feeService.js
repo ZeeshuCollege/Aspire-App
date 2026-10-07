@@ -6,6 +6,7 @@
 
 import { supabase } from './supabaseClient.js';
 import { getStoredStudents } from './userAuthStore.js';
+import { broadcastDataChange } from './syncEvents.js';
 
 export const FEES_STORAGE_KEY = 'aspire_fees_records_v1';
 
@@ -85,6 +86,7 @@ export function saveCourseDefaultFees(feesMap) {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('aspire:course-fees-updated', { detail: feesMap }));
     }
+    broadcastDataChange('fees', { type: 'course-defaults', feesMap });
   } catch (e) {}
 }
 
@@ -320,6 +322,7 @@ export function saveStoredFees(feesList) {
   runtimeFeeCache = feesList;
   try {
     localStorage.setItem(FEES_STORAGE_KEY, JSON.stringify(feesList || []));
+    broadcastDataChange('fees', { count: (feesList || []).length });
   } catch (e) {}
 }
 

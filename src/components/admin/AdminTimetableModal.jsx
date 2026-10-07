@@ -7,6 +7,7 @@ import {
 import { COURSE_OPTIONS, SUBJECT_OPTIONS } from './AdminStudyMaterialsModal';
 import { getStoredTeachers } from '../../lib/userAuthStore';
 import MobileDropdown from '../common/MobileDropdown';
+import { broadcastDataChange } from '../../lib/syncEvents';
 
 export const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -160,6 +161,7 @@ export default function AdminTimetableModal({ isOpen, onClose }) {
   useEffect(() => {
     try {
       localStorage.setItem('aspire_admin_timetable', JSON.stringify(timetable));
+      broadcastDataChange('timetable', { timetable });
     } catch (e) {}
   }, [timetable]);
 

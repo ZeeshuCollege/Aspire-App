@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Search, FileText, Video, ChevronRight } from 'lucide-react';
 import MobileDropdown from '../common/MobileDropdown';
+import { useDataSync } from '../../lib/syncEvents';
 
 export default function StudyMaterial({ onOpenViewer }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All');
 
-  const [materialsList] = useState(() => {
+  const [materialsList, setMaterialsList] = useState(() => {
     try {
       const saved = localStorage.getItem('aspire_study_materials');
       if (saved) {
@@ -15,6 +16,18 @@ export default function StudyMaterial({ onOpenViewer }) {
       }
     } catch (e) {}
     return [];
+  });
+
+  useDataSync(['materials'], () => {
+    try {
+      const saved = localStorage.getItem('aspire_study_materials');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setMaterialsList(parsed);
+      } else {
+        setMaterialsList([]);
+      }
+    } catch (e) {}
   });
 
   const filters = ['All', 'PDF', 'Video'];

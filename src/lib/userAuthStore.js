@@ -7,6 +7,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { supabase, supabaseAdmin } from './supabaseClient';
 import { DEFAULT_GREY_AVATAR } from './mockData';
+import { broadcastDataChange } from './syncEvents';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://wandukvjtpvgvqhknqqm.supabase.co';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -210,6 +211,10 @@ export const addRegisteredUser = async (user) => {
     }
   }
 
+  try {
+    broadcastDataChange(record.role || 'students', { user: record });
+  } catch (e) {}
+
   return record;
 };
 
@@ -340,7 +345,10 @@ export const getStoredStudents = () => {
 };
 
 export const saveStoredStudents = (list) => {
-  try { localStorage.setItem(STUDENTS_LIST_KEY, JSON.stringify(list || [])); } catch {}
+  try {
+    localStorage.setItem(STUDENTS_LIST_KEY, JSON.stringify(list || []));
+    broadcastDataChange('students', { count: (list || []).length });
+  } catch {}
 };
 
 export const deleteStoredStudent = (studentId) => {
@@ -360,6 +368,7 @@ export const deleteStoredStudent = (studentId) => {
   }
   const updated = current.filter(s => s.id !== studentId);
   saveStoredStudents(updated);
+  broadcastDataChange('students', { deletedId: studentId });
   return updated;
 };
 
@@ -370,7 +379,10 @@ export const getStoredTeachers = () => {
 };
 
 export const saveStoredTeachers = (list) => {
-  try { localStorage.setItem(TEACHERS_LIST_KEY, JSON.stringify(list || [])); } catch {}
+  try {
+    localStorage.setItem(TEACHERS_LIST_KEY, JSON.stringify(list || []));
+    broadcastDataChange('teachers', { count: (list || []).length });
+  } catch {}
 };
 
 export const deleteStoredTeacher = (teacherId) => {
@@ -383,6 +395,7 @@ export const deleteStoredTeacher = (teacherId) => {
   }
   const updated = current.filter(t => t.id !== teacherId);
   saveStoredTeachers(updated);
+  broadcastDataChange('teachers', { deletedId: teacherId });
   return updated;
 };
 
@@ -408,6 +421,7 @@ export const saveStoredParents = (list) => {
   try {
     const deduped = deduplicateParents(list || []);
     localStorage.setItem(PARENTS_LIST_KEY, JSON.stringify(deduped));
+    broadcastDataChange('parents', { count: deduped.length });
     return deduped;
   } catch { return list; }
 };
@@ -422,5 +436,6 @@ export const deleteStoredParent = (parentId) => {
   }
   const updated = current.filter(p => p.id !== parentId);
   saveStoredParents(updated);
+  broadcastDataChange('parents', { deletedId: parentId });
   return updated;
 };

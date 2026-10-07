@@ -4,30 +4,27 @@ import { getStoredFees, formatFeeAmount, formatFeeFraction } from '../../lib/fee
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { downloadBlobFile } from '../../lib/exportDataService';
+import { useDataSync } from '../../lib/syncEvents';
 
 export default function ParentFees({ childName = 'Student' }) {
   const [feeRecord, setFeeRecord] = useState(null);
 
-  useEffect(() => {
-    const loadFees = () => {
-      const fees = getStoredFees();
-      const match = fees.find(f => (f.name || '').toLowerCase() === (childName || '').toLowerCase()) || fees[0];
-      setFeeRecord(match || {
-        name: childName,
-        totalFee: 0,
-        paidFee: 0,
-        isFullyPaid: true,
-        course: ''
-      });
-    };
+  const loadFees = () => {
+    const fees = getStoredFees();
+    const match = fees.find(f => (f.name || '').toLowerCase() === (childName || '').toLowerCase()) || fees[0];
+    setFeeRecord(match || {
+      name: childName,
+      totalFee: 0,
+      paidFee: 0,
+      isFullyPaid: true,
+      course: ''
+    });
+  };
 
+  useDataSync(['fees'], loadFees);
+
+  useEffect(() => {
     loadFees();
-    window.addEventListener('storage', loadFees);
-    window.addEventListener('aspire:fee-alert', loadFees);
-    return () => {
-      window.removeEventListener('storage', loadFees);
-      window.removeEventListener('aspire:fee-alert', loadFees);
-    };
   }, [childName]);
 
   const total = feeRecord ? Number(feeRecord.totalFee) || 0 : 20000;

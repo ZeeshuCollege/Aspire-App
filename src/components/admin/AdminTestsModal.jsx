@@ -7,6 +7,7 @@ import {
 import { mockTests } from '../../lib/mockData';
 import { COURSE_OPTIONS, SUBJECT_OPTIONS } from './AdminStudyMaterialsModal';
 import MobileDropdown from '../common/MobileDropdown';
+import { broadcastDataChange, useDataSync } from '../../lib/syncEvents';
 
 export const DURATION_OPTIONS = [
   '45 min',
@@ -32,8 +33,19 @@ export default function AdminTestsModal({ isOpen, onClose }) {
   useEffect(() => {
     try {
       localStorage.setItem('aspire_tests_list', JSON.stringify(tests));
+      broadcastDataChange('tests', { count: tests.length });
     } catch (e) {}
   }, [tests]);
+
+  useDataSync(['tests'], () => {
+    try {
+      const saved = localStorage.getItem('aspire_tests_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setTests(parsed);
+      }
+    } catch (e) {}
+  });
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourseFilter, setSelectedCourseFilter] = useState('All');
