@@ -232,25 +232,6 @@ export default function AdminCourseDetailsModal({
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {!isEditing && (
-              <button
-                type="button"
-                onClick={() => setIsEditing(true)}
-                className="btn-primary"
-                style={{
-                  padding: '6px 12px',
-                  fontSize: '11.5px',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  fontWeight: 700
-                }}
-              >
-                <Edit3 size={13} /> Edit
-              </button>
-            )}
-
             <button
               onClick={handleClose}
               aria-label="Close"
@@ -387,22 +368,6 @@ export default function AdminCourseDetailsModal({
                   <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--brand-900)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     Course Subjects ({course.subjects?.length || 0})
                   </span>
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--accent-600)',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '3px'
-                    }}
-                  >
-                    <Plus size={13} /> Add / Edit
-                  </button>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -465,22 +430,6 @@ export default function AdminCourseDetailsModal({
                   <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--brand-900)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     Assigned Teachers / Faculty ({course.faculty?.length || 0})
                   </span>
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--accent-600)',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '3px'
-                    }}
-                  >
-                    <Plus size={13} /> Modify
-                  </button>
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
