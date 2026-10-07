@@ -201,10 +201,11 @@ export default function AdminFeesModal({ isOpen, onClose }) {
 
   // Filter & Search Logic
   const filteredStudents = useMemo(() => {
-    return feesList.filter(student => {
+    return (feesList || []).filter(student => {
+      if (!student) return false;
       // 1. Search by student name
       const matchesSearch = searchTerm.trim() === '' || 
-        student.name.toLowerCase().includes(searchTerm.toLowerCase().trim());
+        (student.name || '').toLowerCase().includes(searchTerm.toLowerCase().trim());
 
       // 2. Filter by course buttons (All, 9th, 10th, 11th, 12th, JEE, NEET, MHT-CET)
       if (!matchesSearch) return false;
@@ -227,9 +228,10 @@ export default function AdminFeesModal({ isOpen, onClose }) {
 
   // Open a student's card
   const handleOpenCard = (student) => {
+    if (!student) return;
     setSelectedStudent(student);
-    setEditPaidFee(student.paidFee.toString());
-    setEditTotalFee(student.totalFee.toString());
+    setEditPaidFee((student.paidFee !== undefined && student.paidFee !== null ? student.paidFee : 0).toString());
+    setEditTotalFee((student.totalFee !== undefined && student.totalFee !== null ? student.totalFee : 0).toString());
     setIsEditing(false);
   };
 

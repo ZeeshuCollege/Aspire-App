@@ -232,6 +232,7 @@ export async function fetchFeesFromSupabase() {
     if (!pErr && Array.isArray(profiles)) {
       profiles.forEach(p => {
         const key = p.id || p.full_name;
+        const existing = map.get(key);
         let feeData = null;
         if (p.batches) {
           try {
