@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, User, Mail, Phone, BookOpen, Heart, 
   ShieldCheck, Copy, Check, Edit3, Lock,
-  Save, CheckCircle2 
+  Save, CheckCircle2, Users, Award 
 } from 'lucide-react';
 import MobileDropdown from '../common/MobileDropdown';
 import { COURSE_OPTIONS } from '../admin/AdminStudyMaterialsModal';
+import { DEFAULT_GREY_AVATAR } from '../../lib/mockData';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 

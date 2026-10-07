@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle2, XCircle, Check, X, 
-  Clock, BookOpen, User 
+  Clock, BookOpen, User, Calendar
 } from 'lucide-react';
+import MobileDropdown from '../common/MobileDropdown';
 import { getStudentTodayAttendance } from '../../lib/attendanceService';
 
 export const mock30Lectures = [

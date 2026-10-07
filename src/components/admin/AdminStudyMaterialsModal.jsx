@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, Plus, Search, BookOpen, FileText, Video, 
-  ExternalLink, Copy, Check, Trash2, ChevronRight
+  ExternalLink, Copy, Check, Trash2, ChevronRight,
+  ArrowLeft, Layers, Calendar
 } from 'lucide-react';
 import { mockStudyMaterials } from '../../lib/mockData';
 import MobileDropdown from '../common/MobileDropdown';

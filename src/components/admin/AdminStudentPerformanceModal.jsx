@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Search, X, TrendingUp, TrendingDown, Award, 
   ChevronRight, CheckCircle2, Edit3, Save, 
-  Check, User, BookOpen, AlertTriangle
+  Check, User, BookOpen, AlertTriangle, ArrowLeft, Calendar
 } from 'lucide-react';
 import { mockTests, DEFAULT_GREY_AVATAR } from '../../lib/mockData';
 import { getStoredStudents, saveStoredStudents } from '../../lib/userAuthStore';

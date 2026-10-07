@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Search, Users, CheckCircle2, Save, FileText
+  Search, Users, CheckCircle2, Save, FileText, ArrowLeft
 } from 'lucide-react';
 import { getStoredStudents, saveStoredStudents } from '../../lib/userAuthStore';
 import { COURSE_OPTIONS } from './AdminStudyMaterialsModal';

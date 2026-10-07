@@ -15,6 +15,8 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
   const [loading, setLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
 
   // Forgot Password States: 'login' | 'select_method' | 'whatsapp_otp' | 'email_sent' | 'reset_password'
   const [authView, setAuthView] = useState('login');

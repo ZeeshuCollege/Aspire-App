@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Lock, HelpCircle, LogOut, ChevronRight, ShieldCheck, FileText, Trash2 } from 'lucide-react';
+import { User, Lock, HelpCircle, LogOut, ChevronRight, ShieldCheck, FileText, Trash2, Camera } from 'lucide-react';
 import PersonalDetailsModal from './PersonalDetailsModal';
 import ManagePasswordModal from './ManagePasswordModal';
 import ChangeAvatarModal from '../common/ChangeAvatarModal';

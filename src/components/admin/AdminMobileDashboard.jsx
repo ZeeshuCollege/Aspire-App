@@ -14,7 +14,7 @@ import {
   Users, GraduationCap, Bell, UserX, CheckSquare
 } from 'lucide-react';
 import ScreenSlider from '../common/ScreenSlider';
-import AdminStudyMaterialsModal, { COURSE_OPTIONS } from './AdminStudyMaterialsModal';
+import AdminStudyMaterialsModal, { COURSE_OPTIONS, SUBJECT_OPTIONS } from './AdminStudyMaterialsModal';
 import AdminTestsModal from './AdminTestsModal';
 import AdminStudyAndTestMaterialModal from './AdminStudyAndTestMaterialModal';
 import AdminTimetableModal from './AdminTimetableModal';
