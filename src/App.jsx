@@ -9,6 +9,7 @@ import LoginModal from './components/auth/LoginModal';
 import NotificationsModal from './components/common/NotificationsModal';
 import PermissionsModal from './components/common/PermissionsModal';
 import OpeningScreen from './components/common/OpeningScreen';
+import GlobalMobileAlertModal from './components/common/GlobalMobileAlertModal';
 import { isFirstLaunch } from './lib/permissions';
 import { Browser } from '@capacitor/browser';
 import { supabase } from './lib/supabaseClient';
@@ -996,6 +997,9 @@ export default function App() {
           <span>{backToastMessage}</span>
         </div>
       )}
+
+      {/* Global Compact Mobile-Friendly Alert Modal */}
+      <GlobalMobileAlertModal />
     </div>
   );
 }
