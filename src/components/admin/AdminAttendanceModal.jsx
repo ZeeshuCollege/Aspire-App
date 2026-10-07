@@ -50,7 +50,7 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
 
   // Students belonging to selected course for marking
   const courseStudents = useMemo(() => {
-    return students.filter(s => (s.course || 'JEE') === selectedCourse);
+    return (students || []).filter(s => s && (s.course || 'JEE') === selectedCourse);
   }, [students, selectedCourse]);
 
   // Day of week of the selected date (e.g. 'Mon', 'Tue'...)
@@ -67,7 +67,7 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
 
   // Course lectures from timetable
   const courseLectures = useMemo(() => {
-    return timetable.filter(l => (l.course || 'JEE') === selectedCourse);
+    return (timetable || []).filter(l => l && (l.course || 'JEE') === selectedCourse);
   }, [timetable, selectedCourse]);
 
   // Fallback subjects if no timetable lectures exist yet
@@ -231,11 +231,12 @@ export default function AdminAttendanceModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   // Filter students for Records Tab
-  const filteredRecordsStudents = students.filter(s => {
+  const filteredRecordsStudents = (students || []).filter(s => {
+    if (!s) return false;
     const matchesCourse = recordsCourseFilter === 'All' || (s.course || 'JEE') === recordsCourseFilter;
     const matchesSearch = !searchTerm || 
-      (s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (s.roll || s.rollNumber || '').toLowerCase().includes(searchTerm.toLowerCase());
+      String(s.name || '').toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
+      String(s.roll || s.rollNumber || '').toLowerCase().includes(searchTerm.toLowerCase().trim());
     return matchesCourse && matchesSearch;
   });
 

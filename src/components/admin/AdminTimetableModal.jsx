@@ -13,7 +13,7 @@ export function getFacultyOptions() {
   try {
     const stored = getStoredTeachers();
     if (Array.isArray(stored) && stored.length > 0) {
-      return stored.map(t => `${t.name}${t.subject ? ` (${t.subject})` : ''}`);
+      return stored.filter(Boolean).map(t => `${t?.name || 'Faculty'}${t?.subject ? ` (${t.subject})` : ''}`);
     }
   } catch (e) {}
   return [

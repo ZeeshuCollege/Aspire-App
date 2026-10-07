@@ -98,9 +98,11 @@ export default function AdminUserDetailsModal({
     try {
       const fees = getStoredFees() || [];
       feeRecord = fees.find(f =>
-        (f.studentId && f.studentId === userData.id) ||
-        (f.studentRoll && (f.studentRoll === userData.roll || f.studentRoll === userData.rollNumber)) ||
-        (f.studentName && f.studentName.toLowerCase() === (userData.name || '').toLowerCase())
+        f && (
+          (f.studentId && f.studentId === userData.id) ||
+          (f.studentRoll && (String(f.studentRoll) === String(userData.roll) || String(f.studentRoll) === String(userData.rollNumber))) ||
+          (f.studentName && String(f.studentName).toLowerCase() === String(userData.name || '').toLowerCase())
+        )
       );
     } catch {}
   }

@@ -1422,11 +1422,16 @@ export default function AdminMobileDashboard({
 
           {/* Mobile Student List */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {students
-              .filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.roll.includes(searchTerm))
+            {(students || [])
+              .filter(s =>
+                s && (
+                  String(s.name || '').toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
+                  String(s.roll || s.rollNumber || '').toLowerCase().includes(searchTerm.toLowerCase().trim())
+                )
+              )
               .map(std => (
                 <div
-                  key={std.id}
+                  key={std.id || std.email || Math.random()}
                   className="card"
                   onClick={() => setSelectedDetailUser({ type: 'student', data: std })}
                   style={{
@@ -1440,8 +1445,8 @@ export default function AdminMobileDashboard({
                   }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{std.name}</h5>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Roll #{std.roll} • {std.course}</span>
+                    <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{std.name || 'Student'}</h5>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Roll #{std.roll || std.rollNumber || '—'} • {std.course || '—'}</span>
                     {std.parentName ? (
                       <div style={{ fontSize: '11.5px', color: 'var(--brand-700)', fontWeight: 600, marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         👨‍👦 Parent: {std.parentName} {std.parentPhone ? `(${std.parentPhone})` : ''}
@@ -1453,7 +1458,7 @@ export default function AdminMobileDashboard({
                     )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                    <span className="badge badge-success">{std.status}</span>
+                    <span className="badge badge-success">{std.status || 'Active'}</span>
                     <ChevronRight size={16} color="var(--text-muted)" />
                   </div>
                 </div>
@@ -1501,15 +1506,17 @@ export default function AdminMobileDashboard({
 
           {/* Mobile Parents List */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {parents
+            {(parents || [])
               .filter(p =>
-                p.name.toLowerCase().includes(parentSearchTerm.toLowerCase()) ||
-                (p.linkedChildName && p.linkedChildName.toLowerCase().includes(parentSearchTerm.toLowerCase())) ||
-                p.phone.includes(parentSearchTerm)
+                p && (
+                  String(p.name || '').toLowerCase().includes(parentSearchTerm.toLowerCase().trim()) ||
+                  (p.linkedChildName && String(p.linkedChildName).toLowerCase().includes(parentSearchTerm.toLowerCase().trim())) ||
+                  String(p.phone || '').includes(parentSearchTerm.trim())
+                )
               )
               .map(p => (
                 <div
-                  key={p.id}
+                  key={p.id || p.email || Math.random()}
                   className="card"
                   onClick={() => setSelectedDetailUser({ type: 'parent', data: p })}
                   style={{
@@ -1523,14 +1530,14 @@ export default function AdminMobileDashboard({
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>{p.name}</h4>
+                      <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--brand-900)', margin: 0 }}>{p.name || 'Parent'}</h4>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 12px', marginTop: '3px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
-                        <span>📞 {p.phone}</span>
+                        <span>📞 {p.phone || '—'}</span>
                         {p.email && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>✉️ {p.email}</span>}
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                      <span className="badge badge-success">{p.status}</span>
+                      <span className="badge badge-success">{p.status || 'Active'}</span>
                       <ChevronRight size={16} color="var(--text-muted)" />
                     </div>
                   </div>
@@ -1550,10 +1557,10 @@ export default function AdminMobileDashboard({
                         Linked Child
                       </span>
                       <h5 style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--brand-800)', margin: '1px 0 0 0' }}>
-                        {p.linkedChildName}
+                        {p.linkedChildName || 'Student'}
                       </h5>
                       <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                        Roll #{p.linkedChildRoll} • {p.linkedChildCourse}
+                        Roll #{p.linkedChildRoll || '—'} • {p.linkedChildCourse || '—'}
                       </span>
                       {p.linkedChildEmail && (
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
@@ -1563,7 +1570,7 @@ export default function AdminMobileDashboard({
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <a
-                        href={`tel:${p.phone.replace(/\s+/g, '')}`}
+                        href={`tel:${String(p.phone || '').replace(/\s+/g, '')}`}
                         style={{
                           padding: '6px 12px',
                           background: '#ffffff',
@@ -1607,10 +1614,12 @@ export default function AdminMobileDashboard({
                 </div>
               ))}
 
-            {parents.filter(p =>
-              p.name.toLowerCase().includes(parentSearchTerm.toLowerCase()) ||
-              (p.linkedChildName && p.linkedChildName.toLowerCase().includes(parentSearchTerm.toLowerCase())) ||
-              p.phone.includes(parentSearchTerm)
+            {(parents || []).filter(p =>
+              p && (
+                String(p.name || '').toLowerCase().includes(parentSearchTerm.toLowerCase().trim()) ||
+                (p.linkedChildName && String(p.linkedChildName).toLowerCase().includes(parentSearchTerm.toLowerCase().trim())) ||
+                String(p.phone || '').includes(parentSearchTerm.trim())
+              )
             ).length === 0 && (
               <div style={{ textAlign: 'center', padding: '24px 16px', color: 'var(--text-muted)', fontSize: '13px' }}>
                 No parents found matching "{parentSearchTerm}"
@@ -1635,32 +1644,35 @@ export default function AdminMobileDashboard({
             </button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {teachers.map(t => (
-              <div
-                key={t.id}
-                className="card"
-                onClick={() => setSelectedDetailUser({ type: 'teacher', data: t })}
-                style={{
-                  padding: '14px 16px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: '12px',
-                  cursor: 'pointer',
-                  transition: 'transform 0.1s ease, box-shadow 0.15s ease'
-                }}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h5 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>{t.name}</h5>
-                  <span style={{ fontSize: '11px', color: 'var(--accent-500)', fontWeight: 600 }}>{t.subject}</span>
-                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', marginBottom: 0 }}>Batches: {t.batches}</p>
+            {(teachers || []).map(t => {
+              if (!t) return null;
+              return (
+                <div
+                  key={t.id || t.email || Math.random()}
+                  className="card"
+                  onClick={() => setSelectedDetailUser({ type: 'teacher', data: t })}
+                  style={{
+                    padding: '14px 16px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '12px',
+                    cursor: 'pointer',
+                    transition: 'transform 0.1s ease, box-shadow 0.15s ease'
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h5 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>{t.name || 'Faculty'}</h5>
+                    <span style={{ fontSize: '11px', color: 'var(--accent-500)', fontWeight: 600 }}>{t.subject || '—'}</span>
+                    <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', marginBottom: 0 }}>Batches: {t.batches || '—'}</p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                    <span className="badge badge-success">{t.status || 'Active'}</span>
+                    <ChevronRight size={16} color="var(--text-muted)" />
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                  <span className="badge badge-success">{t.status}</span>
-                  <ChevronRight size={16} color="var(--text-muted)" />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )
@@ -1680,42 +1692,47 @@ export default function AdminMobileDashboard({
             </button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {courses.map(c => (
-              <div
-                key={c.id}
-                className="card"
-                onClick={() => setSelectedCourse(c)}
-                style={{
-                  padding: '16px',
-                  cursor: 'pointer',
-                  transition: 'transform 0.1s ease, box-shadow 0.15s ease'
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
-                  <span className="badge badge-accent">{c.code}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-600)', fontSize: '11.5px', fontWeight: 700 }}>
-                    <span>Details & Edit</span>
-                    <ChevronRight size={15} />
+            {(courses || []).map(c => {
+              if (!c) return null;
+              const courseSubjects = Array.isArray(c.subjects) ? c.subjects : [];
+              const courseFaculty = Array.isArray(c.faculty) ? c.faculty : [c.faculty].filter(Boolean);
+              return (
+                <div
+                  key={c.id || c.code || c.name}
+                  className="card"
+                  onClick={() => setSelectedCourse(c)}
+                  style={{
+                    padding: '16px',
+                    cursor: 'pointer',
+                    transition: 'transform 0.1s ease, box-shadow 0.15s ease'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+                    <span className="badge badge-accent">{c.code || 'COURSE'}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-600)', fontSize: '11.5px', fontWeight: 700 }}>
+                      <span>Details & Edit</span>
+                      <ChevronRight size={15} />
+                    </div>
                   </div>
+                  <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--brand-900)', margin: '2px 0 6px 0' }}>{c.name || 'Course'}</h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
+                    {courseSubjects.slice(0, 3).map((sub, idx) => (
+                      <span key={idx} style={{ fontSize: '10.5px', background: '#f1f5f9', color: 'var(--brand-800)', padding: '2px 7px', borderRadius: '6px', fontWeight: 600 }}>
+                        {sub}
+                      </span>
+                    ))}
+                    {courseSubjects.length > 3 && (
+                      <span style={{ fontSize: '10.5px', background: '#f8fafc', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: '6px', fontWeight: 600 }}>
+                        +{courseSubjects.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>
+                    Faculty: {courseFaculty.length > 0 ? courseFaculty.join(', ') : '—'}
+                  </p>
                 </div>
-                <h4 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--brand-900)', margin: '2px 0 6px 0' }}>{c.name}</h4>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
-                  {c.subjects.slice(0, 3).map((sub, idx) => (
-                    <span key={idx} style={{ fontSize: '10.5px', background: '#f1f5f9', color: 'var(--brand-800)', padding: '2px 7px', borderRadius: '6px', fontWeight: 600 }}>
-                      {sub}
-                    </span>
-                  ))}
-                  {c.subjects.length > 3 && (
-                    <span style={{ fontSize: '10.5px', background: '#f8fafc', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: '6px', fontWeight: 600 }}>
-                      +{c.subjects.length - 3} more
-                    </span>
-                  )}
-                </div>
-                <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: 0 }}>
-                  Faculty: {c.faculty.join(', ')}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )
@@ -2299,35 +2316,38 @@ export default function AdminMobileDashboard({
               <button onClick={() => closeModal('students', setShowStudentsModal)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
             </div>
             <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {students.map(s => (
-                <div
-                  key={s.id}
-                  className="card"
-                  onClick={() => setSelectedDetailUser({ type: 'student', data: s })}
-                  style={{
-                    padding: '12px 16px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '12px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{s.name}</h5>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Roll #{s.roll} • {s.course}</span>
-                    {s.parentName && (
-                      <div style={{ fontSize: '11px', color: 'var(--brand-700)', fontWeight: 600, marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        Parent: {s.parentName} ({s.parentPhone || 'Linked'})
-                      </div>
-                    )}
+              {(students || []).map(s => {
+                if (!s) return null;
+                return (
+                  <div
+                    key={s.id || s.roll || Math.random()}
+                    className="card"
+                    onClick={() => setSelectedDetailUser({ type: 'student', data: s })}
+                    style={{
+                      padding: '12px 16px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{s.name || 'Student'}</h5>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Roll #{s.roll || s.rollNumber || '—'} • {s.course || '—'}</span>
+                      {s.parentName && (
+                        <div style={{ fontSize: '11px', color: 'var(--brand-700)', fontWeight: 600, marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          Parent: {s.parentName} ({s.parentPhone || 'Linked'})
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                      <span className="badge badge-success">{s.status || 'Active'}</span>
+                      <ChevronRight size={16} color="var(--text-muted)" />
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                    <span className="badge badge-success">{s.status}</span>
-                    <ChevronRight size={16} color="var(--text-muted)" />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -2345,31 +2365,34 @@ export default function AdminMobileDashboard({
               <button onClick={() => closeModal('teachers', setShowTeachersModal)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
             </div>
             <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {teachers.map(t => (
-                <div
-                  key={t.id}
-                  className="card"
-                  onClick={() => setSelectedDetailUser({ type: 'teacher', data: t })}
-                  style={{
-                    padding: '12px 14px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '12px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{t.name}</h5>
-                    <span style={{ fontSize: '11px', color: 'var(--accent-500)', fontWeight: 600 }}>{t.subject}</span>
-                    <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', marginBottom: 0 }}>Batches: {t.batches}</p>
+              {(teachers || []).map(t => {
+                if (!t) return null;
+                return (
+                  <div
+                    key={t.id || t.email || Math.random()}
+                    className="card"
+                    onClick={() => setSelectedDetailUser({ type: 'teacher', data: t })}
+                    style={{
+                      padding: '12px 14px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h5 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{t.name || 'Faculty'}</h5>
+                      <span style={{ fontSize: '11px', color: 'var(--accent-500)', fontWeight: 600 }}>{t.subject || '—'}</span>
+                      <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', marginBottom: 0 }}>Batches: {t.batches || '—'}</p>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                      <span className="badge badge-success">{t.status || 'Active'}</span>
+                      <ChevronRight size={16} color="var(--text-muted)" />
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                    <span className="badge badge-success">{t.status}</span>
-                    <ChevronRight size={16} color="var(--text-muted)" />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -2698,13 +2721,15 @@ export default function AdminMobileDashboard({
         course={selectedCourse}
         onSaveCourse={handleSaveCourse}
         onDeleteCourse={handleDeleteCourse}
-        availableFaculty={teachers.map(t => t.name)}
+        availableFaculty={(Array.isArray(teachers) ? teachers : []).map(t => t?.name).filter(Boolean)}
         enrolledStudentsCount={
           selectedCourse
-            ? students.filter(s =>
-                s.course === selectedCourse.name ||
-                s.course === selectedCourse.code ||
-                (s.course && selectedCourse.name.toLowerCase().includes(s.course.toLowerCase()))
+            ? (students || []).filter(s =>
+                s && (
+                  s.course === selectedCourse.name ||
+                  s.course === selectedCourse.code ||
+                  (s.course && String(selectedCourse.name || '').toLowerCase().includes(String(s.course).toLowerCase()))
+                )
               ).length
             : 0
         }

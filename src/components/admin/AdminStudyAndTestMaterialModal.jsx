@@ -344,12 +344,15 @@ export default function AdminStudyAndTestMaterialModal({ isOpen, onClose, initia
       ? questionPapers
       : solutions;
 
-  const filteredItems = currentList.filter(item => {
-    const matchesSearch = (item.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.course && item.course.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (item.subject && item.subject.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (item.chapter && item.chapter.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (item.relatedPaper && item.relatedPaper.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredItems = (currentList || []).filter(item => {
+    if (!item) return false;
+    const q = (searchTerm || '').toLowerCase().trim();
+    const matchesSearch = !q ||
+      String(item.title || '').toLowerCase().includes(q) ||
+      (item.course && String(item.course).toLowerCase().includes(q)) ||
+      (item.subject && String(item.subject).toLowerCase().includes(q)) ||
+      (item.chapter && String(item.chapter).toLowerCase().includes(q)) ||
+      (item.relatedPaper && String(item.relatedPaper).toLowerCase().includes(q));
     const matchesCourse = selectedCourseFilter === 'All' || item.course === selectedCourseFilter;
     return matchesSearch && matchesCourse;
   });

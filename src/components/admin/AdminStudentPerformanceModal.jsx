@@ -403,10 +403,13 @@ export default function AdminStudentPerformanceModal({ isOpen, onClose, onOpenMa
 
   // Filter students by search term and course filter
   const filteredStudents = useMemo(() => {
-    return students.filter(std => {
+    return (students || []).filter(std => {
+      if (!std) return false;
       const matchesCourse = selectedCourseFilter === 'All' || std.course === selectedCourseFilter;
       const q = searchTerm.trim().toLowerCase();
-      const matchesSearch = !q || std.name.toLowerCase().includes(q) || (std.rollNumber || std.roll || '').toLowerCase().includes(q);
+      const matchesSearch = !q ||
+        String(std.name || '').toLowerCase().includes(q) ||
+        String(std.rollNumber || std.roll || '').toLowerCase().includes(q);
       return matchesCourse && matchesSearch;
     });
   }, [students, searchTerm, selectedCourseFilter]);
