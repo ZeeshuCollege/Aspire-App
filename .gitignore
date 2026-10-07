@@ -12,3 +12,8 @@ build/
 .vscode/
 .idea/
 *.swp
+
+# Binaries & APKs (Exceeds GitHub 100MB limit)
+*.apk
+*.aab
+
