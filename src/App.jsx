@@ -50,15 +50,34 @@ export default function App() {
     }
   });
   const [activeTab, setActiveTab] = useState('home');
+  const [tabHistory, setTabHistory] = useState(['home']);
+  const tabHistoryRef = useRef(['home']);
+  useEffect(() => {
+    tabHistoryRef.current = tabHistory;
+  }, [tabHistory]);
   const [isTabLoading, setIsTabLoading] = useState(false);
 
-  const handleTabChange = (newTab) => {
+  const handleTabChange = (newTab, isBack = false) => {
+    if (!newTab) return;
     if (newTab !== activeTab) {
       setIsTabLoading(true);
       setActiveTab(newTab);
       setTimeout(() => {
         setIsTabLoading(false);
-      }, 280);
+      }, 250);
+
+      if (!isBack) {
+        setTabHistory(prev => {
+          if (newTab === 'home') {
+            return ['home'];
+          }
+          if (prev[prev.length - 1] === newTab) return prev;
+          return [...prev, newTab];
+        });
+        try {
+          window.history.pushState({ tab: newTab }, '');
+        } catch (e) {}
+      }
     }
   };
 
@@ -430,12 +449,7 @@ export default function App() {
     }
   }, [showOpeningScreen, isLoggedIn]);
 
-  // Keep browser/webview history in sync: push state when leaving home
-  useEffect(() => {
-    if (activeTab !== 'home') {
-      window.history.pushState({ tab: activeTab }, '');
-    }
-  }, [activeTab]);
+
 
   // Unified Android hardware & swipe-gesture back navigation
   useEffect(() => {
@@ -493,6 +507,8 @@ export default function App() {
         if (isLoggedInRef.current) {
           setShowOpeningScreen(false);
           setActiveTab('home');
+          setTabHistory(['home']);
+          tabHistoryRef.current = ['home'];
           lastExitTapTimeRef.current = 0;
           return;
         } else {
@@ -509,21 +525,34 @@ export default function App() {
         }
       }
 
-      // 5. CRITICAL REQUIREMENT:
-      // If currently on ANY other page or tab in ANY portal (Student, Teacher, Parent, Admin),
-      // hitting back MUST ALWAYS navigate to 'home' first!
-      // The screen immediately before closing the whole app will always be the home screen!
-      if (activeTabRef.current !== 'home') {
-        setActiveTab('home');
-        try {
-          window.history.replaceState({ tab: 'home' }, '');
-        } catch (err) {}
-        // Reset exit timer so arriving at home never immediately closes the app
+      // 5. UNWIND SCREEN NAVIGATION HISTORY STEP BY STEP:
+      // "When a user backs from a screen he/she will be directed to it's previous screen from where they came.
+      // It will go on until the user hits the home screen at the very end and then the app will close."
+      const currentStack = tabHistoryRef.current;
+      if (currentStack && currentStack.length > 1) {
+        const newStack = [...currentStack];
+        newStack.pop();
+        const prevScreen = newStack[newStack.length - 1] || 'home';
+
+        tabHistoryRef.current = newStack;
+        setTabHistory(newStack);
+
+        handleTabChange(prevScreen, true);
         lastExitTapTimeRef.current = 0;
         return;
       }
 
-      // 6. User is ALREADY ON 'home' screen:
+      // Safety check: if user is not on 'home' but stack length <= 1
+      if (activeTabRef.current !== 'home') {
+        const homeStack = ['home'];
+        tabHistoryRef.current = homeStack;
+        setTabHistory(homeStack);
+        handleTabChange('home', true);
+        lastExitTapTimeRef.current = 0;
+        return;
+      }
+
+      // 6. User has reached the HOME screen at the very end:
       // Safe exit only after pressing back a second time within 2 seconds
       if (now - lastExitTapTimeRef.current < 2000) {
         try {
@@ -614,6 +643,8 @@ export default function App() {
       localStorage.setItem(`aspire_${userAuth.role}_profile`, JSON.stringify(matched));
     } catch (e) {}
     setActiveTab('home');
+    setTabHistory(['home']);
+    tabHistoryRef.current = ['home'];
     setShowOpeningScreen(false);
     setIsLandingFade(true);
     setTimeout(() => {
@@ -629,6 +660,9 @@ export default function App() {
     setCurrentUser(null);
     setShowOpeningScreen(true);
     setIsLoginOpen(false);
+    setActiveTab('home');
+    setTabHistory(['home']);
+    tabHistoryRef.current = ['home'];
   };
 
   // Mobile OAuth redirect deep link listener (com.aspire.learning://auth#access_token=...)
@@ -769,7 +803,7 @@ export default function App() {
       component: (
         <TeacherDashboard
           user={currentUser || mockUsers.teacher}
-          onNavigate={(tab) => setActiveTab(tab)}
+          onNavigate={handleTabChange}
           onOpenCreateTest={() => setIsCreateTestOpen(true)}
           onOpenUploadMaterial={() => setPdfViewerData({ title: 'Physics Chapter 1 Notes', subtitle: 'Upload & Preview Desk' })}
         />
@@ -779,7 +813,7 @@ export default function App() {
       id: 'batches',
       component: (
         <MyBatches
-          onSelectBatch={() => setActiveTab('performance')}
+          onSelectBatch={() => handleTabChange('performance')}
           onAttendanceSubmit={handleAttendanceSubmit}
         />
       )
@@ -810,7 +844,7 @@ export default function App() {
       component: (
         <ParentHome
           user={currentUser || mockUsers.parent}
-          onNavigate={(tab) => setActiveTab(tab)}
+          onNavigate={handleTabChange}
           onOpenTestPaper={(paper) => setPdfViewerData(paper)}
         />
       )
@@ -932,7 +966,7 @@ export default function App() {
       <CreateTestModal
         isOpen={isCreateTestOpen}
         onClose={() => setIsCreateTestOpen(false)}
-        onCreated={() => setActiveTab('batches')}
+        onCreated={() => handleTabChange('batches')}
       />
 
       {/* Authentication & Password Reset Modal */}
