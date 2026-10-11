@@ -26,7 +26,6 @@ export const checkCurrentPermissions = async () => {
   const result = {
     notifications: 'prompt',
     camera: 'prompt',
-    microphone: 'prompt',
     isNative: Capacitor.isNativePlatform()
   };
 
@@ -48,16 +47,11 @@ export const checkCurrentPermissions = async () => {
     console.warn('Could not check notification permissions:', e);
   }
 
-  // Check Camera & Mic via navigator.permissions if supported
+  // Check Camera via navigator.permissions if supported
   if (navigator.permissions && navigator.permissions.query) {
     try {
       const camStatus = await navigator.permissions.query({ name: 'camera' });
       result.camera = camStatus.state; // 'granted', 'denied', 'prompt'
-    } catch (e) {}
-
-    try {
-      const micStatus = await navigator.permissions.query({ name: 'microphone' });
-      result.microphone = micStatus.state; // 'granted', 'denied', 'prompt'
     } catch (e) {}
   }
 
@@ -124,13 +118,13 @@ export const requestMicrophonePermission = async () => {
 };
 
 /**
- * Sequentially requests all necessary permissions
+ * Sequentially requests all necessary educational permissions (Notifications & Camera only)
+ * Minimizes data collection: microphone permission is explicitly excluded.
  */
 export const requestAllPermissions = async (onStepProgress) => {
   const status = {
     notifications: false,
-    camera: false,
-    microphone: false
+    camera: false
   };
 
   // 1. Notification (prompts user with native Android 13+ dialog)
@@ -141,17 +135,10 @@ export const requestAllPermissions = async (onStepProgress) => {
   // Short pause so user can absorb the transition between native OS dialogs
   await new Promise(r => setTimeout(r, 450));
 
-  // 2. Camera (prompts user with native Android dialog)
+  // 2. Camera (prompts user with native Android dialog for profile picture)
   if (onStepProgress) onStepProgress('camera', 'requesting');
   status.camera = await requestCameraPermission();
   if (onStepProgress) onStepProgress('camera', status.camera ? 'granted' : 'denied');
-
-  await new Promise(r => setTimeout(r, 450));
-
-  // 3. Microphone (prompts user with native Android dialog)
-  if (onStepProgress) onStepProgress('microphone', 'requesting');
-  status.microphone = await requestMicrophonePermission();
-  if (onStepProgress) onStepProgress('microphone', status.microphone ? 'granted' : 'denied');
 
   markPermissionsCompleted();
   return status;

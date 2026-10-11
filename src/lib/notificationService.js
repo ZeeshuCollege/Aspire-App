@@ -1,5 +1,6 @@
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import { supabase } from './supabaseClient';
+import { isMarketingUnsubscribed } from './consentService';
 
 const NativeAppPermissions = registerPlugin('AppPermissions');
 
@@ -254,6 +255,16 @@ export function broadcastNotice(notice) {
  * 3. Local CustomEvent
  */
 export function subscribeToNoticeBroadcasts(onNoticeReceived) {
+  const deliverNotice = (notice) => {
+    if (!notice) return;
+    const cat = (notice.category || '').toLowerCase();
+    if ((cat === 'promotional' || cat === 'marketing' || cat === 'seminar') && isMarketingUnsubscribed()) {
+      console.log('[NotificationService] Suppressed promotional notice per user unsubscribe preference:', notice.title);
+      return;
+    }
+    onNoticeReceived(notice);
+  };
+
   // 1. Supabase Realtime Cross-Device Listener
   let channel = null;
   try {
@@ -263,7 +274,7 @@ export function subscribeToNoticeBroadcasts(onNoticeReceived) {
         const incomingNotice = response?.payload?.notice || response?.payload;
         if (incomingNotice) {
           console.log('[NotificationService] Received cross-device notice via Supabase:', incomingNotice);
-          onNoticeReceived(incomingNotice);
+          deliverNotice(incomingNotice);
         }
       });
     }
@@ -274,14 +285,14 @@ export function subscribeToNoticeBroadcasts(onNoticeReceived) {
   // 2. BroadcastChannel (same browser multi-tab)
   const channelListener = (event) => {
     if (event?.data?.type === 'NEW_NOTICE' && event?.data?.notice) {
-      onNoticeReceived(event.data.notice);
+      deliverNotice(event.data.notice);
     }
   };
 
   // 3. Window CustomEvent
   const windowListener = (event) => {
     if (event?.detail?.notice) {
-      onNoticeReceived(event.detail.notice);
+      deliverNotice(event.detail.notice);
     }
   };
 

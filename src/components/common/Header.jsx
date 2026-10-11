@@ -32,7 +32,7 @@ export default function Header({ currentRole, onOpenNotifications, unreadCount =
         }}>
           <img
             src="/logo.png"
-            alt="ASPIRE Logo"
+            alt="ASPIRE Learning Centre emblem"
             style={{
               width: '100%',
               height: '100%',
@@ -96,6 +96,7 @@ export default function Header({ currentRole, onOpenNotifications, unreadCount =
         {/* Notifications Icon Button */}
         <button
           onClick={onOpenNotifications}
+          aria-label={`Announcements and Notice Board${unreadCount > 0 ? `, ${unreadCount} unread notices` : ''}`}
           style={{
             background: 'var(--surface)',
             border: '1px solid var(--border)',

@@ -101,23 +101,25 @@
     }
     th {
       background: #f1f5f9;
-      font-weight: 700;
       color: var(--primary);
-    }
-    a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 600;
-    }
-    a:hover {
-      text-decoration: underline;
+      font-weight: 700;
     }
     .footer {
       text-align: center;
-      padding: 30px 20px;
-      color: var(--text-muted);
-      font-size: 12px;
-      border-top: 1px solid var(--border);
+      padding: 30px 20px 40px;
+      color: #64748b;
+      font-size: 13px;
+      border-top: 1px solid #e2e8f0;
+      background: #ffffff;
+      margin-top: 40px;
+    }
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+      margin: 0 8px;
+    }
+    .footer a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -125,165 +127,176 @@
 
   <div class="header">
     <h1>Privacy Policy</h1>
-    <p>ASPIRE Learning Centre Mobile Application</p>
-    <p style="margin-top: 4px; font-size: 12px;">Last Updated: September 28, 2026 • Version 1.0</p>
+    <p>ASPIRE Learning Centre • Effective Date: October 1, 2026 • Version 1.0</p>
   </div>
 
   <div class="container">
 
     <div class="card">
-      <h2>1. Overview & Institute Mandate</h2>
+      <h2>1. Introduction & Scope</h2>
       <p>
-        <strong>ASPIRE Learning Centre</strong> ("we", "our", or "the Institute") operates the <strong>Aspire Learning</strong> mobile application exclusively as an academic management companion for enrolled students, verified parents, faculty members, and institute administrators.
+        <strong>ASPIRE Learning Centre</strong> ("we", "us", or "our") is dedicated to protecting the privacy, confidentiality, and security of our students, parents, and faculty. This Privacy Policy details our data collection, processing, storage, and retention practices across our mobile applications, web portals, and offline coaching management operations.
       </p>
       <p>
-        This application is designed specifically for offline coaching institute operations (Standards 9–10 Foundation, Standards 11–12 Science, JEE Main/Advanced, and NEET coaching). We do not sell data to advertisers, and we collect only the information strictly necessary to provide academic tracking, attendance, test grading, timetable scheduling, and fee record administration.
+        This policy is drafted to comply with the <strong>Digital Personal Data Protection (DPDP) Act, 2023 (India)</strong>, the <strong>Children's Online Privacy Protection Act (COPPA)</strong>, and <strong>Google Play Developer Policies & Data Safety</strong> requirements.
       </p>
     </div>
 
     <div class="card">
-      <h2>2. Data We Collect & How It Is Used</h2>
-      <p>The following personal and educational data is processed within the application:</p>
+      <h2>2. Data We Collect & Specific Purpose</h2>
+      <p>We adhere to strict data minimization principles. We collect only data strictly necessary for academic administration and student safety:</p>
 
       <div class="table-container">
         <table>
           <thead>
             <tr>
-              <th>Data Type</th>
-              <th>Collection Purpose</th>
-              <th>Storage Location</th>
-              <th>Shared With</th>
+              <th>Data Category</th>
+              <th>Specific Items</th>
+              <th>Educational Purpose</th>
+              <th>Mandatory / Optional</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><strong>Full Name & Email</strong></td>
-              <td>Authentication, profile identification, and academic notices</td>
-              <td>Supabase Cloud Database (PostgreSQL)</td>
-              <td>None</td>
+              <td><strong>Identity Information</strong></td>
+              <td>Full Name, Roll Number, Enrolled Course/Batch (e.g. JEE, NEET, 10th).</td>
+              <td>Account identification, batch allocation, and student attendance ledger.</td>
+              <td>Mandatory for enrolled students</td>
             </tr>
             <tr>
-              <td><strong>Phone Number</strong></td>
-              <td>WhatsApp OTP verification, attendance alerts, and parental emergency contact</td>
-              <td>Supabase Database</td>
-              <td>Meta WhatsApp Cloud API (Only for OTP transmission)</td>
+              <td><strong>Contact Details</strong></td>
+              <td>Email address, Mobile phone number, Parent/Guardian phone number.</td>
+              <td>Dispatching attendance alerts, exam results, fee receipts, and secure OTP logins.</td>
+              <td>Mandatory</td>
             </tr>
             <tr>
-              <td><strong>Course & Roll Number</strong></td>
-              <td>Classroom batch assignment, timetable filtering, test registration</td>
-              <td>Supabase Database</td>
-              <td>None</td>
+              <td><strong>Academic Records</strong></td>
+              <td>Attendance logs, test scores, report cards, class rankings.</td>
+              <td>Evaluating academic progress and informing parents of student performance.</td>
+              <td>Mandatory</td>
             </tr>
             <tr>
-              <td><strong>Attendance Records</strong></td>
-              <td>Classroom presence tracking and parent notification of absences</td>
-              <td>Supabase Database</td>
-              <td>None</td>
+              <td><strong>Financial Records</strong></td>
+              <td>Tuition fee payment ledger, offline receipt numbers, balance due.</td>
+              <td>Tuition fee accounting and official tax/financial receipt generation.</td>
+              <td>Mandatory</td>
             </tr>
             <tr>
-              <td><strong>Test Marks & Grades</strong></td>
-              <td>Unit assessment results, rank analysis, and academic progress reports</td>
-              <td>Supabase Database</td>
-              <td>None</td>
+              <td><strong>Emergency Information</strong></td>
+              <td>Blood Group (Optional).</td>
+              <td>Campus emergency first-aid and medical safety while attending offline classes.</td>
+              <td><strong>Optional</strong></td>
             </tr>
             <tr>
-              <td><strong>Fee Account Records</strong></td>
-              <td>Offline tuition fee tracking, payment receipts, and balance dues</td>
-              <td>Supabase Database</td>
-              <td>None</td>
-            </tr>
-            <tr>
-              <td><strong>Profile Photo (Optional)</strong></td>
-              <td>Student / faculty identification card within the institute</td>
-              <td>Supabase Storage</td>
-              <td>None</td>
+              <td><strong>Profile Picture</strong></td>
+              <td>Student / Teacher avatar image.</td>
+              <td>Visual identification on student ID and app profile.</td>
+              <td><strong>Optional</strong></td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <div class="highlight-box">
-        <strong>Zero Commercial Advertising:</strong> We do NOT display third-party advertisements, do NOT use advertising identifiers (AAID), and do NOT sell or broker user data to third parties.
+        <strong>Zero Commercial Advertising:</strong> We do NOT sell, rent, broker, or monetize student or parent data. We do NOT use advertising identifiers (AAID) and do NOT display third-party advertisements in our software.
       </div>
     </div>
 
     <div class="card">
       <h2>3. Device Permissions & Purpose</h2>
-      <p>The application requests only the minimal Android permissions necessary for educational functionality:</p>
+      <p>The ASPIRE Learning mobile application requests only the minimal system permissions required for core educational features:</p>
       <ul>
-        <li><strong>INTERNET:</strong> Required for secure API communication with the Supabase backend database, downloading syllabus PDFs, and syncing marks.</li>
-        <li><strong>POST_NOTIFICATIONS (Android 13+):</strong> Required to alert students and parents about upcoming lectures, schedule changes, test results, attendance statuses, and fee account updates.</li>
-        <li><strong>CAMERA (Optional):</strong> Used solely if the user chooses to capture a new profile photo or scan a physical worksheet. It is never accessed in the background.</li>
-        <li><strong>READ_MEDIA_IMAGES (Optional):</strong> Used solely if the user chooses to select an existing photo from their gallery for their profile picture.</li>
+        <li><strong>INTERNET:</strong> Essential for secure communication with our backend database (over TLS 1.3), syncing attendance, and downloading study PDFs.</li>
+        <li><strong>POST_NOTIFICATIONS (Android 13+):</strong> Alerts students and parents regarding upcoming lectures, schedule changes, test results, attendance status, and fee updates.</li>
+        <li><strong>CAMERA (Optional):</strong> Invoked solely if the user voluntarily captures a new profile photo. It is never activated in the background.</li>
+        <li><strong>READ_MEDIA_IMAGES (Optional):</strong> Invoked solely if the user selects an existing photo from their local gallery for their profile picture.</li>
       </ul>
       <p>
-        <em>No location permissions, microphone permissions, contact permissions, or background tracking permissions are requested or used by this application.</em>
+        <em>Explicit Exclusions: We do NOT request or access GPS location, microphone, audio recordings, contact address books, or external phone logs.</em>
       </p>
     </div>
 
     <div class="card">
-      <h2>4. Third-Party Service Providers</h2>
-      <p>We work with trusted enterprise-grade infrastructure providers operating under strict confidentiality:</p>
+      <h2>4. Third-Party Service Providers & Data Security</h2>
+      <p>We work exclusively with trusted, enterprise-grade infrastructure providers operating under strict confidentiality:</p>
       <ul>
-        <li><strong>Supabase Inc.</strong> — Database hosting, user authentication, and encrypted data storage. Hosted on AWS infrastructure with SOC 2 compliance.</li>
-        <li><strong>Meta Cloud API (WhatsApp Business)</strong> — Used exclusively to dispatch one-time passwords (OTPs) to verified parent and student phone numbers for password recovery.</li>
+        <li><strong>Supabase Inc.</strong> — Database hosting, authentication, and secure data storage hosted on AWS SOC 2 compliant infrastructure. All data in transit is encrypted using Transport Layer Security (TLS 1.3 / HTTPS), and database access is enforced via PostgreSQL Row Level Security (RLS).</li>
+        <li><strong>Meta Cloud API (WhatsApp Business)</strong> — Used exclusively to dispatch one-time passwords (OTPs) to verified phone numbers for password recovery and account verification.</li>
+      </ul>
+      <p>For a detailed breakdown of all libraries and licensing, view our <a href="/licenses.html">Open Source Licenses & IP Credits</a>.</p>
+    </div>
+
+    <div class="card">
+      <h2>5. Children & Minors Privacy</h2>
+      <p>
+        Our enrolled students include teenagers (aged 13 to 18) preparing for secondary and competitive entrance exams, as well as adult learners and parents.
+      </p>
+      <ul>
+        <li>We collect personal data for students under 18 strictly with verified parental or guardian consent during coaching admission.</li>
+        <li>Parent accounts are explicitly linked to their child's account so that parents can supervise academic notices, attendance, marks, and fees at all times.</li>
+        <li>No open social forums, direct messaging between strangers, or behavioral profiling exist in the application.</li>
       </ul>
     </div>
 
     <div class="card">
-      <h2>5. Children & Minors Privacy (COPPA & Google Play Families)</h2>
+      <h2>6. Account Deletion & Right to Erasure</h2>
       <p>
-        ASPIRE Learning Centre provides secondary and higher secondary coaching. Our enrolled students include teenagers aged 13 to 18, as well as adult learners and parents.
-      </p>
-      <ul>
-        <li>We do not knowingly collect personal information directly from children under 13 without verified parental consent.</li>
-        <li>Parent accounts are explicitly linked to their child's account so that parents can supervise all academic notices, attendance records, test marks, and fee payment details.</li>
-        <li>No behavioral profiling, ad tracking, or public social networking features exist in the application.</li>
-      </ul>
-    </div>
-
-    <div class="card">
-      <h2>6. Data Security & Storage</h2>
-      <p>
-        All communications between the mobile application and our backend database are encrypted in transit using Transport Layer Security (TLS 1.3 / HTTPS). Database rows are protected with PostgreSQL Row Level Security (RLS) policies, ensuring that users can only access information relevant to their assigned role and profile.
-      </p>
-    </div>
-
-    <div class="card">
-      <h2>7. Account Deletion & Data Retention Rights</h2>
-      <p>
-        In accordance with Google Play developer policies and privacy regulations, users have the right to request the complete deletion of their account and associated personal data at any time.
+        In accordance with Google Play developer policies and Section 12 of the DPDP Act 2023, users have the right to request the permanent deletion of their account and personal data at any time.
       </p>
       <h3>In-App Deletion Path:</h3>
       <p>
-        Open the <strong>Aspire Learning App &rarr; Profile Tab &rarr; Security & Privacy &rarr; Delete Account & Data</strong>.
+        Open the <strong>ASPIRE App &rarr; Profile Tab &rarr; Delete Account & Data</strong>.
       </p>
-      <h3>Web-Based Deletion Request:</h3>
+      <h3>Online Web Deletion Portal:</h3>
       <p>
-        You can also request immediate account and data deletion online through our dedicated portal:
+        You can also submit an immediate self-service account deletion request online:
         <br>
         <a href="/delete-account.html" target="_blank"><strong>Submit Account Deletion Request &rarr;</strong></a>
       </p>
       <p>
-        Upon receiving an account deletion request, we permanently delete the user's login credentials, profile data, personal photos, and direct links within 30 days, retaining only legally required physical financial receipts as mandated by applicable accounting regulations.
+        Upon submission, all personal credentials, student profile photos, and academic logs are permanently purged from active databases within 48 hours, retaining only statutory financial accounting records required under applicable Indian accounting laws.
       </p>
     </div>
 
     <div class="card">
-      <h2>8. Contact Information</h2>
-      <p>If you have any questions, feedback, or data requests regarding this Privacy Policy, please contact our institute administration:</p>
+      <h2>7. Communication Preferences & Unsubscribe</h2>
+      <p>
+        You may opt out of receiving promotional announcements, newsletters, or workshop invitations at any time via our self-service <a href="/unsubscribe.html">Communication Preferences & Unsubscribe Portal</a>. Essential academic notices (attendance alerts and exam marks) remain active for enrolled students to ensure academic safety.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>8. Cookies & Local Storage</h2>
+      <p>
+        Our web application uses essential cookies and local storage tokens strictly for session authentication and preference management. We do not use third-party tracking cookies. For full details, review our <a href="/cookie-policy.html">Cookie Policy</a>.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>9. Business Details & Grievance Officer</h2>
+      <p>
+        In compliance with the Information Technology Act, 2000 and DPDP Act, 2023, the details of the operating entity and designated Grievance Officer are:
+      </p>
       <p>
         <strong>ASPIRE Learning Centre</strong><br>
-        Email: <a href="mailto:aspirelearningcentre@outlook.com">aspirelearningcentre@outlook.com</a><br>
-        Phone: +91 77385 78685<br>
-        Address: ASPIRE Learning Centre, Offline Campus
+        Grievance Redressal Officer: Zeeshan Pinjari<br>
+        Official Email: <a href="mailto:aspirelearningcentre@outlook.com">aspirelearningcentre@outlook.com</a><br>
+        Helpline / Phone: +91 77385 78685<br>
+        Address: ASPIRE Learning Centre, Offline Campus, Navi Mumbai, Maharashtra, India<br>
+        Operating Hours: Monday – Saturday, 9:00 AM – 8:00 PM IST
       </p>
     </div>
 
   </div>
 
   <div class="footer">
-    &copy; 2026 ASPIRE Learning Centre. All rights reserved.
+    &copy; 2026 ASPIRE Learning Centre. All rights reserved.<br>
+    <a href="/privacy-policy.html">Privacy Policy</a> •
+    <a href="/terms-of-service.html">Terms of Service</a> •
+    <a href="/refund-policy.html">Refund Policy</a> •
+    <a href="/cookie-policy.html">Cookie Policy</a> •
+    <a href="/unsubscribe.html">Unsubscribe</a> •
+    <a href="/delete-account.html">Delete Account</a>
   </div>
 
 </body>

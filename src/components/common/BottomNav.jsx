@@ -79,6 +79,8 @@ export default function BottomNav({ role, activeTab, setActiveTab }) {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
+            aria-label={`${tab.label} tab`}
+            aria-current={isActive ? 'page' : undefined}
             style={{
               flex: 1,
               display: 'flex',

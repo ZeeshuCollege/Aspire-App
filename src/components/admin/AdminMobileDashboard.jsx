@@ -26,6 +26,7 @@ import AdminUserDetailsModal from './AdminUserDetailsModal';
 import AdminCourseDetailsModal from './AdminCourseDetailsModal';
 import AdminExportModal from './AdminExportModal';
 import MobileDropdown from '../common/MobileDropdown';
+import LegalCentreModal from '../common/LegalCentreModal';
 import { broadcastNotice } from '../../lib/notificationService';
 import { broadcastDataChange, useDataSync } from '../../lib/syncEvents';
 
@@ -60,6 +61,8 @@ export default function AdminMobileDashboard({
   const [showMarksModal, setShowMarksModal] = useState(false);
   const [showFeesModal, setShowFeesModal] = useState(false);
   const [showPerformanceModal, setShowPerformanceModal] = useState(false);
+  const [showAdminLegalModal, setShowAdminLegalModal] = useState(false);
+  const [adminLegalTab, setAdminLegalTab] = useState('privacy');
   const [notices, setNotices] = useState(propNotices || initialNotices);
 
   useEffect(() => {
@@ -1783,6 +1786,66 @@ export default function AdminMobileDashboard({
           </div>
 
 
+          {/* Institute Legal & Compliance Hub */}
+          <div className="card" style={{ padding: '16px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 700, marginBottom: '4px', color: 'var(--brand-900)' }}>
+              Institute Compliance & Legal Centre
+            </h4>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+              India DPDP Act 2023, Terms of Service, Fee Refund guidelines, and Data Safety documentation.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setAdminLegalTab('privacy');
+                  setShowAdminLegalModal(true);
+                }}
+                className="btn-secondary"
+                style={{ width: '100%', fontSize: '12px', padding: '9px 12px', justifyContent: 'space-between' }}
+              >
+                <span>Privacy & Data Protection Policy</span>
+                <ChevronRight size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAdminLegalTab('terms');
+                  setShowAdminLegalModal(true);
+                }}
+                className="btn-secondary"
+                style={{ width: '100%', fontSize: '12px', padding: '9px 12px', justifyContent: 'space-between' }}
+              >
+                <span>Terms of Service</span>
+                <ChevronRight size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAdminLegalTab('refund');
+                  setShowAdminLegalModal(true);
+                }}
+                className="btn-secondary"
+                style={{ width: '100%', fontSize: '12px', padding: '9px 12px', justifyContent: 'space-between' }}
+              >
+                <span>Fee Inclusions & Refund Policy</span>
+                <ChevronRight size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAdminLegalTab('business');
+                  setShowAdminLegalModal(true);
+                }}
+                className="btn-secondary"
+                style={{ width: '100%', fontSize: '12px', padding: '9px 12px', justifyContent: 'space-between' }}
+              >
+                <span>Campus Business & Grievance Details</span>
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+
           <button
             onClick={onLogout}
             style={{
@@ -3001,6 +3064,31 @@ export default function AdminMobileDashboard({
                 </div>
               )}
 
+              {/* Consent Verification Checkbox (India DPDP Act & Form Consents) */}
+              <label style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '8px',
+                fontSize: '11px',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                margin: '4px 0',
+                background: '#f8fafc',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                border: '1px solid var(--border)'
+              }}>
+                <input
+                  type="checkbox"
+                  required
+                  defaultChecked={true}
+                  style={{ marginTop: '2px', accentColor: 'var(--brand-800)' }}
+                />
+                <span>
+                  <strong>Consent Verified:</strong> Parent/Student has provided informed consent for educational record storage, attendance notifications, and marks processing in accordance with ASPIRE's Privacy Policy.
+                </span>
+              </label>
+
               <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
                 <button type="button" onClick={handleCloseAddUserModal} className="btn-secondary" style={{ flex: 1, fontSize: '13px', padding: '10px' }}>
                   Cancel
@@ -3013,6 +3101,13 @@ export default function AdminMobileDashboard({
           </div>
         </div>
       )}
+
+      {/* Admin Legal & Compliance Centre Modal */}
+      <LegalCentreModal
+        isOpen={showAdminLegalModal}
+        onClose={() => setShowAdminLegalModal(false)}
+        initialTab={adminLegalTab}
+      />
     </>
   );
 }

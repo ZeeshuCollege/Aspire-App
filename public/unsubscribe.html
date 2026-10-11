@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Communication Preferences & Unsubscribe - ASPIRE Learning Centre</title>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --accent: #0284c7;
+      --bg: #f8fafc;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background-color: var(--bg);
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0 0 8px 0;
+      font-size: 26px;
+      font-weight: 800;
+    }
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 28px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .info-box {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-left: 4px solid var(--accent);
+      padding: 14px 16px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 20px;
+      font-size: 13.5px;
+      color: #1e3a8a;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #334155;
+    }
+    input[type="email"], input[type="text"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .checkbox-group {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+    .checkbox-item:last-child {
+      margin-bottom: 0;
+    }
+    .checkbox-item input {
+      margin-top: 3px;
+    }
+    .checkbox-item.disabled {
+      opacity: 0.75;
+    }
+    button {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    button:hover {
+      background: #1e40af;
+    }
+    .confirmation {
+      display: none;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      padding: 24px;
+      border-radius: 8px;
+      text-align: center;
+      color: #166534;
+    }
+    .footer {
+      text-align: center;
+      padding: 30px 20px;
+      color: #64748b;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Communication Preferences</h1>
+    <p>ASPIRE Learning Centre • Self-Service Email & Notification Desk</p>
+  </div>
+
+  <div class="container">
+    <div class="card">
+
+      <div class="info-box">
+        <strong>Academic Notice Policy:</strong> In compliance with consumer protection and educational welfare guidelines, you may unsubscribe from all marketing and promotional communications at any time. Essential academic alerts (student attendance, exam results, and fee receipts) remain active for enrolled students.
+      </div>
+
+      <div id="form-container">
+        <form id="unsubscribe-form" onsubmit="handleUnsubscribeSubmit(event)">
+          <div>
+            <label for="email">Registered Email Address or Phone *</label>
+            <input type="email" id="email" required placeholder="your.email@example.com" />
+          </div>
+
+          <label>Manage Communication Channels:</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item disabled">
+              <input type="checkbox" id="academic" checked disabled />
+              <div>
+                <strong>Essential Academic Alerts (Mandatory)</strong><br>
+                <span style="font-size: 12px; color: #64748b;">Daily attendance notifications, test performance reports, schedule changes, and official fee receipts.</span>
+              </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 10px 0;">
+
+            <div class="checkbox-item">
+              <input type="checkbox" id="promotions" />
+              <div>
+                <strong>Promotional Announcements & Seminars</strong><br>
+                <span style="font-size: 12px; color: #64748b;">Career counseling invitations, vacation batches, workshop announcements, and institute newsletters. (Uncheck to opt-out).</span>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" id="submit-btn">
+            Save Communication Preferences
+          </button>
+        </form>
+      </div>
+
+      <div id="confirmation-container" class="confirmation">
+        <h3 style="margin-top: 0; font-size: 18px; color: #15803d;">Preferences Successfully Updated</h3>
+        <p style="font-size: 14px;">
+          Your notification preferences for <strong id="confirmed-email"></strong> have been saved immediately.
+        </p>
+        <p style="font-size: 13px; color: #166534;" id="opt-out-status">
+          You have been unsubscribed from promotional marketing broadcasts. Essential educational alerts will continue as required.
+        </p>
+        <p style="font-size: 12px; color: #64748b;">
+          Reference ID: <strong id="ref-id"></strong> • Timestamp: <span id="timestamp-val"></span>
+        </p>
+        <a href="/" style="display: inline-block; margin-top: 14px; color: var(--primary); font-size: 13px; font-weight: 700; text-decoration: none;">&larr; Return to ASPIRE App</a>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer">
+    &copy; 2026 ASPIRE Learning Centre •
+    <a href="/privacy-policy.html" style="color: #64748b;">Privacy Policy</a> •
+    <a href="/terms-of-service.html" style="color: #64748b;">Terms of Service</a>
+  </div>
+
+  <script>
+    // Prefill email from query parameter if present (e.g. ?email=test@example.com)
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const emailParam = urlParams.get('email');
+      if (emailParam) {
+        document.getElementById('email').value = emailParam;
+      }
+      // If ?action=unsubscribe is passed, automatically uncheck promotions
+      const action = urlParams.get('action');
+      if (action === 'unsubscribe') {
+        document.getElementById('promotions').checked = false;
+      }
+    });
+
+    function handleUnsubscribeSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const wantsPromotions = document.getElementById('promotions').checked;
+      const ref = 'ASP-COMM-' + Math.floor(100000 + Math.random() * 900000);
+      const now = new Date().toLocaleString('en-IN');
+
+      // Update local communication preferences
+      try {
+        const COMM_KEY = 'aspire_comm_preferences_v1';
+        const raw = localStorage.getItem(COMM_KEY);
+        const all = raw ? JSON.parse(raw) : {};
+        all[email.toLowerCase()] = {
+          academicAlerts: true,
+          promotionalAnnouncements: wantsPromotions,
+          lastUpdated: new Date().toISOString()
+        };
+        all.global = all[email.toLowerCase()];
+        localStorage.setItem(COMM_KEY, JSON.stringify(all));
+      } catch (err) {}
+
+      document.getElementById('form-container').style.display = 'none';
+      document.getElementById('confirmed-email').textContent = email;
+      document.getElementById('ref-id').textContent = ref;
+      document.getElementById('timestamp-val').textContent = now;
+      document.getElementById('opt-out-status').textContent = wantsPromotions
+        ? 'You are opted in to receive academic updates and seminar announcements.'
+        : 'You have been opted out of all promotional broadcasts. Essential academic notices remain active.';
+      document.getElementById('confirmation-container').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

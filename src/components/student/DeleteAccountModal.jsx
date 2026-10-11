@@ -8,6 +8,18 @@ export default function DeleteAccountModal({ isOpen, onClose, user, onAccountDel
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  // Keyboard Escape dismissal
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && !isDeleting) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isDeleting, onClose]);
+
   if (!isOpen) return null;
 
   const handleDelete = async () => {
@@ -26,6 +38,12 @@ export default function DeleteAccountModal({ isOpen, onClose, user, onAccountDel
           .from('profiles')
           .delete()
           .eq('id', user.id);
+
+        // Delete from student_fees table as well
+        await supabase
+          .from('student_fees')
+          .delete()
+          .eq('id', user.id);
       } else if (user?.email) {
         await supabase
           .from('profiles')
@@ -33,10 +51,26 @@ export default function DeleteAccountModal({ isOpen, onClose, user, onAccountDel
           .eq('email', user.email);
       }
 
-      // 2. Clean up local stored session data
+      // 2. Clean up all local stored session and profile data
       try {
         localStorage.removeItem('aspire_current_user');
         localStorage.removeItem('aspire_user_role');
+        localStorage.removeItem('aspire_is_logged_in');
+        localStorage.removeItem('aspire_student_profile');
+        localStorage.removeItem('aspire_parent_profile');
+        localStorage.removeItem('aspire_teacher_profile');
+        localStorage.removeItem('aspire_user_course');
+        
+        // Log deletion request for compliance auditing
+        const requests = JSON.parse(localStorage.getItem('aspire_deletion_requests') || '[]');
+        requests.push({
+          userId: user?.id,
+          email: user?.email,
+          name: user?.name,
+          timestamp: new Date().toISOString()
+        });
+        localStorage.setItem('aspire_deletion_requests', JSON.stringify(requests));
+
         const creds = JSON.parse(localStorage.getItem('aspire_creds_v1') || '{}');
         if (user?.email) {
           delete creds[user.email.toLowerCase()];
@@ -63,6 +97,9 @@ export default function DeleteAccountModal({ isOpen, onClose, user, onAccountDel
   return (
     <div
       className="modal-backdrop-05s"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Delete Account and Data"
       onClick={(e) => { if (e.target === e.currentTarget && !isDeleting) onClose(); }}
     >
       <div

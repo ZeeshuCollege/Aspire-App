@@ -16,6 +16,17 @@ export default function NotificationsModal({ isOpen, onClose, notices = [], onMa
 
   const { dragOffset, touchHandlers } = useSwipeDownDismiss(handleClose);
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const unreadCount = notices.filter(n => !n.read).length;
@@ -280,9 +291,34 @@ export default function NotificationsModal({ isOpen, onClose, notices = [], onMa
           borderTop: '1px solid var(--border)',
           textAlign: 'center',
           fontSize: '11px',
-          color: 'var(--text-muted)'
+          color: 'var(--text-muted)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '4px'
         }}>
-          ASPIRE Closed Ecosystem • Real-time Instant Delivery Active
+          <span>ASPIRE Closed Ecosystem • Real-time Instant Delivery Active</span>
+          <button
+            type="button"
+            onClick={() => {
+              handleClose();
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('aspire:open-legal', { detail: { tab: 'communications' } }));
+              }, 300);
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--brand-700)',
+              fontSize: '11px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              padding: 0,
+              textDecoration: 'underline'
+            }}
+          >
+            Manage Notification & Unsubscribe Preferences
+          </button>
         </div>
       </div>
     </div>

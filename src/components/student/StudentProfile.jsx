@@ -1,19 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { User, Lock, HelpCircle, LogOut, ChevronRight, ShieldCheck, FileText, Trash2, Camera } from 'lucide-react';
+import { User, Lock, HelpCircle, LogOut, ChevronRight, ShieldCheck, FileText, Trash2, Camera, DollarSign, Bell } from 'lucide-react';
 import PersonalDetailsModal from './PersonalDetailsModal';
 import ManagePasswordModal from './ManagePasswordModal';
 import ChangeAvatarModal from '../common/ChangeAvatarModal';
 import DeleteAccountModal from './DeleteAccountModal';
+import LegalCentreModal from '../common/LegalCentreModal';
 
 export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdateUser, onOpenPermissions }) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isManagePasswordOpen, setIsManagePasswordOpen] = useState(false);
   const [isChangeAvatarOpen, setIsChangeAvatarOpen] = useState(false);
   const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
+  const [isLegalOpen, setIsLegalOpen] = useState(false);
+  const [legalInitialTab, setLegalInitialTab] = useState('privacy');
 
   // Intercept back button for profile submodals
   useEffect(() => {
     const handleProfileBack = (e) => {
+      if (isLegalOpen) {
+        setIsLegalOpen(false);
+        e.detail?.markHandled?.();
+        return;
+      }
       if (isDeleteAccountOpen) {
         setIsDeleteAccountOpen(false);
         e.detail?.markHandled?.();
@@ -37,7 +45,7 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
     };
     window.addEventListener('app:back', handleProfileBack);
     return () => window.removeEventListener('app:back', handleProfileBack);
-  }, [isDeleteAccountOpen, isChangeAvatarOpen, isManagePasswordOpen, isDetailsOpen]);
+  }, [isLegalOpen, isDeleteAccountOpen, isChangeAvatarOpen, isManagePasswordOpen, isDetailsOpen]);
 
   const isTeacher = user?.role === 'teacher';
   const isParent = user?.role === 'parent';
@@ -74,7 +82,9 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
     { icon: User, label: 'Personal Details', badge: personalDetailsBadge },
     { icon: Lock, label: 'Manage Password', badge: null },
     { icon: ShieldCheck, label: 'Device Permissions', badge: 'Active' },
-    { icon: FileText, label: 'Privacy Policy', badge: null },
+    { icon: FileText, label: 'Legal & Compliance Centre', badge: 'DPDP / ToS' },
+    { icon: DollarSign, label: 'Fee Inclusions & Refund Policy', badge: null },
+    { icon: Bell, label: 'Communication Preferences', badge: null },
     { icon: Trash2, label: 'Delete Account & Data', badge: null, isDanger: true },
     { icon: HelpCircle, label: 'Help & Support', badge: null }
   ];
@@ -100,7 +110,7 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
         <div style={{ position: 'relative', flexShrink: 0 }}>
           <img
             src={user.avatar}
-            alt={user.name}
+            alt={user.name ? `${user.name}'s profile avatar` : 'User profile avatar'}
             onClick={() => setIsChangeAvatarOpen(true)}
             style={{ width: '64px', height: '64px', borderRadius: '16px', objectFit: 'cover', border: '2px solid var(--accent-500)', cursor: 'pointer', boxShadow: '0 4px 10px rgba(234, 88, 12, 0.15)' }}
             title="Click to change profile picture"
@@ -145,13 +155,14 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
         </div>
       </div>
 
-      {/* Navigation List - Sharp Frame */}
+      {/* Navigation List - Sharp Frame with Full Keyboard Accessibility */}
       <div className="card" style={{ padding: '4px 16px', display: 'flex', flexDirection: 'column' }}>
         {menuItems.map((item, index) => {
           const Icon = item.icon;
           return (
-            <div
+            <button
               key={item.label}
+              type="button"
               onClick={() => {
                 if (item.label === 'Personal Details') {
                   setIsDetailsOpen(true);
@@ -159,8 +170,15 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
                   setIsManagePasswordOpen(true);
                 } else if (item.label === 'Device Permissions' && onOpenPermissions) {
                   onOpenPermissions();
-                } else if (item.label === 'Privacy Policy') {
-                  window.open('/privacy-policy.html', '_blank');
+                } else if (item.label === 'Legal & Compliance Centre') {
+                  setLegalInitialTab('privacy');
+                  setIsLegalOpen(true);
+                } else if (item.label === 'Fee Inclusions & Refund Policy') {
+                  setLegalInitialTab('refund');
+                  setIsLegalOpen(true);
+                } else if (item.label === 'Communication Preferences') {
+                  setLegalInitialTab('communications');
+                  setIsLegalOpen(true);
                 } else if (item.label === 'Delete Account & Data') {
                   setIsDeleteAccountOpen(true);
                 } else if (item.label === 'Help & Support') {
@@ -172,8 +190,12 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '14px 0',
+                border: 'none',
+                background: 'transparent',
+                width: '100%',
                 borderBottom: index < menuItems.length - 1 ? '1px solid var(--border)' : 'none',
                 cursor: 'pointer',
+                textAlign: 'left',
                 transition: 'background 0.15s ease'
               }}
             >
@@ -187,7 +209,7 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
                 )}
                 <ChevronRight size={16} color="var(--text-muted)" />
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -221,6 +243,14 @@ export default function StudentProfile({ user, onLogout, onUpdateAvatar, onUpdat
         onClose={() => setIsDeleteAccountOpen(false)}
         user={user}
         onAccountDeleted={onLogout}
+      />
+
+      {/* Legal & Compliance Centre Modal */}
+      <LegalCentreModal
+        isOpen={isLegalOpen}
+        onClose={() => setIsLegalOpen(false)}
+        initialTab={legalInitialTab}
+        onOpenDeleteAccount={() => setIsDeleteAccountOpen(true)}
       />
 
       {/* Log Out Button */}

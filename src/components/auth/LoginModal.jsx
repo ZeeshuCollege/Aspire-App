@@ -7,6 +7,7 @@ import { authenticateLocalUser } from '../../lib/userAuthStore';
 import { sendWhatsAppOtp, verifyWhatsAppOtp } from '../../lib/whatsappService';
 import { X, Mail, Lock, Eye, EyeOff, MessageSquare, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useSwipeDownDismiss } from '../../lib/systemNavigation';
+import { recordTermsAndPrivacyConsent } from '../../lib/consentService';
 
 export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
   const [email, setEmail] = useState('');
@@ -160,6 +161,9 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
       console.info(`[SECURITY AUDIT] Successful login for ${authUser.role}: ${authUser.email}`);
       setIsVerifying(false);
       setLoading(false);
+      try {
+        recordTermsAndPrivacyConsent(authUser.email || authUser.id);
+      } catch (e) {}
       onLoginSuccess(authUser);
       onClose();
     } catch (err) {
@@ -532,6 +536,28 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                 >
                   {lockoutSeconds > 0 ? `Locked (${lockoutSeconds}s)` : loading ? 'Authenticating...' : 'Login'}
                 </button>
+
+                {/* Consent & Policy Agreement */}
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', margin: '10px 0 0 0', lineHeight: 1.4 }}>
+                  By signing in, you agree to ASPIRE's{' '}
+                  <a
+                    href="/terms-of-service.html"
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: 'var(--brand-800)', fontWeight: 600, textDecoration: 'underline' }}
+                  >
+                    Terms of Service
+                  </a>{' '}
+                  and{' '}
+                  <a
+                    href="/privacy-policy.html"
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: 'var(--brand-800)', fontWeight: 600, textDecoration: 'underline' }}
+                  >
+                    Privacy Policy
+                  </a>.
+                </p>
               </form>
 
               {/* Divider */}

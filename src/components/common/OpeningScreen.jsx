@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function OpeningScreen({ isLoggedIn, onOpenLogin, onProceed }) {
+export default function OpeningScreen({ isLoggedIn, onOpenLogin, onProceed, onOpenLegal }) {
   const [isExiting, setIsExiting] = useState(false);
 
   // When already logged in, show as opening splash screen with no button and auto-proceed
@@ -171,7 +171,8 @@ export default function OpeningScreen({ isLoggedIn, onOpenLogin, onProceed }) {
         minHeight: '110px'
       }}>
         {!isLoggedIn ? (
-          <button
+          <>
+            <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
@@ -210,6 +211,50 @@ export default function OpeningScreen({ isLoggedIn, onOpenLogin, onProceed }) {
           >
             Access Portal // Sign In
           </button>
+          {/* Pre-login Legal & Compliance Links */}
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            marginTop: '16px',
+            fontSize: '11px',
+            color: '#64748b'
+          }}>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onOpenLegal ? onOpenLegal('terms') : window.open('/terms-of-service.html', '_blank'); }}
+              style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '2px', textDecoration: 'underline', fontSize: '11px' }}
+            >
+              Terms
+            </button>
+            <span>•</span>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onOpenLegal ? onOpenLegal('privacy') : window.open('/privacy-policy.html', '_blank'); }}
+              style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '2px', textDecoration: 'underline', fontSize: '11px' }}
+            >
+              Privacy Policy
+            </button>
+            <span>•</span>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onOpenLegal ? onOpenLegal('refund') : window.open('/refund-policy.html', '_blank'); }}
+              style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '2px', textDecoration: 'underline', fontSize: '11px' }}
+            >
+              Refunds
+            </button>
+            <span>•</span>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onOpenLegal ? onOpenLegal('cookies') : window.open('/cookie-policy.html', '_blank'); }}
+              style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '2px', textDecoration: 'underline', fontSize: '11px' }}
+            >
+              Cookies
+            </button>
+          </div>
+        </>
         ) : (
           /* When already logged in, no button is shown - subtle splash hint */
           <div style={{

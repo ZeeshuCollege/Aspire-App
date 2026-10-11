@@ -517,12 +517,12 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
 
                 {/* Blood Group */}
                 <MobileDropdown
-                  label="Blood Group"
-                  title="Select Blood Group"
+                  label="Blood Group (Optional - Campus Medical Safety Only)"
+                  title="Select Blood Group (Optional)"
                   options={BLOOD_GROUPS.map(bg => ({ value: bg, label: bg }))}
                   value={formData.bloodGroup || ''}
                   onChange={val => setFormData({ ...formData, bloodGroup: val })}
-                  placeholder="Select Blood Group"
+                  placeholder="Select Blood Group (Optional)"
                 />
               </div>
 
@@ -640,6 +640,11 @@ export default function PersonalDetailsModal({ isOpen, onClose, user, onSaveUser
                   </>
                 )}
               </div>
+
+              {/* Data Processing Consent Notice */}
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4, margin: '6px 0 2px 0', textAlign: 'center' }}>
+                By saving, you consent to the processing and storage of this academic profile data under ASPIRE's Privacy Policy.
+              </p>
 
               {/* Submit Buttons */}
               <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>

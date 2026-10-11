@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, Download } from 'lucide-react';
+import { CheckCircle2, Download, ShieldCheck, Info, ExternalLink } from 'lucide-react';
 import { getStoredFees, formatFeeAmount, formatFeeFraction } from '../../lib/feeService';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { downloadBlobFile } from '../../lib/exportDataService';
 import { useDataSync } from '../../lib/syncEvents';
+import LegalCentreModal from '../common/LegalCentreModal';
 
 export default function ParentFees({ childName = 'Student' }) {
   const [feeRecord, setFeeRecord] = useState(null);
+  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
 
   const loadFees = () => {
     const fees = getStoredFees();
@@ -161,11 +163,60 @@ export default function ParentFees({ childName = 'Student' }) {
             onClick={handleDownloadReceipt}
             style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', padding: '7px 9px', borderRadius: '8px', cursor: 'pointer', color: 'var(--brand-900)', transition: 'var(--transition-smooth)' }}
             title="Download Receipt"
+            aria-label="Download payment receipt PDF"
           >
             <Download size={15} />
           </button>
         </div>
       </div>
+
+      {/* Transparent Fee Inclusions & Refund Policy Box */}
+      <div className="card" style={{ padding: '14px 16px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+          <ShieldCheck size={16} color="var(--brand-800)" />
+          <h5 style={{ fontSize: '13px', fontWeight: 800, margin: 0, color: 'var(--brand-900)' }}>
+            Transparent Fee Inclusions // Zero Hidden Fees
+          </h5>
+        </div>
+        <p style={{ fontSize: '11.5px', color: '#64748b', lineHeight: 1.5, margin: 0 }}>
+          Your declared tuition fee covers full syllabus classroom lectures, printed kit notes, unit test series, and ASPIRE portal access. No separate digital maintenance fees or exam charges are levied.
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #e2e8f0' }}>
+          <button
+            type="button"
+            onClick={() => setIsRefundModalOpen(true)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--accent-600, #0284c7)',
+              fontSize: '11.5px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              padding: 0,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            View Fee Refund & Cancellation Policy &rarr;
+          </button>
+          <a
+            href="/refund-policy.html"
+            target="_blank"
+            rel="noreferrer"
+            style={{ fontSize: '11px', color: '#94a3b8', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+          >
+            Web Document <ExternalLink size={10} />
+          </a>
+        </div>
+      </div>
+
+      {/* In-App Legal & Refund Modal */}
+      <LegalCentreModal
+        isOpen={isRefundModalOpen}
+        onClose={() => setIsRefundModalOpen(false)}
+        initialTab="refund"
+      />
     </div>
   );
 }

@@ -10,6 +10,8 @@ import NotificationsModal from './components/common/NotificationsModal';
 import PermissionsModal from './components/common/PermissionsModal';
 import OpeningScreen from './components/common/OpeningScreen';
 import GlobalMobileAlertModal from './components/common/GlobalMobileAlertModal';
+import CookieConsentBanner from './components/common/CookieConsentBanner';
+import LegalCentreModal from './components/common/LegalCentreModal';
 import { isFirstLaunch } from './lib/permissions';
 import { Browser } from '@capacitor/browser';
 import { supabase } from './lib/supabaseClient';
@@ -86,6 +88,17 @@ export default function App() {
   const [isCreateTestOpen, setIsCreateTestOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
+  const [isGlobalLegalOpen, setIsGlobalLegalOpen] = useState(false);
+  const [globalLegalTab, setGlobalLegalTab] = useState('privacy');
+
+  useEffect(() => {
+    const handleOpenLegal = (e) => {
+      setGlobalLegalTab(e.detail?.tab || 'privacy');
+      setIsGlobalLegalOpen(true);
+    };
+    window.addEventListener('aspire:open-legal', handleOpenLegal);
+    return () => window.removeEventListener('aspire:open-legal', handleOpenLegal);
+  }, []);
   const [notices, setNotices] = useState(() => {
     try {
       const saved = localStorage.getItem('aspire_notices_list');
@@ -1015,6 +1028,10 @@ export default function App() {
           isLoggedIn={isLoggedIn}
           onOpenLogin={() => setIsLoginOpen(true)}
           onProceed={() => setShowOpeningScreen(false)}
+          onOpenLegal={(tab) => {
+            setGlobalLegalTab(tab || 'privacy');
+            setIsGlobalLegalOpen(true);
+          }}
         />
       )}
 
@@ -1051,6 +1068,21 @@ export default function App() {
 
       {/* Global Compact Mobile-Friendly Alert Modal */}
       <GlobalMobileAlertModal />
+
+      {/* Cookie & Data Storage Consent Banner */}
+      <CookieConsentBanner
+        onOpenLegalModal={(tab) => {
+          setGlobalLegalTab(tab || 'cookies');
+          setIsGlobalLegalOpen(true);
+        }}
+      />
+
+      {/* Unified In-App Legal, Compliance & Policy Centre */}
+      <LegalCentreModal
+        isOpen={isGlobalLegalOpen}
+        onClose={() => setIsGlobalLegalOpen(false)}
+        initialTab={globalLegalTab}
+      />
     </div>
   );
 }
